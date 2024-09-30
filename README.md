@@ -288,6 +288,10 @@ Server creates queue, when a character's turn came up, server will send the info
 that character gets and ask the controller to what to do for that character. Executes
 effects when the Reorder Turn came up.
 
+Every hit, damage, position change, should be notified to the controllers by eye of the
+character. For that, every succesfull hit should be notified. And every object in the world
+should have an ID.
+
 A communcation standard should be defined.
 
 These structs should be defined:
@@ -402,13 +406,160 @@ struct Stats{
 };
 ```
 
+
+### Effect Struct and Rules of Effects
+Effect Struct is a reference struct to effects. Every effect
+shall follow these kind of header.
+
+```C
+#define EFFECT_STATGIVER (1<<0)
+#define EFFECT_INVISIBLE (1<<1) // an invisible effect can't be detected
+
+enum InvokeTimeType {INVOKE_ON_REORDER_TURN, INVOKE_ON_CHARACTER_TURN, INVOKE_EVERYTIME};
+
+struct Effect {
+    unsigned int ID;
+    int time = 0; // if -1, effect is parmenent. else when time is 0, effect will be destroyed.
+    unsigned int effectSpecs = 0; // for example effectSpecs = EFFECT_STATGIVER | ... for Stat Givers
+
+    struct Stats givenStats;
+
+    enum InvokeTimeType invokeTimeType;
+    struct Character character;
+    void (*executer)(void* effectptr, struct World*, struct Character* entity);
+};
+```
+
+Example of a custom effect:
+
+```C
+// I want to create a three sectioned effect that does different things on each one.
+
+struct CustomEffectDefinitionHere {
+    struct Effect effect = {.time = 3, .invokeTimeType = INVOKE_ON_REORDER_TURN}; //header
+
+    unsigned int segmentCounter = 0;
+    void (*segment1)(void* effectptr, struct World*, struct Character* entity);
+    void (*segment2)(void* effectptr, struct World*, struct Character* entity);
+    void (*segment3)(void* effectptr, struct World*, struct Character* entity);
+};
+
+void CustomEffectDefinitionHere_executer(void* effectptr, struct World* world, struct Character* entity)
+{
+    struct CustomEffectDefinitionHere* effect = effectptr;
+    if (effect->segmentCounter == 0) effect->segment1(effectptr, world, entity);
+    else if (effect->segmentCounter == 1) effect->segment2(effectptr, world, entity);
+    else if (effect->segmentCounter == 2) effect->segment3(effectptr, world, entity);
+    effect->segmentCounter += 1;
+}
+
+```
+
+Effects will do something again and again by the turn.
+
+Some effects may give additional stats to the character, temporarely. These effects are
+Stat Giver Effects. When a Stat Giver Effect adden to or removed from a character, ```stats```
+variable will be calculated again.
+
+### Eventer Struct
+
+Eventer Struct is a reference struct to eventers. Every eventer
+shall follow these kind of header. So a custom eventer can be
+defined just like custom effects.
+
+```C
+enum EventerType {
+    TYPE_CLASSIC, TYPE_FASTMAGIC, TYPE_FASTCOMBAT
+};
+
+enum TargetType {
+    TYPE_TARGET, TYPE_AREA, TYPE_POSITION;
+};
+
+struct Eventer{
+    unsigned int ID;
+    int energy; int spellEnergy;
+    enum EventerType eventer_type;
+    enum TargetType target_type;
+    void (*executer)(void* eventer, struct World*, struct Character*, void* target);
+};
+
+struct EventerTypes{
+    size_t count;
+    enum EventerType* types;
+};
+```
+
+
+### AttackInfo Struct and Attacks
+Attacks should send an info about the attack when tries to hit.
+
+```C
+struct Attackinfo;
+
+typedef int (*hitterFunction)(struct Character* self, struct Character* hitter, struct AttackInfo);
+// hit functions should report whether the attack hitted or not
+
+#define ATTACK_NONDODGEABLE (1<<1)
+
+
+enum DamageType {
+    DAMAGE_BLUDGEONING
+};
+
+
+struct AttackInfo{
+    struct Stats additiveStats;
+    unsigned int specs = 0;
+
+    enum DamageType damageType;
+    int damage;
+};
+```
+
+
+### Controller Communicator
+Detailed informations about environment and other characters shall
+pass from the perspective of a character to a communicator.
+
+#### World Information
+
+This information contains the world information that the character
+can see. World information is the only required informations to
+see or hear somethings.
+
+```C
+struct WorldInformation{
+
+
+};
+```
+
+```C
+typedef void (*ControllerCommunicator)(struct Character* character, struct World* world);
+```
+
+But this definition will not allow to mind controlling stuff that effects the
+seeing of a character. For that, firstly the power needs to edit the communicator
+function. Secondly, the communicator function somehow needs to find that its a
+character's mind control function. And we need to somehow automatically change this
+to default when a mind controller character passes out.
+
+
 ### Character Struct
 
 ```C
 #define STATE_DEAD (1<<1)
 #define STATE_FAINTED (1<<2)
 
+struct Character;
+struct AttackInfo;
+
 struct Character{
+    unsigned int ID;
+
+    int x,y;
+
     struct Stats baseStats;
     struct Stats stats;
 
@@ -423,56 +574,13 @@ struct Character{
     struct Eventer* eventers;
 
     struct List effects; // server needs to change effects fastly
+
+    hitterFunction headHit, bodyHit, armHit, legHit;
+
+
+    ControllerCommunicator controllerCom;
 };
 ```
 
-### Effect Struct and Rules of Effects
-
-
-```C
-#define EFFECT_STATGIVER (1<<0)
-
-enum InvokeTimeType {INVOKE_ON_REORDER_TURN, INVOKE_ON_CHARACTER_TURN, INVOKE_EVERYTIME};
-
-struct Effect {
-    int time = 0; // if -1, effect is parmenent. else when time is 0, effect will be destroyed.
-    unsigned int effectSpecs = 0; // for example effectSpecs = EFFECT_STATGIVER | ... for Stat Givers
-
-    struct Stats givenStats;
-
-    enum InvokeTimeType invokeTimeType;
-    struct Character character;
-    void (*executer)(struct World*, struct Character* entity);
-};
-```
-
-Effects will do something again and again by the turn.
-
-Some effects may give additional stats to the character, temporarely. These effects are
-Stat Giver Effects. When a Stat Giver Effect adden to or removed from a character, ```stats```
-variable will be calculated again.
-
-### Eventer Struct
-
-```C
-enum EventerType {
-    TYPE_CLASSIC, TYPE_FASTMAGIC, TYPE_FASTCOMBAT
-};
-
-enum TargetType {
-    TYPE_TARGET, TYPE_AREA, TYPE_POSITION;
-};
-
-struct Eventer{
-    int energy; int spellEnergy;
-    enum EventerType eventer_type;
-    enum TargetType target_type;
-    void (*executer)(struct World*, struct Character*, void* target);
-};
-
-struct EventerTypes{
-    size_t count;
-    enum EventerType* types;
-};
-
-```
+Every hit function should have a controlling segment that an attack is succesfull or not.
+If the hit succesfully done, the hit functions should notify the server system.
