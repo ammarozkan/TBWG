@@ -260,6 +260,28 @@ Effects:
 In the program system, there will be two part that seperated from each other: Server
 and Controller.
 
+## Deep Down Systems
+
+### Lists
+
+```C
+struct ListElementHeader {
+    struct ListElementHeader* prior;
+    struct ListElementHeader* next;
+};
+
+struct List {
+    struct ListElementHeader* firstelement;
+    struct ListElementHeader* lastelement;
+};
+
+#define ITERATE(list) for(struct ListElement* elm = list.firstelement; elm != NULL, elm = elm->next)
+
+void addElement(struct ListElementHeader* list, void* element);
+
+void removeElement(struct ListElementHeader* list, void* element); // we don't need the list actually.
+```
+
 ## Server
 
 Server creates queue, when a character's turn came up, server will send the information
@@ -268,39 +290,61 @@ effects when the Reorder Turn came up.
 
 A communcation standard should be defined.
 
-### The Way
+These structs should be defined:
+
+### The Queue
+
+```C
+enum QueueElementType {
+    QUEUE_CHARACTER, QUEUE_ENTITY, QUEUE_TIMED, QUEUE_REORDER
+};
+
+struct Queue{
+    struct List queueElements;
+};
+
+struct QueueElementHeader{
+    struct ListElementHeader listHeader;
+
+    enum QueueElementType type;
+};
+```
 
 #### Fight Start
 
 Every character's every passive will be executed. Passive functions should be
 accesed(rw) to characters and character's values.
 
+When a passive adds a stat to the character, will add it to the baseStats in
+character struct (take a look at the struct Character).
+
 #### Reorder Turns
 
 Server will add every character's base queue to the start of the queue in order
 of character's speed.
+
+```C
+struct QueueReorderTurn {
+    struct QueueElementHeader header = {.type = QUEUE_REORDER};
+};
+```
 
 #### Character's Turn
 
 Server will ask to the controller to choose what character will do in the turn.
 Will choose an eventer.
 
-Eventer structure definitions:
+Now Character's Turn Queue Structure Definition:
+
 
 ```C
-enum EventerType {
-    TYPE_CLASSIC, TYPE_FASTMAGIC, TYPE_FASTCOMBAT
-};
+struct QueueCharacterTurn{
+    struct QueueElementHeader header = {.type = QUEUE_CHARACTER};
 
-enum TargetType {
-    TYPE_TARGET, TYPE_AREA, TYPE_POSITION;
-};
+    struct EventerTypes allowedEventers;
+    struct Character* character;
 
-struct Eventer{
-    int energy; int spellEnergy;
-    enum EventerType eventer_type;
-    enum TargetType target_type;
-    void (*executer)(struct World*, struct Character*, void* target);
+    int characterShouldBeAlive;
 };
 ```
 
@@ -326,10 +370,109 @@ Turn Types:
 Every timed effect has its own proccess. But every timed effect is called from
 a function that gets timed effect's variable.
 
+```C
+struct QueueTimedTurn{
+    struct QueueElementHeader header = {.type = QUEUE_ENTITY};
+
+    struct TimedEffect* effect;
+    void (*executer)(struct World*, struct TimedEffect* effect);
+};
+```
+
 #### Entity Turns
 
 The working segment is exactly same as character except the choosing an eventer. Entitiy
 turns always does only one eventer. But that eventer can call different eventers.
 
+```C
+struct QueueEntityTurn{
+    struct QueueElementHeader header = {.type = QUEUE_ENTITY};
+
+    struct Entity* entity;
+    void (*executer)(struct World*, struct Entity* entity);
+};
+```
+
+### Stat Struct
+This definition needed for explanation now on.
+
+```C
+struct Stats{
+    int STR, DEX, CNS, WIS, SCS;
+};
+```
+
+### Character Struct
+
+```C
+#define STATE_DEAD (1<<1)
+#define STATE_FAINTED (1<<2)
+
+struct Character{
+    struct Stats baseStats;
+    struct Stats stats;
+
+    int maxhp, maxe, maxse;
+    int hp, e, se;
+    unsigned int state = 0;
+
+    size_t passivePowerCount;
+    struct PassivePower* passivePowers;
+
+    size_t eventerCount;
+    struct Eventer* eventers;
+
+    struct List effects; // server needs to change effects fastly
+};
+```
+
+### Effect Struct and Rules of Effects
 
 
+```C
+#define EFFECT_STATGIVER (1<<0)
+
+enum InvokeTimeType {INVOKE_ON_REORDER_TURN, INVOKE_ON_CHARACTER_TURN, INVOKE_EVERYTIME};
+
+struct Effect {
+    int time = 0; // if -1, effect is parmenent. else when time is 0, effect will be destroyed.
+    unsigned int effectSpecs = 0; // for example effectSpecs = EFFECT_STATGIVER | ... for Stat Givers
+
+    struct Stats givenStats;
+
+    enum InvokeTimeType invokeTimeType;
+    struct Character character;
+    void (*executer)(struct World*, struct Character* entity);
+};
+```
+
+Effects will do something again and again by the turn.
+
+Some effects may give additional stats to the character, temporarely. These effects are
+Stat Giver Effects. When a Stat Giver Effect adden to or removed from a character, ```stats```
+variable will be calculated again.
+
+### Eventer Struct
+
+```C
+enum EventerType {
+    TYPE_CLASSIC, TYPE_FASTMAGIC, TYPE_FASTCOMBAT
+};
+
+enum TargetType {
+    TYPE_TARGET, TYPE_AREA, TYPE_POSITION;
+};
+
+struct Eventer{
+    int energy; int spellEnergy;
+    enum EventerType eventer_type;
+    enum TargetType target_type;
+    void (*executer)(struct World*, struct Character*, void* target);
+};
+
+struct EventerTypes{
+    size_t count;
+    enum EventerType* types;
+};
+
+```
