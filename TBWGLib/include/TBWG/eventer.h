@@ -15,5 +15,5 @@ struct Eventer {
 	digits32 eventer_type, target_type;
 
 	void (*executer)(void* eventer, struct World*, struct Character*, void* target);
-	void (*notChoosed)(void* eventer);
+	void (*notChoosed)(void* eventer, struct World*, struct Character*);
 };
