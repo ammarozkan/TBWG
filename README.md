@@ -1,7 +1,8 @@
 ### Explanation
 
-This game is created to battle with a lot of creative powers.
+This game rule standard is created to battle with a lot of creative powers.
 
+# TBWG 1
 
 # Game Logic
 
@@ -273,13 +274,32 @@ struct ListElementHeader {
 struct List {
     struct ListElementHeader* firstelement;
     struct ListElementHeader* lastelement;
+    unsigned int count = 0;
 };
 
-#define ITERATE(list) for(struct ListElement* elm = list.firstelement; elm != NULL, elm = elm->next)
+#define ITERATE(list, asthis) for(struct ListElementHeader* asthis = list.firstelement; asthis != NULL, asthis = asthis->next)
 
-void addElement(struct ListElementHeader* list, void* element);
+struct List createList();
 
-void removeElement(struct ListElementHeader* list, void* element); // we don't need the list actually.
+void addElement(struct List* list, struct ListElementHeader* element);
+
+void removeElement(struct List* list, struct ListElementHeader* element); // we don't need the list actually.
+```
+
+### Identification Numbers
+
+```C
+typedef uint32_t id_number;
+
+id_number getID();
+
+
+
+id_number getID()
+{
+    static id_number id = 5;
+    return id++;
+}
 ```
 
 ## Server
@@ -342,13 +362,15 @@ Now Character's Turn Queue Structure Definition:
 
 
 ```C
-struct QueueCharacterTurn{
-    struct QueueElementHeader header = {.type = QUEUE_CHARACTER};
+#define CHARACTER_REQ_ALIVE = (1<<1)
 
-    struct EventerTypes allowedEventers;
-    struct Character* character;
+struct QueueCharacterTurn {
+	struct QueueElementHeader header = {.type = QUEUE_CHARACTER};
 
-    int characterShouldBeAlive;
+	digits32 allowedEventerTypes;
+	struct Character* character;
+
+	digits32 requirements;
 };
 ```
 
@@ -376,7 +398,7 @@ a function that gets timed effect's variable.
 
 ```C
 struct QueueTimedTurn{
-    struct QueueElementHeader header = {.type = QUEUE_ENTITY};
+    struct QueueElementHeader header = {.type = QUEUE_TIMED};
 
     struct TimedEffect* effect;
     void (*executer)(struct World*, struct TimedEffect* effect);
@@ -412,21 +434,19 @@ Effect Struct is a reference struct to effects. Every effect
 shall follow these kind of header.
 
 ```C
-#define EFFECT_STATGIVER (1<<0)
-#define EFFECT_INVISIBLE (1<<1) // an invisible effect can't be detected
-
-enum InvokeTimeType {INVOKE_ON_REORDER_TURN, INVOKE_ON_CHARACTER_TURN, INVOKE_EVERYTIME};
-
 struct Effect {
-    unsigned int ID;
-    int time = 0; // if -1, effect is parmenent. else when time is 0, effect will be destroyed.
-    unsigned int effectSpecs = 0; // for example effectSpecs = EFFECT_STATGIVER | ... for Stat Givers
+	unsigned int ID;
 
-    struct Stats givenStats;
+	int time = 0; // if -1, effect is parmenent. else when time is 0, effect will be destroyed.
 
-    enum InvokeTimeType invokeTimeType;
-    struct Character character;
-    void (*executer)(void* effectptr, struct World*, struct Character* entity);
+	digits32 effectSpecs = 0; // for example effectSpecs = EFFECT_STATGIVER | ... for Stat Givers
+
+	struct Stats givenStats;
+
+	digits32 invokeTimeType;
+
+	struct Character* character;
+	void (*executer)(void* effectptr, struct World*, struct Character* entity);
 };
 ```
 
@@ -468,25 +488,23 @@ shall follow these kind of header. So a custom eventer can be
 defined just like custom effects.
 
 ```C
-enum EventerType {
-    TYPE_CLASSIC, TYPE_FASTMAGIC, TYPE_FASTCOMBAT
-};
 
-enum TargetType {
-    TYPE_TARGET, TYPE_AREA, TYPE_POSITION;
-};
+#define EVENTER_CLASSIC (1<<0)
+#define EVENTER_FASTMAGIC (1<<1)
+#define EVENTER_FASTCOMBAT (1<<2)
+
+#define TARGET_ONE (1<<0)
+#define TARGET_AREA (1<<1)
+#define TARGET_POSITION (1<<2)
 
 struct Eventer{
     unsigned int ID;
     int energy; int spellEnergy;
-    enum EventerType eventer_type;
-    enum TargetType target_type;
+    digits32 eventer_type;
+    digits32 target_type;
     void (*executer)(void* eventer, struct World*, struct Character*, void* target);
-};
-
-struct EventerTypes{
-    size_t count;
-    enum EventerType* types;
+    void (*notChoosed)(void* eventer); // if an eventer needs focus for couple of times, not choosing it
+                                       // should be able to break the focus.
 };
 ```
 
@@ -500,50 +518,18 @@ struct Attackinfo;
 typedef int (*hitterFunction)(struct Character* self, struct Character* hitter, struct AttackInfo);
 // hit functions should report whether the attack hitted or not
 
-#define ATTACK_NONDODGEABLE (1<<1)
+#define ATTACK_NONDODGEABLE (1<<0)
 
+#define DAMAGE_BLUDGEONING 0x01
 
-enum DamageType {
-    DAMAGE_BLUDGEONING
-};
+struct AttackInfo {
+	struct Stats additiveStats;
+	unsigned int specs;
 
-
-struct AttackInfo{
-    struct Stats additiveStats;
-    unsigned int specs = 0;
-
-    enum DamageType damageType;
-    int damage;
+	enum DamageType damageType;
+	int damage;
 };
 ```
-
-
-### Controller Communicator
-Detailed informations about environment and other characters shall
-pass from the perspective of a character to a communicator.
-
-#### World Information
-
-This information contains the world information that the character
-can see. World information is the only required informations to
-see or hear somethings.
-
-```C
-struct WorldInformation{
-
-
-};
-```
-
-```C
-typedef void (*ControllerCommunicator)(struct Character* character, struct World* world);
-```
-
-But this definition will not allow to mind controlling stuff that effects the
-seeing of a character. For that, firstly the power needs to edit the communicator
-function. Secondly, the communicator function somehow needs to find that its a
-character's mind control function. And we need to somehow automatically change this
-to default when a mind controller character passes out.
 
 
 ### Character Struct
@@ -555,8 +541,13 @@ to default when a mind controller character passes out.
 struct Character;
 struct AttackInfo;
 
+#define CHARACTER_DEFAULT 0x00
+#define CHARACTER_DIO 0x01
+#define CHARACTER_PAIN_DEVA 0x02
+
 struct Character{
-    unsigned int ID;
+    unsigned int characterCode = CHARACTER_DEFAULT; // for determining the look
+    id_number ID;
 
     int x,y;
 
@@ -578,9 +569,202 @@ struct Character{
     hitterFunction headHit, bodyHit, armHit, legHit;
 
 
-    ControllerCommunicator controllerCom;
+    ControllerInterface* controllerInterface;
 };
 ```
 
 Every hit function should have a controlling segment that an attack is succesfull or not.
 If the hit succesfully done, the hit functions should notify the server system.
+
+
+
+
+### Observing Information
+
+This information contains the world information that the character
+can see. World information is the only required informations to
+see or hear somethings.
+
+```C
+struct CharacterInformation {
+	id_number ID;
+	unsigned int characterCode;
+	int x,y;
+	int hp;
+	float dirx,diry;
+};
+
+struct EntityInformation{
+    id_number ID;
+    unsigned int entityCode;
+    int x,y;
+    float dirx,diry;
+};
+
+struct ObservingInformation{
+    id_number selfid;
+
+    struct Stats characterStats;
+    int hp, maxhp;
+    int e, maxe;
+    int se, maxse;
+    unsigned int state;
+
+    struct List effects;
+
+    size_t eventerCount;
+    struct Eventer* eventers;
+
+
+    size_t characterCount;
+    struct CharacterInformation* charInfos;
+
+    size_t entityCount;
+    struct EntityInformation* entityInfos;
+};
+
+struct ObservingInformation observe(struct Character* as, struct World* world);
+```
+
+
+
+### Controllers and Communications
+
+
+#### Controller Communicating System (CCS)
+
+Server should listen to the invoking client connection requests all the time.
+When a client wants to join, server needs to accept it and then ask it which character
+to choose in server. If there's no empty characters, controller should be able to
+join as a new character aswell.
+
+```C
+struct Controller {
+    int socket_fd;
+    char* nickname;
+};
+
+struct ControllerCommunicatingSystem {
+    struct List controllers;
+} CCS;
+```
+
+##### Requests and Responses
+
+```C
+enum RequestType = {REQUEST_NONE, REQUEST_OBSERVE, REQUEST_SENDMESSAGE, REQUEST_EVENTER};
+enum ResponseType = {RESPONSE_MESSAGE, RESPONSE_OBSERVE, RESPONSE_EVENTER};
+
+struct RequestHeader {
+    enum RequestType type;
+};
+
+
+struct ObserveRequest{
+    struct RequestHeader header = {.type = REQUEST_OBSERVE};
+};
+
+struct SendMessageRequest{
+    struct RequestHeader header = {.type = REQUEST_SENDMESSAGE};
+
+    size_t messageSize;
+    char* message;
+
+    unsigned int aswho; // 0 if nickname, else that id numbered character
+};
+
+struct EventerRequest{
+};
+
+
+struct ResponseHeader{
+    enum ResponseType type;
+};
+
+struct MessageResponse {
+    struct ResponseHeader header = {.type = RESPONSE_MESSAGE};
+
+    size_t messageSize;
+    char* message;
+
+    unsigned int aswho; // 0 if nickname, else that id numbered character
+};
+
+struct ObserveResponse {
+    struct ResponseHeader header = {.type = RESPONSE_OBSERVE};
+
+    struct ObservingInformation observingInformation;
+};
+
+struct EventerResponse{};
+
+
+struct RequestHeader* receiveRequest(struct Controller controller);
+struct ResponseHeader* receiveResponse(struct Controller controller);
+void sendResponse(struct Controller controller, struct ResponseHeader* response);
+void sendRequest(struct Controller controller, struct RequestHeader* request);
+```
+
+
+#### Controller Interface
+
+Detailed informations about environment and other characters shall
+pass from the perspective of a character to a communicator.
+
+```C
+struct ControllerInterface;
+
+typedef void (*ControllerObserve)(struct Character* character, struct ObservingInformation* worldInfo);
+// and all the other eventer etc. things here please
+
+struct ControllerInterface {
+    struct Controller* controller;
+    ControllerObserve observer;
+};
+
+void sendObservationToController(struct ControllerInterface*, struct ObservingInformation worldInfo);
+
+struct ControllerInterface getDefaultControllerInterface(struct Controller* controller);
+```
+
+##### Custom Interface Example
+
+This example will create a mind playing power's communicator that doesn't gives any information
+(making the character feelingless) to controller.
+
+```C
+struct GenjutsuInterface{
+    struct ControllerInterface interface;
+
+    struct Character* caster;
+};
+
+
+void inGenjutsuObserver(struct Character* character, struct ObservingInformation* world)
+{
+    struct GenjutsuInterface* interface = character->controllerInterface;
+    if(interface->caster->state & (STATE_DEAD | STATE_FAINTED)) {
+        free(character->controllerInterface);
+        character->controllerInterface = getDefaultControllerInterface();
+        character->controllerInterface->observer(character, world);
+    } else {
+        struct ObservingInformation worldInfo = {.characterCount = 0,
+                                .charInfos = malloc(0),
+                                entityCount = 0,
+                                .entityInfos = malloc(0)};
+        sendObservationToController(interface, worldInfo);
+        free(worldInfo.charInfos);
+        free(worldInfo.entityInfos);
+    }
+}
+
+struct ControllerInterface* getGenjutsuInterface(struct Character* caster)
+{
+    struct GenjutsuInterface* interface = malloc(sizeof(struct GenjutsuInterface));
+    interface->interface.observer = inGenjutsuObserver;
+    interface->caster = caster;
+    return (struct ControllerInterface*)interface;
+}
+```
+
+
