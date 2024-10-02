@@ -434,12 +434,24 @@ Effect Struct is a reference struct to effects. Every effect
 shall follow these kind of header.
 
 ```C
+#define EFFECT_STATGIVER (1<<0)
+#define EFFECT_INVISIBLE (1<<1)
+
+#define INVOKE_ON_REORDER (1<<0)
+#define INVOKE_ON_CHARACTERTURN (1<<1)
+
+#define EFFECTOR_PLAYER 0x1
+#define EFFECTOR_DIMENSION 0x2
+
 struct Effect {
 	unsigned int ID;
+	uint8_t effectorType;
+	uint32_t effector; // player id if type is EFFECTOR_PLAYER, effector th dimension if
+                    // EFFECTOR_DIMENSION is choosen
 
-	int time = 0; // if -1, effect is parmenent. else when time is 0, effect will be destroyed.
+	int time;
 
-	digits32 effectSpecs = 0; // for example effectSpecs = EFFECT_STATGIVER | ... for Stat Givers
+	digits32 effectSpecs;
 
 	struct Stats givenStats;
 
@@ -450,7 +462,10 @@ struct Effect {
 };
 ```
 
-Example of a custom effect:
+When a character is exiting from a dimension, server should search the dimension invoked
+effects and remove them.
+
+#### Example of a custom effect:
 
 ```C
 // I want to create a three sectioned effect that does different things on each one.
@@ -503,7 +518,7 @@ struct Eventer{
     digits32 eventer_type;
     digits32 target_type;
     void (*executer)(void* eventer, struct World*, struct Character*, void* target);
-    void (*notChoosed)(void* eventer); // if an eventer needs focus for couple of times, not choosing it
+    void (*notChoosed)(void* eventer, struct World*, struct Character*);// if an eventer needs focus for couple of times, not choosing it
                                        // should be able to break the focus.
 };
 ```
@@ -576,6 +591,15 @@ struct Character{
 Every hit function should have a controlling segment that an attack is succesfull or not.
 If the hit succesfully done, the hit functions should notify the server system.
 
+
+### Dimensions
+
+World has dimensions in it. In example Sasuke from Naruto anime/manga series can do dimension
+travels or Funny Valentine from JoJo's Bizzare Adventure can travel parallel universes. So,
+a dimension system is required for these types of powers. Some dimensions could do some
+effects to the characters. In example in some dimensions, the air could be so heavy to breath
+and that could make all the players to deacrease the energy regeneration or constantly deacreasing
+it.
 
 
 
@@ -714,7 +738,7 @@ pass from the perspective of a character to a communicator.
 ```C
 struct ControllerInterface;
 
-typedef void (*ControllerObserve)(struct Character* character, struct ObservingInformation* worldInfo);
+typedef void (*ControllerObserve)(struct ControllerInterface*, struct ObservingInformation*);
 // and all the other eventer etc. things here please
 
 struct ControllerInterface {
@@ -722,7 +746,7 @@ struct ControllerInterface {
     ControllerObserve observer;
 };
 
-void sendObservationToController(struct ControllerInterface*, struct ObservingInformation worldInfo);
+void sendObservationToController(struct ControllerInterface*, struct ObservingInformation obsInfo);
 
 struct ControllerInterface getDefaultControllerInterface(struct Controller* controller);
 ```
