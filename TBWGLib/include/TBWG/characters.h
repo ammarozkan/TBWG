@@ -1,20 +1,22 @@
-#include <TBWG/essentials.h>
+#ifndef TBWG_CHARACTERS_H
+#define TBWG_CHARACTERS_H
 
-struct Stats {
-	int STR, DEX, CNS, WIS, SCS:
-};
+#include <TBWG/essentials.h>
+#include <TBWG/attacks.h>
+#include <TBWG/controllerInterface.h>
+#include <TBWG/stats.h>
+#include <TBWG/queue.h>
 
 
 #define STATE_DEAD (1<<1)
 #define STATE_FAINTED (1<<2)
 
-struct Character;
-struct AttackInfo;
-
 #define CHARACTER_DEFAULT 0x00
 
 struct Character {
-	unsigned int characterCode = CHARACTER_DEFAULT;
+	TBWGType tbwgType;
+
+	unsigned int characterCode;
 	id_number ID;
 
 	int x,y;
@@ -34,7 +36,14 @@ struct Character {
 
 	struct List effects;
 
-	hitterFunction headHit, bodyHit, armHit, legHit;
+	struct Queue baseQueue;
 
-	ControllerInterface* controllerInterface;
+	HitterFunction headHit, bodyHit, armHit, legHit;
+
+	struct ControllerInterface* controllerInterface;
 };
+
+struct Character* createDefaultCharacter();
+void destroyCharacter(struct Character*);
+
+#endif /*TBWG_CHARACTERS_H*/

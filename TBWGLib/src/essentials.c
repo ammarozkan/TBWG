@@ -8,17 +8,25 @@ struct List createList()
 	return result;
 }
 
-void addElement(struct List* list, struct ListElementHeader* element)
+void addElement(struct List* list, void* elm)
 {
+	struct ListElementHeader* element = (struct ListElementHeader*)elm;
+
+
+	if (list->firstelement == NULL) list->firstelement = element;
+	
 	if(list->lastelement != NULL) list->lastelement->next = element;
-	else list->firstelement = element;
+
 	element->prior = list->lastelement;
 	list->lastelement = element;
 	list->count += 1;
 }
 
-void removeElement(struct List* list, struct ListElementHeader* element)
+
+void* popElement(struct List* list, void* elm)
 {
+	struct ListElementHeader* element = (struct ListElementHeader*)elm;
+
 	if(element->next == NULL) {
 		list->lastelement = element->prior;
 	} else {
@@ -32,7 +40,13 @@ void removeElement(struct List* list, struct ListElementHeader* element)
 	}
 
 	list->count += 1;
-	free(element);
+	return element;
+}
+
+
+void removeElement(struct List* list, void* elm)
+{
+	free(popElement(list, elm));
 }
 
 

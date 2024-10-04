@@ -12,7 +12,7 @@
 struct Effect {
 	unsigned int ID;
 	uint8_t effectorType;
-	uint32_t effector; // player-
+	id_number effectorId; // player-
 
 	int time;
 

@@ -1,4 +1,8 @@
+#ifndef TBWG_OBSERVATION_H
+#define TBWG_OBSERVATION_H
+
 #include <TBWG/essentials.h>
+#include <TBWG/world.h>
 
 struct CharacterInformation {
 	id_number ID;
@@ -38,3 +42,5 @@ struct ObservingInformation{
 };
 
 struct ObservingInformation observe(struct Character* as, struct World* world);
+
+#endif /*TBWG_OBSERVATION_H*/

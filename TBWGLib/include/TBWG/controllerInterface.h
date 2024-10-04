@@ -1,4 +1,7 @@
-#include <TBWG/CCS.h>
+#ifndef TBWG_CONTROLLERINTERFACE_H
+#define TBWG_CONTROLLERINTERFACE_H
+
+#include <TBWG/ccs.h>
 
 struct ControllerInterface;
 
@@ -13,3 +16,5 @@ struct ControllerInterface {
 void sendObservationToController(struct ControllerInterface*, struct ObservingInformation obsInfo);
 
 struct ControllerInterface getDefaultControllerInterface(struct Controller* controller);
+
+#endif /*TBWG_CONTROLLERINTERFACE_H*/
