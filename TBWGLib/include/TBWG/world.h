@@ -33,4 +33,12 @@ struct World {
 
 struct World createDefaultWorld();
 
+
+struct Character* dimensionGetCharacterByPosition(struct Dimension* dimension, int x, int y);
+
+#define GET_CHARACTER_LIST_FROM_DIMENSION(dimension) ((struct DimensionListElement*)dimension)->dimension->characterList
+
+#define ITERATE_ALL_CHARACTERS_IN_WORLD(world, charlistelm, dimension) ITERATE(world.dimensionList, dimension) \
+	ITERATE(GET_CHARACTER_LIST_FROM_DIMENSION(dimension),charlistelm) 
+
 #endif /*TBWG_WORLD_H*/

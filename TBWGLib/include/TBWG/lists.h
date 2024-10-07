@@ -16,9 +16,10 @@ struct List {
 #define ITERATE(list, asthis) for (struct ListElementHeader* asthis = (struct ListElementHeader*)list.firstelement; asthis != NULL; asthis = asthis->next)
 #define ITERATE_(list, asthis, type, next) for (type* asthis = (type*)list.firstelement; asthis != NULL; asthis = asthis next)
 
-void addElement(struct List* list, void* element);
+void addElement(struct List* list, void* element, long unsigned int size);
 void removeElement(struct List* list, void* element);
 void* popElement(struct List* list, void* element);
 struct List createList();
+int listIsEmpty(struct List* list);
 
 #endif /*TBWG_LISTS_H*/

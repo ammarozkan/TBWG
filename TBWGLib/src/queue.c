@@ -12,9 +12,14 @@ createQueue()
 }
 
 void
-addTurnToQueue(struct Queue* queue, struct QueueElementHeader* turn)
+queueAddTurn(struct Queue* queue, struct QueueElementHeader* turn)
 {
-	addElement(&(queue->queueElements), (void*)turn);
+	unsigned long int turnSize = 0;
+	if(turn->type == QUEUE_CHARACTER) turnSize = sizeof(struct QueueCharacterTurn);
+	else if(turn->type == QUEUE_ENTITY) turnSize = sizeof(struct QueueEntityTurn);
+	else if(turn->type == QUEUE_TIMED) turnSize = sizeof(struct QueueTimedTurn);
+	else if(turn->type == QUEUE_REORDER) turnSize = sizeof(struct QueueReorderTurn);
+	addElement(&(queue->queueElements), (void*)turn, turnSize);
 }
 
 struct QueueElementHeader* 
@@ -27,11 +32,17 @@ queuePop(struct Queue* queue)
 	return (struct QueueElementHeader*)result;
 }
 
+int
+queueIsEmpty(struct Queue* queue)
+{
+	return listIsEmpty(&(queue->queueElements));
+}
+
 
 void mergeBaseQueue(struct Queue* targetQueue, struct Queue* baseQueue)
 {
 	ITERATE(baseQueue->queueElements, turn) {
-		addElement(&(targetQueue->queueElements), (void*)turn);
+		queueAddTurn(targetQueue, (struct QueueElementHeader*)turn);
 	}
 }
 

@@ -1,20 +1,23 @@
 #ifndef TBWG_CONTROLLERINTERFACE_H
 #define TBWG_CONTROLLERINTERFACE_H
 
-#include <TBWG/ccs.h>
+#include <TBWG/observation.h>
 
 struct ControllerInterface;
 
-typedef void (*ControllerObserve)(struct ControllerInterface*, struct ObservingInformation*);
+typedef void (*ControllerObserve)(struct ControllerInterface*, struct ObservingInformation);
 // and all the other eventer etc. things here please
 
+typedef struct EventerChoose (*ControllerChooseEventer)(struct ControllerInterface*, digits32 allowedEventerTypes, 
+    size_t eventerCount, struct Eventer* eventers);
+
 struct ControllerInterface {
-    struct Controller* controller;
     ControllerObserve observer;
+    ControllerChooseEventer chooseEventer;
 };
 
-void sendObservationToController(struct ControllerInterface*, struct ObservingInformation obsInfo);
+struct ControllerInterface* getDefaultControllerInterface();
 
-struct ControllerInterface getDefaultControllerInterface(struct Controller* controller);
+struct ControllerInterface* getstdioControllerInterface();
 
 #endif /*TBWG_CONTROLLERINTERFACE_H*/

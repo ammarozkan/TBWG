@@ -3,6 +3,7 @@
 
 #include <TBWG/essentials.h>
 #include <TBWG/world.h>
+#include <TBWG/stats.h>
 
 struct CharacterInformation {
 	id_number ID;
@@ -12,21 +13,19 @@ struct CharacterInformation {
 	float dirx,diry;
 };
 
-struct EntityInformation{
+struct EntityInformation {
     id_number ID;
     unsigned int entityCode;
     int x,y;
     float dirx,diry;
 };
 
-struct ObservingInformation{
+struct ObservingInformation {
     id_number selfid;
 
     struct Stats characterStats;
-    int hp, maxhp;
-    int e, maxe;
-    int se, maxse;
-    unsigned int state;
+    iValue hp, e, se;
+    digits32 state;
 
     struct List effects;
 
@@ -41,6 +40,10 @@ struct ObservingInformation{
     struct EntityInformation* entityInfos;
 };
 
-struct ObservingInformation observe(struct Character* as, struct World* world);
+typedef int (*SeeCharacter)(struct Character* observer, struct Character* target);
+
+struct ObservingInformation Observe(struct Character* as, struct World* world);
+
+int defaultSeeCharacter(struct Character* observer, struct Character* target);
 
 #endif /*TBWG_OBSERVATION_H*/

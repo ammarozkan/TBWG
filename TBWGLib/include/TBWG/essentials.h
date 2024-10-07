@@ -15,4 +15,12 @@ id_number getID();
 
 typedef uint8_t TBWGType;
 
+void tbwgmemcpy(void* dest, void* source, long unsigned int size);
+
+struct iLimitedValue {
+	int value, max;
+};
+
+typedef struct iLimitedValue iValue;
+
 #endif

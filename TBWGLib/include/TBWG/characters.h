@@ -6,6 +6,12 @@
 #include <TBWG/controllerInterface.h>
 #include <TBWG/stats.h>
 #include <TBWG/queue.h>
+#include <TBWG/observation.h>
+
+
+struct Physiology {
+	iValue hp, e, se;
+};
 
 
 #define STATE_DEAD (1<<1)
@@ -19,14 +25,13 @@ struct Character {
 	unsigned int characterCode;
 	id_number ID;
 
-	int x,y;
+	int x,y; struct Dimension* dimension;
 
 	struct Stats baseStats;
 	struct Stats stats;
 
-	int maxhp, maxe, maxse;
-	int hp, e, se;
-	unsigned int state;
+	iValue hp, e, se;
+	digits32 state;
 
 	size_t passivePowerCount;
 	struct PassivePower* passivePowers;
@@ -43,7 +48,7 @@ struct Character {
 	struct ControllerInterface* controllerInterface;
 };
 
-struct Character* createDefaultCharacter();
+struct Character* createDefaultCharacter(struct Dimension* dimension);
 void destroyCharacter(struct Character*);
 
 #endif /*TBWG_CHARACTERS_H*/

@@ -50,12 +50,12 @@ struct QueueEntityTurn {
 };
 
 struct Queue createQueue();
-void addTurnToQueue(struct Queue*, struct QueueElementHeader*);
+void queueAddTurn(struct Queue*, struct QueueElementHeader*);
 
 struct QueueElementHeader* queuePop(struct Queue* queue);
 void mergeBaseQueue(struct Queue* targetQueue, struct Queue* baseQueue);
 
-
+int queueIsEmpty(struct Queue* queue);
 
 
 #endif /*TBWG_QUEUE_H*/

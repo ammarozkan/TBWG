@@ -8,7 +8,12 @@ struct tbwgdata {
 
 
 struct tbwgdata tbwgInit();
+void tbwgUse(struct tbwgdata* data);
 
-void tbwgReorder(struct tbwgdata* data);
+void tbwgTurn();
+void tbwgReorder();
 
-void tbwgAddCharacter(struct tbwgdata* data, struct Character* character);
+int tbwgAddCharacter(struct Character* character);
+struct Dimension* tbwgGetFirstDimension();
+struct Dimension* tbwgFindDimensionByPos(unsigned int pos);
+struct Dimension* tbwgFindDimensionByID(id_number ID);
