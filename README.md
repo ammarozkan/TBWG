@@ -446,7 +446,7 @@ shall follow these kind of header.
 struct Effect {
 	unsigned int ID;
 	uint8_t effectorType;
-	uint32_t effector; // player id if type is EFFECTOR_PLAYER, effector th dimension if
+	id_number effectorId; // player id if type is EFFECTOR_PLAYER, effector th dimension if
                     // EFFECTOR_DIMENSION is choosen
 
 	int time;
@@ -512,13 +512,17 @@ defined just like custom effects.
 #define TARGET_AREA (1<<1)
 #define TARGET_POSITION (1<<2)
 
-struct Eventer{
-    unsigned int ID;
-    int energy; int spellEnergy;
-    digits32 eventer_type;
-    digits32 target_type;
-    void (*executer)(void* eventer, struct World*, struct Character*, void* target);
-    void (*notChoosed)(void* eventer, struct World*, struct Character*);// if an eventer needs focus for couple of times, not choosing it
+
+struct Eventer {
+	unsigned int eventerCode;
+	id_number ID;
+
+	int energy, spellEnergy;
+	digits32 eventer_type, target_type;
+
+	void (*executer)(void* eventer, struct World*, struct Character*, void* target, struct Tool* tool);
+	int (*canCast)(void* eventer, struct Character*);
+	void (*notChoosed)(void* eventer, struct World*, struct Character*);// if an eventer needs focus for couple of times, not choosing it
                                        // should be able to break the focus.
 };
 ```
@@ -530,7 +534,7 @@ Attacks should send an info about the attack when tries to hit.
 ```C
 struct Attackinfo;
 
-typedef int (*hitterFunction)(struct Character* self, struct Character* hitter, struct AttackInfo);
+typedef int (*HitterFunction)(void* hitting, struct Character* hitter, struct AttackInfo);
 // hit functions should report whether the attack hitted or not
 
 #define ATTACK_NONDODGEABLE (1<<0)
@@ -581,7 +585,7 @@ struct Character{
 
     struct List effects; // server needs to change effects fastly
 
-    hitterFunction headHit, bodyHit, armHit, legHit;
+    HitterFunction headHit, bodyHit, armHit, legHit;
 
 
     ControllerInterface* controllerInterface;
@@ -600,6 +604,44 @@ a dimension system is required for these types of powers. Some dimensions could 
 effects to the characters. In example in some dimensions, the air could be so heavy to breath
 and that could make all the players to deacrease the energy regeneration or constantly deacreasing
 it.
+
+```C
+struct CharacterListElement {
+	struct ListElementHeader header;
+	struct Character* character;
+};
+
+struct EntityListElement {
+	struct ListElementHeader header;
+	struct Entity* entity;
+};
+
+struct AreaListElement {
+	struct ListElementHeader header;
+	struct Area* entity;
+};
+
+struct Dimension {
+	id_number ID;
+	struct List characterList;
+	struct List entityList;
+	struct List Areas;
+};
+```
+
+### Effect Areas
+
+```C
+struct Area {
+    int x1, y1, x2, y2;
+
+    void (*whenEntered)(struct Area*, struct Character* enterer);
+    void (*whenExited)(struct Area*, struct Character* exiter);
+    void (*whileInside)(struct Area*, struct Character* insider);
+};
+```
+
+Are
 
 
 
@@ -649,6 +691,9 @@ struct ObservingInformation{
 
 struct ObservingInformation observe(struct Character* as, struct World* world);
 ```
+
+
+
 
 
 
@@ -790,5 +835,26 @@ struct ControllerInterface* getGenjutsuInterface(struct Character* caster)
     return (struct ControllerInterface*)interface;
 }
 ```
+
+### TBWG Manager
+
+All the game properties that explained above for server is designed to work with
+TBWG Manager. This is the thing that manages all the game logic.
+
+```C
+
+struct tbwgdata {
+	struct Queue queue;
+	struct World world;
+};
+
+
+struct tbwgdata tbwgInit();
+
+```
+
+When the game starts, TBWG Manager should be inited.
+
+
 
 
