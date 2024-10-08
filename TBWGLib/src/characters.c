@@ -2,7 +2,7 @@
 #include <TBWG/eventer.h>
 #include <stdlib.h> // malloc
 
-struct Stats defaultStats = {0, 0, 0, 0, 0};
+struct Stats defaultStats = {0, 0, 0, 0, 0, 2.8f};
 
 //typedef int (*HitterFunction)(void* hitting, struct Character* hitter, struct AttackInfo);
 
@@ -35,6 +35,9 @@ struct Character* createDefaultCharacter(struct Dimension* dimension)
 	character->x = 0;
 	character->y = 0;
 
+	character->dirx = 1.0f;
+	character->diry = 0.0f;
+
 	character->dimension = dimension;
 
 	character->baseStats = defaultStats;
@@ -63,22 +66,21 @@ struct Character* createDefaultCharacter(struct Dimension* dimension)
 	character->baseQueue = createQueue();
 
 	struct QueueCharacterTurn* defaultCharTurn = malloc(sizeof(struct QueueCharacterTurn));
-	defaultCharTurn->header.type = QUEUE_CHARACTER;
-	defaultCharTurn->allowedEventerTypes = 0b11111111111;
+	(*defaultCharTurn) = getBasicCharacterTurn();
 	defaultCharTurn->character = character;
-	defaultCharTurn->requirements = CHARACTER_REQ_ALIVE | 0b0;
 	queueAddTurn(&(character->baseQueue), (struct QueueElementHeader*)defaultCharTurn);
-
 
 	character->headHit = character->bodyHit = character->armHit = character->legHit = characterDefaultHit;
 
 	character->controllerInterface = getstdioControllerInterface();
 
-
 	return character;
 }
 
-
+int defaultSeeCharacter(struct Character* observer, struct Character* target)
+{
+	return target->canSeen(observer, target);
+}
 
 void destroyCharacter(struct Character* chr)
 {

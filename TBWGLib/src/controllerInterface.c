@@ -7,10 +7,10 @@ void defaultControllerObserve(struct ControllerInterface*, struct ObservingInfor
 }
 
 
-struct EventerChoose defaultControllerChooseEventer(struct ControllerInterface*, digits32 allowedEventerTypes, 
+struct TurnPlay defaultControllerChooseEventer(struct ControllerInterface*, digits32 allowedEventerTypes, 
     size_t eventerCount, struct Eventer* eventers)
 {
-	struct EventerChoose result = {0, NULL};
+	struct TurnPlay result = {0, NULL};
 	return result;
 }
 
@@ -35,17 +35,22 @@ void stdioControllerObserve(struct ControllerInterface*, struct ObservingInforma
 }
 
 
-struct EventerChoose stdioControllerChooseEventer(struct ControllerInterface*, digits32 allowedEventerTypes, 
+struct TurnPlay stdioControllerChooseEventer(struct ControllerInterface*, digits32 allowedEventerTypes, 
     size_t eventerCount, struct Eventer* eventers)
 {
-	struct EventerChoose result;
+	struct TurnPlay result;
 	printf("--Eventer Choosing--\n");
+	printf("e:End turn\n");
 	for(unsigned int i = 0 ; i < eventerCount ; i += 1) {
 		printf("%u:Eventer %u",i,eventers[i].eventerCode);
 		if (eventers[i].eventer_type & allowedEventerTypes == 0) printf(" (not allowed)");
 		printf(" with id %u\n",eventers[i].ID);
 	}
-	printf("choice:");scanf("%u",&result.eventer_th);
+
+	char choice[8];
+	printf("choice:");scanf("%s",choice);
+	result.eventer_th = atoi(choice);
+	printf("EVENT:%u\n",result.eventer_th);
 
 	if (eventers[result.eventer_th].target_type = TARGET_ONE) {
 		struct TargetPosition* target = malloc(sizeof(struct TargetPosition));

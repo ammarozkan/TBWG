@@ -65,8 +65,6 @@ TBWGType* tbwgFindBeingByPosition(unsigned int dimensionID)
 	}
 }
 
-
-
 void tbwgReorder()
 {
 	ITERATE(data->world.dimensionList, dimension) {
@@ -82,7 +80,7 @@ void tbwgReorder()
 void tbwgCharacterTurn(struct QueueCharacterTurn* turn)
 {
 	struct ControllerInterface* interface = turn->character->controllerInterface;
-	struct EventerChoose choose = interface->chooseEventer(interface, turn->allowedEventerTypes, turn->character->eventerCount, turn->character->eventers);
+	struct TurnPlay choose = interface->chooseEventer(interface, turn->allowedEventerTypes, turn->character->eventerCount, turn->character->eventers);
 
 	struct Character* character = turn->character;
 

@@ -41,9 +41,9 @@ struct ObservingInformation {
 };
 
 typedef int (*SeeCharacter)(struct Character* observer, struct Character* target);
+typedef int (*CanSeen)(struct Character* observer, struct Character* target);
 
 struct ObservingInformation Observe(struct Character* as, struct World* world);
 
-int defaultSeeCharacter(struct Character* observer, struct Character* target);
 
 #endif /*TBWG_OBSERVATION_H*/

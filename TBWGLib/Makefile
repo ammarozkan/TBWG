@@ -9,5 +9,5 @@ clean:
 
 test:
 	echo test starts!
-	gcc testmain.c -I include/ -L libs -ltbwg -o testout
+	gcc testmain.c -I include/ -L libs -ltbwg -lm -o testout
 	./testout

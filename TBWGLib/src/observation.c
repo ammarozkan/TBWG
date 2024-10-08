@@ -26,9 +26,3 @@ struct ObservingInformation Observe(struct Character* as, struct World* world)
 		struct Character* chr = ((struct CharacterListElement*)charlistelm)->character;
 	}
 }
-
-
-int defaultSeeCharacter(struct Character* observer, struct Character* target)
-{
-	
-}

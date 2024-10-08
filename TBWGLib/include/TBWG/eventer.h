@@ -1,3 +1,6 @@
+#ifndef TBWG_EVENTER_H
+#define TBWG_EVENTER_H
+
 #include <TBWG/essentials.h>
 #include <TBWG/tool.h>
 #include <TBWG/world.h>
@@ -13,12 +16,18 @@
 
 #define EVENTER_DEFAULT 0x00
 
+struct EventerUses {
+	unsigned int classic, fastmagic, fastcombat, thoughtmagic;
+};
+
 struct Eventer {
 	unsigned int eventerCode;
 	id_number ID;
 
 	int energy, spellEnergy;
 	digits32 eventer_type, target_type;
+	struct EventerUses costs;
+	int usedInThisTurn; // will be set to zero when turn is beginning newly.
 
 	void (*executer)(void* eventer, struct World*, struct Character*, 
 		void* target, struct Tool* tool);
@@ -39,9 +48,11 @@ struct TargetDirectedArea {
 	int dirx, diry;
 };
 
-struct EventerChoose {
+struct TurnPlay {
 	unsigned int eventer_th;
 	void* target; // if target is NULL, then choosing failed.
 };
 
 struct Eventer getDefaultPunchEventer();
+
+#endif

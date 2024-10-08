@@ -27,6 +27,8 @@ struct Character {
 
 	int x,y; struct Dimension* dimension;
 
+	float dirx, diry;
+
 	struct Stats baseStats;
 	struct Stats stats;
 
@@ -46,9 +48,15 @@ struct Character {
 	HitterFunction headHit, bodyHit, armHit, legHit;
 
 	struct ControllerInterface* controllerInterface;
+
+	SeeCharacter seeCharacter;
+	CanSeen canSeen;
 };
 
 struct Character* createDefaultCharacter(struct Dimension* dimension);
 void destroyCharacter(struct Character*);
+
+
+int defaultSeeCharacter(struct Character* observer, struct Character* target);
 
 #endif /*TBWG_CHARACTERS_H*/

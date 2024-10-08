@@ -5,6 +5,7 @@
 #include <TBWG/lists.h>
 #include <TBWG/tbwgmanager.h>
 #include <TBWG/characters.h>
+#include <TBWG/maths.h>
 
 struct CustomListElement {
 	struct ListElementHeader header;
@@ -17,8 +18,26 @@ struct CustomListElement getELM(char* name)
 	return result;
 }
 
+void getSpecTest(iVector tp, fVector dir)
+{
+	printf("Looking to (%i,%i) from (%i,%i) with direction (%f,%f):", tp.x, tp.y, 0,0, dir.x, dir.y);
+	printf("%i\n", isInVisionArea(dir, 2.8f, getiVector(0,0), tp) );
+}
+
+void getTest(iVector tp)
+{
+	printf("[UP] "); getSpecTest(tp, getfVector(0.0f,1.0f) );
+	printf("[RIGHT] "); getSpecTest(tp, getfVector(1.0f,0.0f) );
+}
+
 int main(int argc, char*argv[])
 {
+	printf("Testing look dir math 3.14f look angle.\n\n");
+	getTest(getiVector(10,0));
+	getTest(getiVector(28,2));
+	getTest(getiVector(-10,0));
+	printf("\n\n");
+
 	struct List list = createList();
 	struct CustomListElement cle = getELM("test1");
 	addElement(&list, &cle, sizeof(struct CustomListElement));

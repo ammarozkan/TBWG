@@ -4,6 +4,7 @@
 #include <TBWG/lists.h>
 #include <TBWG/essentials.h>
 #include <TBWG/world.h>
+#include <TBWG/eventer.h>
 
 enum QueueElementType {
 	QUEUE_CHARACTER, QUEUE_ENTITY, QUEUE_TIMED, QUEUE_REORDER
@@ -30,10 +31,16 @@ struct QueueCharacterTurn {
 	struct QueueElementHeader header;
 
 	digits32 allowedEventerTypes;
+	struct EventerUses costUses;
 	struct Character* character;
+
+	void (*whenInvoked)(struct QueueCharacterTurn*);
 
 	digits32 requirements;
 };
+
+struct QueueCharacterTurn getBasicCharacterTurn();
+void defaultCharacterTurnInvoke(struct QueueCharacterTurn*);
 
 struct QueueTimedTurn {
 	struct QueueElementHeader header;

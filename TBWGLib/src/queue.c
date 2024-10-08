@@ -39,6 +39,7 @@ queueIsEmpty(struct Queue* queue)
 }
 
 
+
 void mergeBaseQueue(struct Queue* targetQueue, struct Queue* baseQueue)
 {
 	ITERATE(baseQueue->queueElements, turn) {
@@ -46,3 +47,28 @@ void mergeBaseQueue(struct Queue* targetQueue, struct Queue* baseQueue)
 	}
 }
 
+
+
+
+void defaultCharacterTurnInvoke(struct QueueCharacterTurn*)
+{
+	return;
+}
+
+
+struct QueueCharacterTurn getBasicCharacterTurn()
+{
+	struct QueueCharacterTurn r;
+	r.header.listHeader.prior = NULL;
+	r.header.listHeader.next = NULL;
+	r.header.type = QUEUE_CHARACTER;
+	r.allowedEventerTypes = 0b1111111111;
+	r.costUses.classic = 1;
+	r.costUses.fastmagic = 0;
+	r.costUses.fastcombat = 0;
+	r.costUses.thoughtmagic = 0;
+	r.character = NULL;
+	r.whenInvoked = defaultCharacterTurnInvoke;
+	r.requirements = 0 | CHARACTER_REQ_ALIVE;
+	return r;
+}

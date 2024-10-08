@@ -21,6 +21,8 @@ struct Entity {
 	CollisionFunction collisionFunction;
 	
 	HitterFunction hit;
+	
+	CanSeen canSeen;
 };
 
 

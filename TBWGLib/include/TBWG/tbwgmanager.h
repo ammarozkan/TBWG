@@ -17,3 +17,5 @@ int tbwgAddCharacter(struct Character* character);
 struct Dimension* tbwgGetFirstDimension();
 struct Dimension* tbwgFindDimensionByPos(unsigned int pos);
 struct Dimension* tbwgFindDimensionByID(id_number ID);
+
+void interruptTurn(); // will be used when a stopper trap invoked

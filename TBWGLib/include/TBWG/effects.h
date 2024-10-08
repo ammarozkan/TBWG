@@ -24,4 +24,5 @@ struct Effect {
 
 	struct Character* character;
 	void (*executer)(void* effectptr, struct World*, struct Character* entity);
+	
 };
