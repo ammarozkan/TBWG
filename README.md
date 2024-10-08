@@ -423,8 +423,9 @@ struct QueueEntityTurn{
 This definition needed for explanation now on.
 
 ```C
-struct Stats{
-    int STR, DEX, CNS, WIS, SCS;
+struct Stats {
+	int STR, DEX, CNS, WIS, SCS;
+	float visionAngle; // in radians (maximum 2.8f for normal people (approximately) )
 };
 ```
 
@@ -564,37 +565,66 @@ struct AttackInfo;
 #define CHARACTER_DIO 0x01
 #define CHARACTER_PAIN_DEVA 0x02
 
-struct Character{
-    unsigned int characterCode = CHARACTER_DEFAULT; // for determining the look
-    id_number ID;
+struct Character {
+	TBWGType tbwgType;
 
-    int x,y;
+	unsigned int characterCode = CHARACTER_DEFAULT; // for determining the look
+	id_number ID;
 
-    struct Stats baseStats;
-    struct Stats stats;
+	int x,y; struct Dimension* dimension;
 
-    int maxhp, maxe, maxse;
-    int hp, e, se;
-    unsigned int state = 0;
+	float dirx, diry;
 
-    size_t passivePowerCount;
-    struct PassivePower* passivePowers;
+	struct Stats baseStats;
+	struct Stats stats;
 
-    size_t eventerCount;
-    struct Eventer* eventers;
+	iValue hp, e, se;
+	digits32 state;
 
-    struct List effects; // server needs to change effects fastly
+	size_t passivePowerCount;
+	struct PassivePower* passivePowers;
 
-    HitterFunction headHit, bodyHit, armHit, legHit;
+	size_t eventerCount;
+	struct Eventer* eventers;
 
+	struct List effects;
 
-    ControllerInterface* controllerInterface;
+	struct Queue baseQueue;
+
+	HitterFunction headHit, bodyHit, armHit, legHit;
+
+	struct ControllerInterface* controllerInterface;
+
+	SeeCharacter seeCharacter;
+	CanSeen canSeen;
 };
 ```
 
 Every hit function should have a controlling segment that an attack is succesfull or not.
 If the hit succesfully done, the hit functions should notify the server system.
 
+
+### Entities
+
+Rocks, rasenshrukien, Dio's knifes, Gojo's blue and red BAlLs... All these are required to
+be existed as entities.
+
+```C
+struct Entity {
+	TBWGType tbwgType;
+
+	digits32 entityCode;
+	int x,y;
+	float dirx, diry;
+	float mass;
+
+	CollisionFunction collisionFunction;
+
+	HitterFunction hit;
+
+	CanSeen canSeen;
+};
+```
 
 ### Dimensions
 
@@ -660,21 +690,19 @@ struct CharacterInformation {
 	float dirx,diry;
 };
 
-struct EntityInformation{
+struct EntityInformation {
     id_number ID;
     unsigned int entityCode;
     int x,y;
     float dirx,diry;
 };
 
-struct ObservingInformation{
+struct ObservingInformation {
     id_number selfid;
 
     struct Stats characterStats;
-    int hp, maxhp;
-    int e, maxe;
-    int se, maxse;
-    unsigned int state;
+    iValue hp, e, se;
+    digits32 state;
 
     struct List effects;
 
@@ -689,8 +717,16 @@ struct ObservingInformation{
     struct EntityInformation* entityInfos;
 };
 
-struct ObservingInformation observe(struct Character* as, struct World* world);
+typedef int (*SeeCharacter)(struct Character* observer, struct Character* target);
+typedef int (*CanSeen)(struct Character* observer, struct Character* target);
+
+struct ObservingInformation Observe(struct Character* as, struct World* world);
 ```
+
+In observe function, all the character's self informations (except the invisible
+effects) will be observed. For all the characters that in the vision angle the vision
+functions will be executed (seeCharacter and canSeen functions in character struct).
+And for other entities too.
 
 
 
