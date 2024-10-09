@@ -20,6 +20,11 @@ struct Physiology {
 
 #define CHARACTER_DEFAULT 0x00
 
+
+typedef int (*SeeCharacter)(struct Character* observer, struct Character* target);
+typedef int (*SeeWorldEvent)(struct Character* observer, struct WorldEvent* target);
+typedef int (*CanSeen)(struct Character* observer, struct Character* target);
+
 struct Character {
 	TBWGType tbwgType;
 
@@ -53,13 +58,16 @@ struct Character {
 	struct ControllerInterface* controllerInterface;
 
 	SeeCharacter seeCharacter;
+	SeeWorldEvent seeWorldEvent;
 	CanSeen canSeen;
 };
 
-struct Character* createDefaultCharacter(struct Dimension* dimension);
+struct Character* createDefaultCharacter(struct Dimension* dimension, iVector position);
 void destroyCharacter(struct Character*);
 
 
 int defaultSeeCharacter(struct Character* observer, struct Character* target);
+int defaultSeeWorldEvent(struct Character* observer, struct WorldEvent* target);
+int defaultCanSeen(struct Character* observer, struct Character* target);
 
 #endif /*TBWG_CHARACTERS_H*/

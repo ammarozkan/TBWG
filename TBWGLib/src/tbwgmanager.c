@@ -83,6 +83,7 @@ void tbwgCharacterTurn(struct QueueCharacterTurn* turn)
 
 	struct TurnPlay choose;
 	while( 1 ) {
+		tbwgMakeObserveAllCharacters();
 		choose = interface->chooseEventer(interface, turn->allowedEventerTypes, turn->character->eventerCount, turn->character->eventers);
 		if (choose.specs & TURNPLAY_END_TURN) return;
 
@@ -90,8 +91,7 @@ void tbwgCharacterTurn(struct QueueCharacterTurn* turn)
 
 		struct Eventer* eventer = character->eventers + choose.eventer_th;
 
-		eventer->executer((void*)eventer, &(data->world), turn->character, choose.target, NULL);
-		tbwgMakeObserveAllCharacters();
+		eventer->executer((void*)eventer, &(data->world), turn->character, choose.requiredInformations, NULL);
 	}
 }
 
@@ -99,7 +99,8 @@ void tbwgMakeObserveAllCharacters()
 {
 	ITERATE_ALL_CHARACTERS_IN_WORLD((data->world), charlistelm, dimension) {
 		struct Character* chr = ((struct CharacterListElement*)charlistelm)->character;
-		chr->controllerInterface->observer(chr->controllerInterface, Observe(chr, &(data->world) ));
+		struct ObservingInformation obsInfo = Observe(chr, &(data->world));
+		chr->controllerInterface->observer(chr->controllerInterface, obsInfo);
 	}
 }
 
@@ -123,4 +124,13 @@ void tbwgTurn()
 int tbwgAddCharacter(struct Character* character)
 {
 	return addCharacterToWorld(&(data->world), character);
+}
+
+void tbwgStreamWorldEvent(struct Dimension* dim, struct WorldEvent event)
+{
+	ITERATE(dim->characterList, characterElm) {
+		struct Character* chr = ((struct CharacterListElement*)characterElm)->character;
+		struct WorldEventInformation inf = ObserveWorldEventInformation(chr, &event);
+		if (inf.eventName[0] != '\0') chr->controllerInterface->receiveWorldEvent(chr->controllerInterface, inf);
+	}
 }

@@ -5,6 +5,7 @@
 #include <TBWG/world.h>
 #include <TBWG/stats.h>
 #include <TBWG/maths.h>
+#include <TBWG/worldevents.h>
 
 struct CharacterInformation {
 	id_number ID;
@@ -12,7 +13,6 @@ struct CharacterInformation {
 	iVector position;
     fVector direction;
 	iValue hp;
-    
 };
 
 struct EntityInformation {
@@ -33,6 +33,7 @@ struct ObservingInformation {
 
     struct Stats characterStats;
     iValue hp, e, se;
+    iVector position; fVector direction;
     digits32 state;
 
     struct List effects;
@@ -48,10 +49,15 @@ struct ObservingInformation {
     struct EntityInformation* entityInfos;
 };
 
-typedef int (*SeeCharacter)(struct Character* observer, struct Character* target);
-typedef int (*CanSeen)(struct Character* observer, struct Character* target);
-
 struct ObservingInformation Observe(struct Character* as, struct World* world);
+
+struct WorldEventInformation {
+    id_number selfid;
+    char* eventName;
+    iVector position;
+};
+
+struct WorldEventInformation ObserveWorldEventInformation(struct Character* as, struct WorldEvent*);
 
 
 #endif /*TBWG_OBSERVATION_H*/

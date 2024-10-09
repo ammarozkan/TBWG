@@ -68,9 +68,9 @@ int main(int argc, char*argv[])
 
 	printf("Character creation test!\n");
 
-	struct Character* character1 = createDefaultCharacter(tbwgGetFirstDimension(&data));
-	struct Character* character2 = createDefaultCharacter(tbwgGetFirstDimension(&data));
-	struct Character* character3 = createDefaultCharacter(tbwgGetFirstDimension(&data));
+	struct Character* character1 = createDefaultCharacter(tbwgGetFirstDimension(&data), getiVector(1,0));
+	struct Character* character2 = createDefaultCharacter(tbwgGetFirstDimension(&data), getiVector(0,0));
+	struct Character* character3 = createDefaultCharacter(tbwgGetFirstDimension(&data), getiVector(0,1));
 
 	printf("Adding character to tbwgmanager\n");
 

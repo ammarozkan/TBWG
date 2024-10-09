@@ -1,5 +1,6 @@
 #include<TBWG/queue.h>
 #include<TBWG/world.h>
+#include<TBWG/worldevents.h>
 
 struct tbwgdata {
 	struct Queue queue;
@@ -13,6 +14,7 @@ void tbwgUse(struct tbwgdata* data);
 void tbwgTurn();
 void tbwgReorder();
 void tbwgMakeObserveAllCharacters();
+void tbwgStreamWorldEvent(struct Dimension* dim, struct WorldEvent event);
 
 int tbwgAddCharacter(struct Character* character);
 struct Dimension* tbwgGetFirstDimension();

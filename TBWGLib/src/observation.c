@@ -24,6 +24,8 @@ struct ObservingInformation Observe(struct Character* as, struct World* world)
 	obsrv.e = as->e;
 	obsrv.se = as->se;
 
+	obsrv.position = as->position;
+
 	obsrv.state = as->state;
 
 	obsrv.effects = as->effects;
@@ -58,7 +60,7 @@ struct ObservingInformation Observe(struct Character* as, struct World* world)
 
 		ITERATE(as->seeingResources, resourceElement) {
 			// we're not succesfull. lets check with vision resource entities.
-			
+
 			TBWGType* resourceType = (TBWGType*)((struct SeeingResourceElement*)resourceElement)->resource;
 			if(*resourceType == TBWG_TYPE_CHARACTER) {
 				struct Character* sr = (struct Character*)resourceType;
@@ -86,4 +88,12 @@ seeingSuccesfull:
 	obsrv.charInfos = realEyezRealize;
 
 	return obsrv;
+}
+
+struct WorldEventInformation ObserveWorldEventInformation(struct Character* as, struct WorldEvent* evnt)
+{
+	struct WorldEventInformation info = {as->ID, "", evnt->position};
+	if(!as->seeWorldEvent(as, evnt)) return info;
+	info.eventName = evnt->name;
+	return info;
 }

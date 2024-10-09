@@ -2,7 +2,7 @@
 #include <TBWG/eventer.h>
 #include <stdlib.h> // malloc
 
-struct Stats defaultStats = {0, 0, 0, 0, 0, 2.8f};
+struct Stats defaultStats = {0, 0, 0, 0, 0, 2.8f, 1.0f, 0.0f, 1.0f};
 
 //typedef int (*HitterFunction)(void* hitting, struct Character* hitter, struct AttackInfo);
 
@@ -22,7 +22,7 @@ int characterDefaultHit(void* hitting, struct Character* hitter, struct AttackIn
 	return 0;
 }
 
-struct Character* createDefaultCharacter(struct Dimension* dimension)
+struct Character* createDefaultCharacter(struct Dimension* dimension, iVector position)
 {
 	struct Character* character = malloc(sizeof(struct Character));
 
@@ -32,7 +32,7 @@ struct Character* createDefaultCharacter(struct Dimension* dimension)
 	
 	character->characterCode = CHARACTER_DEFAULT;
 	character->ID = getID();
-	character->position = getiVector(0,0);
+	character->position = position;
 
 	character->direction = getfVector(1.0f, 0.0f);
 
@@ -72,12 +72,31 @@ struct Character* createDefaultCharacter(struct Dimension* dimension)
 
 	character->controllerInterface = getstdioControllerInterface();
 
+	character->seeCharacter = defaultSeeCharacter;
+	character->canSeen = defaultCanSeen;
+	character->seeWorldEvent = defaultSeeWorldEvent;
+
 	return character;
 }
+
+float getVisionHardnessFinal(float visionHardness, float distance);
+
 
 int defaultSeeCharacter(struct Character* observer, struct Character* target)
 {
 	return target->canSeen(observer, target);
+}
+
+int defaultSeeWorldEvent(struct Character* observer, struct WorldEvent* target)
+{
+	int visionHardnessCheck = observer->stats.visionLevel >= getVisionHardnessFinal(target->visionHardness, getiVectorDistance(observer->position, target->position));
+	int speedCheck = observer->stats.visionSpeed >= target->disappearingSpeed;
+	return visionHardnessCheck && speedCheck;
+}
+
+int defaultCanSeen(struct Character* observer, struct Character* target)
+{
+	return observer->stats.visionLevel >= target->stats.visionResistence;
 }
 
 void destroyCharacter(struct Character* chr)

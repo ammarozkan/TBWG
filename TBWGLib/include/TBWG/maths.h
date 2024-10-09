@@ -17,14 +17,18 @@ fVector getfVector(float x, float y);
 
 int isInVisionArea(fVector direction, float seeingAngle, iVector position, iVector opp_position); // radians
 
-float getVectorLength(fVector);
+float getiVectorLength(iVector);
+float getfVectorLength(fVector);
 
 fVector normiVector(iVector);
 
 iVector connectiVectors(iVector from, iVector to);
 fVector connectfVectors(fVector from, fVector to);
 
+float getiVectorDistance(iVector a, iVector b);
+
 float getMaxLookLengthByAngle(float seeingAngle); // radians
 
+float getVisionHardnessFinal(float visionHardness, float distance);
 
 #endif /*TBWG_MATHS_H*/
