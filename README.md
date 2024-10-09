@@ -198,7 +198,8 @@ may not see it by the effect.
 When a character does some hand sign to perform something, some characters may see what
 sign the character is doing by checking the vision level of observer and vision hardness
 of this event. In example sharingan users may see more clearly what the character is doing
-in front of him before the sign is done and the thing is performing.
+in front of him before the sign is done and the thing is performing. (Thats called World
+Events in the library. Look at the World Events section for detailed information.)
 
 
 ```
