@@ -115,6 +115,9 @@ Queue:
 - Reorder Turns
 - Timed Bomb Explosion (effect)
 
+## Positions and Movement
+
+(1,0) position means (0.50m, 0.0m)
 
 ## Characters
 
@@ -183,7 +186,25 @@ These kind of eventers can be used in the turn. Every power has a specific
 type. In example punch, karate straight punch, karate lunge punch are
 fight powers.
 
+## Events and Vision Levels
 
+Every character has a vision level. And every event, entity or character has a vision
+resistence. Basically, the vision resistance for entities and characters is zero. So
+every character that has that thing in the vision area, can see it. But when a character
+gains a effect that makes the vision resistence higher, then some characters may not
+see it. In example, when a character is inside a bush area, low vision leveled characters
+may not see it by the effect.
+
+When a character does some hand sign to perform something, some characters may see what
+sign the character is doing by checking the vision level of observer and vision hardness
+of this event. In example sharingan users may see more clearly what the character is doing
+in front of him before the sign is done and the thing is performing.
+
+
+```
+distanceFactor = max(1.0f, pow(distance, 0.25f)/2.0f)
+VisionHardnessFinal = VisionHardness * pow(distance, 0.25f)/2.0f
+```
 
 ## Example
 
@@ -558,28 +579,29 @@ struct AttackInfo {
 #define STATE_DEAD (1<<1)
 #define STATE_FAINTED (1<<2)
 
-struct Character;
-struct AttackInfo;
-
 #define CHARACTER_DEFAULT 0x00
-#define CHARACTER_DIO 0x01
-#define CHARACTER_PAIN_DEVA 0x02
+
+typedef int (*SeeCharacter)(struct Character* observer, struct Character* target);
+typedef int (*SeeWorldEvent)(struct Character* observer, struct WorldEvent* target);
+typedef int (*CanSeen)(struct Character* observer, struct Character* target);
 
 struct Character {
 	TBWGType tbwgType;
 
-	unsigned int characterCode = CHARACTER_DEFAULT; // for determining the look
+	unsigned int characterCode;
 	id_number ID;
 
-	int x,y; struct Dimension* dimension;
-
-	float dirx, diry;
+	iVector position;
+	struct Dimension* dimension;
+	fVector direction;
 
 	struct Stats baseStats;
 	struct Stats stats;
 
 	iValue hp, e, se;
 	digits32 state;
+
+	struct List seeingResources; // in example gaara's eye, rinnegan bodies.
 
 	size_t passivePowerCount;
 	struct PassivePower* passivePowers;
@@ -596,6 +618,7 @@ struct Character {
 	struct ControllerInterface* controllerInterface;
 
 	SeeCharacter seeCharacter;
+	SeeWorldEvent seeWorldEvent;
 	CanSeen canSeen;
 };
 ```
@@ -729,7 +752,29 @@ functions will be executed (seeCharacter and canSeen functions in character stru
 And for other entities too.
 
 
+#### Observing World Events
 
+When a eventer does something that could seen by other entities or characters, that thing should
+stream a world event. By calculations, the world event will be seen by the characters that could
+see it.
+
+```
+struct WorldEvent {
+	char* name;
+	float visionHardness;
+	float disappearingSpeed;
+	iVector position;
+};
+
+struct WorldEvent getDefaultWorldEvent(char* name,
+	float visionHardness,
+	float disappearingSpeed,
+	iVector position);
+
+...
+
+void tbwgStreamWorldEvent(struct Dimension* dim, struct WorldEvent event);
+```
 
 
 
