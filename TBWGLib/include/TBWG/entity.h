@@ -14,9 +14,10 @@ struct Entity {
 	TBWGType tbwgType;
 	
 	digits32 entityCode;
-	int x,y;
-	float dirx, diry;
-	float mass;
+	iVector position; fVector direction;
+	float mass; unsigned int visionHardness;
+
+	float visionAngle; unsigned int visionLevel;
 
 	CollisionFunction collisionFunction;
 	

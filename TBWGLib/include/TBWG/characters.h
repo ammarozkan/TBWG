@@ -7,6 +7,7 @@
 #include <TBWG/stats.h>
 #include <TBWG/queue.h>
 #include <TBWG/observation.h>
+#include <TBWG/maths.h>
 
 
 struct Physiology {
@@ -25,15 +26,17 @@ struct Character {
 	unsigned int characterCode;
 	id_number ID;
 
-	int x,y; struct Dimension* dimension;
-
-	float dirx, diry;
+	iVector position;
+	struct Dimension* dimension;
+	fVector direction;
 
 	struct Stats baseStats;
 	struct Stats stats;
 
 	iValue hp, e, se;
 	digits32 state;
+
+	struct List seeingResources; // in example gaara's eye, rinnegan bodies.
 
 	size_t passivePowerCount;
 	struct PassivePower* passivePowers;

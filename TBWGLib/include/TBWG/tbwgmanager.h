@@ -12,6 +12,7 @@ void tbwgUse(struct tbwgdata* data);
 
 void tbwgTurn();
 void tbwgReorder();
+void tbwgMakeObserveAllCharacters();
 
 int tbwgAddCharacter(struct Character* character);
 struct Dimension* tbwgGetFirstDimension();

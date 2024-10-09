@@ -48,9 +48,12 @@ struct TargetDirectedArea {
 	int dirx, diry;
 };
 
+#define TURNPLAY_END_TURN (1<<1)
+
 struct TurnPlay {
 	unsigned int eventer_th;
 	void* target; // if target is NULL, then choosing failed.
+	unsigned int specs;
 };
 
 struct Eventer getDefaultPunchEventer();

@@ -32,11 +32,9 @@ struct Character* createDefaultCharacter(struct Dimension* dimension)
 	
 	character->characterCode = CHARACTER_DEFAULT;
 	character->ID = getID();
-	character->x = 0;
-	character->y = 0;
+	character->position = getiVector(0,0);
 
-	character->dirx = 1.0f;
-	character->diry = 0.0f;
+	character->direction = getfVector(1.0f, 0.0f);
 
 	character->dimension = dimension;
 

@@ -22,7 +22,7 @@ createDefaultWorld()
 
 
 
-	struct World world = {.dimensionList = dimensionList};
+	struct World world = {.dimensionList = dimensionList, .characterCount = 0};
 
 	return world;
 }
@@ -34,8 +34,22 @@ dimensionGetCharacterByPosition(struct Dimension* dimension, int x, int y)
 		struct CharacterListElement* charListElm = (struct CharacterListElement*)charListElm_pure;
 		struct Character* chr = charListElm->character;
 
-		if(chr->x == x && chr->y == y) return chr;
+		if(chr->position.x == x && chr->position.y == y) return chr;
 	}
 
 	return NULL;
+}
+
+int
+addCharacterToWorld(struct World* world, struct Character* character)
+{
+	struct Dimension* dimension = character->dimension;
+	if(dimension == NULL) return 0;
+
+	struct List* characterList = &(dimension->characterList);
+	struct CharacterListElement charListElm = {.character = character};
+
+	addElement(characterList, (void*)&charListElm, sizeof(struct CharacterListElement));
+	world->characterCount += 1;
+	return 1;
 }

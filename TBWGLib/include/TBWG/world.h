@@ -29,10 +29,12 @@ struct DimensionListElement {
 
 struct World {
 	struct List dimensionList;
+
+	unsigned int characterCount;
 };
 
 struct World createDefaultWorld();
-
+int addCharacterToWorld(struct World* world, struct Character* character);
 
 struct Character* dimensionGetCharacterByPosition(struct Dimension* dimension, int x, int y);
 

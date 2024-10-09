@@ -80,14 +80,27 @@ void tbwgReorder()
 void tbwgCharacterTurn(struct QueueCharacterTurn* turn)
 {
 	struct ControllerInterface* interface = turn->character->controllerInterface;
-	struct TurnPlay choose = interface->chooseEventer(interface, turn->allowedEventerTypes, turn->character->eventerCount, turn->character->eventers);
 
-	struct Character* character = turn->character;
+	struct TurnPlay choose;
+	while( 1 ) {
+		choose = interface->chooseEventer(interface, turn->allowedEventerTypes, turn->character->eventerCount, turn->character->eventers);
+		if (choose.specs & TURNPLAY_END_TURN) return;
 
-	struct Eventer* eventer = character->eventers + choose.eventer_th;
+		struct Character* character = turn->character;
 
-	eventer->executer((void*)eventer, &(data->world), turn->character, choose.target, NULL);
+		struct Eventer* eventer = character->eventers + choose.eventer_th;
 
+		eventer->executer((void*)eventer, &(data->world), turn->character, choose.target, NULL);
+		tbwgMakeObserveAllCharacters();
+	}
+}
+
+void tbwgMakeObserveAllCharacters()
+{
+	ITERATE_ALL_CHARACTERS_IN_WORLD((data->world), charlistelm, dimension) {
+		struct Character* chr = ((struct CharacterListElement*)charlistelm)->character;
+		chr->controllerInterface->observer(chr->controllerInterface, Observe(chr, &(data->world) ));
+	}
 }
 
 void tbwgTurn()
@@ -109,12 +122,5 @@ void tbwgTurn()
 
 int tbwgAddCharacter(struct Character* character)
 {
-	struct Dimension* dimension = character->dimension;
-	if(dimension == NULL) return 0;
-
-	struct List* characterList = &(dimension->characterList);
-	struct CharacterListElement charListElm = {.character = character};
-
-	addElement(characterList, (void*)&charListElm, sizeof(struct CharacterListElement));
-	return 1;
+	return addCharacterToWorld(&(data->world), character);
 }

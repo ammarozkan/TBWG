@@ -3,7 +3,8 @@
 
 struct Stats {
 	int STR, DEX, CNS, WIS, SCS;
-	float visionAngle; // in radians (maximum 2.8f for normal people (approximately) ) 
+	float visionAngle; // in radians (maximum 2.8f for normal people (approximately) )
+	unsigned int visionLevel;
 };
 
 #endif /*TBWG_STATS_H*/

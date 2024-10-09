@@ -30,8 +30,9 @@ struct ControllerInterface* getDefaultControllerInterface()
 #include <stdio.h>
 
 
-void stdioControllerObserve(struct ControllerInterface*, struct ObservingInformation obsInfo)
+void stdioControllerObserve(struct ControllerInterface* interface, struct ObservingInformation obsInfo)
 {
+	printf("Observed!\n");
 }
 
 
@@ -39,6 +40,7 @@ struct TurnPlay stdioControllerChooseEventer(struct ControllerInterface*, digits
     size_t eventerCount, struct Eventer* eventers)
 {
 	struct TurnPlay result;
+	result.specs = 0;
 	printf("--Eventer Choosing--\n");
 	printf("e:End turn\n");
 	for(unsigned int i = 0 ; i < eventerCount ; i += 1) {
@@ -49,6 +51,11 @@ struct TurnPlay stdioControllerChooseEventer(struct ControllerInterface*, digits
 
 	char choice[8];
 	printf("choice:");scanf("%s",choice);
+	if (choice[0] == 'e') {
+		result.specs = TURNPLAY_END_TURN;
+		goto choosingFinished;
+	}
+
 	result.eventer_th = atoi(choice);
 	printf("EVENT:%u\n",result.eventer_th);
 
@@ -59,6 +66,8 @@ struct TurnPlay stdioControllerChooseEventer(struct ControllerInterface*, digits
 
 		result.target = (void*)target;
 	}
+
+choosingFinished:
 	return result;
 }
 

@@ -4,13 +4,15 @@
 #include <TBWG/essentials.h>
 #include <TBWG/world.h>
 #include <TBWG/stats.h>
+#include <TBWG/maths.h>
 
 struct CharacterInformation {
 	id_number ID;
 	unsigned int characterCode;
-	int x,y;
-	int hp;
-	float dirx,diry;
+	iVector position;
+    fVector direction;
+	iValue hp;
+    
 };
 
 struct EntityInformation {
@@ -18,6 +20,12 @@ struct EntityInformation {
     unsigned int entityCode;
     int x,y;
     float dirx,diry;
+};
+
+
+struct SeeingResourceElement {
+    struct ListElementHeader header;
+    void* resource;
 };
 
 struct ObservingInformation {
