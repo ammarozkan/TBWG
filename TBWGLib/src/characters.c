@@ -55,7 +55,7 @@ struct Character* createDefaultCharacter(struct Dimension* dimension, iVector po
 	character->passivePowers = malloc(0);
 
 	struct EventerUses newUses = {0,0,0,0,0};
-	character->eventerUses = newUses;
+	character->eventerSpendings = newUses;
 	
 	character->eventerCount = 1;
 	character->eventers = malloc(1*sizeof(struct Eventer));

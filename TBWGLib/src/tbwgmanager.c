@@ -92,7 +92,7 @@ void tbwgCharacterTurn(struct QueueCharacterTurn* turn)
 {
 	struct ControllerInterface* interface = turn->character->controllerInterface;
 	turn->whenInvoked(turn);
-	addEventerUses(&(turn->character->eventerUses), turn->gainingUses);
+	addEventerUses(&(turn->character->eventerSpendings), turn->gainingUses);
 
 	struct TurnPlay choose;
 	while( 1 ) {
@@ -100,12 +100,12 @@ void tbwgCharacterTurn(struct QueueCharacterTurn* turn)
 		struct Character* character = turn->character;
 
 		choose = interface->chooseEventer(interface, turn->allowedEventerTypes, character->eventerCount, turn->character->eventers,
-			character->eventerUses);
+			character->eventerSpendings);
 		if (choose.specs & TURNPLAY_END_TURN) return;
 
 		struct Eventer* eventer = character->eventers + choose.eventer_th;
 
-		if (checkRequiredEventers(character->eventerUses, eventer->costs))
+		if (checkRequiredEventers(character->eventerSpendings, eventer->costs))
 			eventer->executer((void*)eventer, &(data->world), turn->character, choose.requiredInformations, NULL);
 	}
 }

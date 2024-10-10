@@ -47,7 +47,7 @@ struct Character {
 	size_t passivePowerCount;
 	struct PassivePower* passivePowers;
 
-	struct EventerUses eventerUses;
+	struct EventerUses eventerSpendings;
 	size_t eventerCount;
 	struct Eventer* eventers;
 
