@@ -3,6 +3,40 @@
 #include <TBWG/characters.h>
 #include <TBWG/tbwgmanager.h>
 
+void addEventerUses(struct EventerUses* a, struct EventerUses b)
+{
+	unsigned int* target = (unsigned int*)a;
+	unsigned int* value = (unsigned int*)&b;
+
+	for(unsigned int i = 0 ; i < sizeof(struct EventerUses)/sizeof(unsigned int); i += 1) {
+		target[i] += value[i];
+	}
+}
+
+int checkRequiredEventers(struct EventerUses a, struct EventerUses req)
+{
+	unsigned int* a_ = (unsigned int*)&a;
+	unsigned int* req_ = (unsigned int*)&req;
+
+	for(unsigned int i = 0 ; i < sizeof(struct EventerUses)/sizeof(unsigned int); i += 1)
+		if (a_[i] < req_[i]) return 0;
+
+	return 1;
+}
+
+
+int executerCanCast(void* eventer, struct Character*, struct Tool* tool)
+{
+	return 1;
+}
+
+void executerNotChoosed(void* eventer, struct World*, struct Character*)
+{
+}
+
+
+
+
 #include <stdio.h>
 
 void executerDefaultPunchEventer(void* eventer, struct World* world, struct Character* user, struct EventerRequiredInformations reqinf, struct Tool* tool)
@@ -22,15 +56,6 @@ void executerDefaultPunchEventer(void* eventer, struct World* world, struct Char
 	if(c_target->bodyHit(c_target, (void*)user, atkInfo)) printf("LETSGOOOOO\n");
 }
 
-int executerCanCast(void* eventer, struct Character*, struct Tool* tool)
-{
-	return 1;
-}
-
-void executerNotChoosed(void* eventer, struct World*, struct Character*)
-{
-}
-
 
 struct Eventer
 getDefaultPunchEventer()
@@ -45,6 +70,10 @@ getDefaultPunchEventer()
 
 	evn.eventer_type = EVENTER_TYPE_FASTCOMBAT;
 	evn.required_informations = EVENTER_REQUIRED_INFORMATION_POSITION;
+	struct EventerUses costs = {0,0,1,0,0};
+	costs.fastcombat = 1;
+	costs.fastmagic = 0;
+	evn.costs = costs;
 
 	evn.executer = executerDefaultPunchEventer;
 	evn.canCast = executerCanCast;

@@ -22,8 +22,11 @@
 #define EVENTER_DEFAULT 0x00
 
 struct EventerUses {
-	unsigned int classic, fastmagic, fastcombat, thoughtmagic;
+	unsigned int classic, fastmagic, fastcombat, thoughtmagic, movement;
 };
+
+void addEventerUses(struct EventerUses* a, struct EventerUses b);
+int checkRequiredEventers(struct EventerUses, struct EventerUses req);
 
 struct EventerRequiredInformations {
 	iVector position;

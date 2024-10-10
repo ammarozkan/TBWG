@@ -2,6 +2,7 @@
 #define TBWG_CONTROLLERINTERFACE_H
 
 #include <TBWG/observation.h>
+#include <TBWG/eventer.h>
 
 struct ControllerInterface;
 
@@ -11,7 +12,7 @@ typedef void (*ControllerObserve)(struct ControllerInterface*, struct ObservingI
 typedef void (*ReceiveWorldEvent)(struct ControllerInterface*, struct WorldEventInformation);
 
 typedef struct TurnPlay (*ControllerChooseEventer)(struct ControllerInterface*, digits32 allowedEventerTypes, 
-    size_t eventerCount, struct Eventer* eventers);
+    size_t eventerCount, struct Eventer* eventers, struct EventerUses restUses);
 
 struct ControllerInterface {
     // receivers

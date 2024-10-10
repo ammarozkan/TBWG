@@ -8,6 +8,7 @@
 #include <TBWG/queue.h>
 #include <TBWG/observation.h>
 #include <TBWG/maths.h>
+#include <TBWG/eventer.h>
 
 
 struct Physiology {
@@ -46,6 +47,7 @@ struct Character {
 	size_t passivePowerCount;
 	struct PassivePower* passivePowers;
 
+	struct EventerUses eventerUses;
 	size_t eventerCount;
 	struct Eventer* eventers;
 

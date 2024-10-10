@@ -2,7 +2,7 @@
 #include <TBWG/eventer.h>
 #include <stdlib.h> // malloc
 
-struct Stats defaultStats = {0, 0, 0, 0, 0, 2.8f, 1.0f, 0.0f, 1.0f};
+struct Stats defaultStats = {0, 0, 0, 0, 0, 1, 2.8f, 1.0f, 0.0f, 1.0f};
 
 //typedef int (*HitterFunction)(void* hitting, struct Character* hitter, struct AttackInfo);
 
@@ -54,6 +54,9 @@ struct Character* createDefaultCharacter(struct Dimension* dimension, iVector po
 	character->passivePowerCount = 0;
 	character->passivePowers = malloc(0);
 
+	struct EventerUses newUses = {0,0,0,0,0};
+	character->eventerUses = newUses;
+	
 	character->eventerCount = 1;
 	character->eventers = malloc(1*sizeof(struct Eventer));
 

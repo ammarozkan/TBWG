@@ -63,10 +63,11 @@ struct QueueCharacterTurn getBasicCharacterTurn()
 	r.header.listHeader.next = NULL;
 	r.header.type = QUEUE_CHARACTER;
 	r.allowedEventerTypes = 0b1111111111;
-	r.costUses.classic = 1;
-	r.costUses.fastmagic = 0;
-	r.costUses.fastcombat = 0;
-	r.costUses.thoughtmagic = 0;
+	r.gainingUses.classic = 1;
+	r.gainingUses.fastmagic = 0;
+	r.gainingUses.fastcombat = 0;
+	r.gainingUses.thoughtmagic = 0;
+	r.gainingUses.movement = 1;
 	r.character = NULL;
 	r.whenInvoked = defaultCharacterTurnInvoke;
 	r.requirements = 0 | CHARACTER_REQ_ALIVE;

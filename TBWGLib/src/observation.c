@@ -13,7 +13,9 @@ struct CharacterInformation getCharacterInformation(struct Character* chr)
 	r.position = chr->position;
 	r.direction = chr->direction;
 	r.hp = chr->hp;
+	return r;
 }
+
 
 struct ObservingInformation Observe(struct Character* as, struct World* world)
 {
@@ -34,7 +36,6 @@ struct ObservingInformation Observe(struct Character* as, struct World* world)
 	obsrv.eventers = as->eventers;
 
 	obsrv.characterCount = 0;
-	if (as->stats.visionLevel == 0) return obsrv;
 
 	obsrv.charInfos = malloc(sizeof(struct CharacterInformation)*world->characterCount); // max possible character count
 
@@ -78,6 +79,7 @@ struct ObservingInformation Observe(struct Character* as, struct World* world)
 		if(seeingResult) {
 seeingSuccesfull:
 			obsrv.charInfos[obsrv.characterCount] = getCharacterInformation(chr);
+
 			obsrv.characterCount += 1;
 		}
 	}

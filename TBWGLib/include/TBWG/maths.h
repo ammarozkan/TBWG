@@ -9,8 +9,13 @@ struct fVector_ {
 	float x,y;
 };
 
+struct iArea_ {
+	struct iVector_ a, b;
+};
+
 typedef struct iVector_ iVector;
 typedef struct fVector_ fVector;
+typedef struct iArea_ iArea;
 
 iVector getiVector(int x, int y);
 fVector getfVector(float x, float y);

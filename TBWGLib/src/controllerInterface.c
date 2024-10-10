@@ -12,10 +12,10 @@ void defaultControllerWorldEventObserve(struct ControllerInterface*, struct Worl
 
 
 struct TurnPlay defaultControllerChooseEventer(struct ControllerInterface*, digits32 allowedEventerTypes, 
-    size_t eventerCount, struct Eventer* eventers)
+    size_t eventerCount, struct Eventer* eventers, struct EventerUses restUses)
 {
 	struct EventerRequiredInformations reqs = {getiVector(0,0), getfVector(1.0f, 0.0f), getiVector(0,0), getiVector(1,1)};
-	struct TurnPlay result = {0, reqs};
+	struct TurnPlay result = {0, reqs, TURNPLAY_END_TURN};
 	return result;
 }
 
@@ -56,17 +56,33 @@ void stdioControllerWorlEventObserve(struct ControllerInterface* interface, stru
 }
 
 
+
+
 struct TurnPlay stdioControllerChooseEventer(struct ControllerInterface*, digits32 allowedEventerTypes, 
-    size_t eventerCount, struct Eventer* eventers)
+    size_t eventerCount, struct Eventer* eventers, struct EventerUses restUses)
 {
 	struct TurnPlay result;
 	result.specs = 0;
 	printf("--Eventer Choosing--\n");
+	printf("Remaining Uses:\n");
+
+	char* useCases[5] = {"Classic","Fast Magic","Fast Combat","Thought Combat","Movement"};
+	for(unsigned int i = 0 ; i<5 ; i += 1) {
+		printf("\t%s:%u",useCases[i],((unsigned int*)&restUses)[i]);
+	}
+	printf("\n");
+
 	printf("e:End turn\n");
 	for(unsigned int i = 0 ; i < eventerCount ; i += 1) {
 		printf("%u:Eventer %u [%s]",i,eventers[i].eventerCode, eventers[i].name);
 		if (eventers[i].eventer_type & allowedEventerTypes == 0) printf(" (not allowed)");
-		printf(" with id %u\n",eventers[i].ID);
+		printf(" with id %u\t",eventers[i].ID);
+
+		char* useCases[5] = {"C","FM","FC","TM","M"};
+		for(unsigned int j = 0 ; j<5 ; j += 1) {
+			printf("%s:%u ", useCases[j], ((unsigned int*)(&(eventers[i].costs)))[j] );
+		}
+		printf("\n");
 	}
 
 	char choice[8];

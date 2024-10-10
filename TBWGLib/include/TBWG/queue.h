@@ -31,7 +31,7 @@ struct QueueCharacterTurn {
 	struct QueueElementHeader header;
 
 	digits32 allowedEventerTypes;
-	struct EventerUses costUses;
+	struct EventerUses gainingUses;
 	struct Character* character;
 
 	void (*whenInvoked)(struct QueueCharacterTurn*);
