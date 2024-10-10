@@ -16,6 +16,9 @@ Activities on queues:
 When a turn of Character came up, that Character should make
 the move.
 
+In every turn, there could be limit of eventer type. And there will
+be a count of spending costs. In example movement, fast attack, fast magic etc.
+
 #### Reorder Turns
 When this event came up on the queue, the base queue should be
 added to the queue.
@@ -387,16 +390,21 @@ Now Character's Turn Queue Structure Definition:
 #define CHARACTER_REQ_ALIVE = (1<<1)
 
 struct QueueCharacterTurn {
-	struct QueueElementHeader header = {.type = QUEUE_CHARACTER};
+	struct QueueElementHeader header;
 
 	digits32 allowedEventerTypes;
+	struct EventerUses gainingUses;
 	struct Character* character;
+
+	void (*whenInvoked)(struct QueueCharacterTurn*);
 
 	digits32 requirements;
 };
 ```
 
 Energy and spell spending must be **before** executing the eventer executer!
+(Or not. Events should detain their own spendings with the required information
+(area, position, direction informations in example).)
 
 In some turn types, server will only allow to some specific kind of eventers.
 When an unavailable eventer has been called or eventer used with a irrelated target,
@@ -405,6 +413,11 @@ server will send a denied response and ask for again.
 When an eventer has been choosen and can be used in this turn; server will
 execute the eventer's function. Eventer's function should can access(rw) to
 all the world and the character itself and the target, seperately.
+
+In every new character turn, character's spendings will be setted to gainingUses
+Every eventer will spend a use. If the character don't has any more turns,
+then character can't use the eventer. After the character turn, if character gets
+an attack and tries to avoid it, auto-avoidation should use the remaining spendings.
 
 Turn Types:
 
@@ -518,6 +531,10 @@ Effects will do something again and again by the turn.
 Some effects may give additional stats to the character, temporarely. These effects are
 Stat Giver Effects. When a Stat Giver Effect adden to or removed from a character, ```stats```
 variable will be calculated again.
+
+
+Other types of effect needs to be stored differently.
+
 
 ### Eventer Struct
 
