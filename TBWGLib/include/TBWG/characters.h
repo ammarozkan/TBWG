@@ -51,7 +51,7 @@ struct Character {
 	size_t eventerCount;
 	struct Eventer* eventers;
 
-	struct List effects;
+	struct List tickEffects;
 
 	struct Queue baseQueue;
 

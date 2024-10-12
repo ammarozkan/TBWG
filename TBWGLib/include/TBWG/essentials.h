@@ -22,5 +22,8 @@ struct iLimitedValue {
 };
 
 typedef struct iLimitedValue iValue;
+typedef char Name[32];
+
+void getName(Name memPlace, char*);
 
 #endif

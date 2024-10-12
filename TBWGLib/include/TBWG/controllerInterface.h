@@ -6,6 +6,19 @@
 
 struct ControllerInterface;
 
+struct EventerInformation {
+    unsigned int eventerCode;
+    char name[32];
+
+    uint8_t energyValueType;
+    int minEnergy, minSpellEnergy;
+    int maxEnergy, maxSpellEnergy;
+
+    struct EventerUses costs;
+};
+
+struct EventerInformation* getEventerInformationsFromEventers(size_t eventerCount, struct Eventer* eventers);
+
 typedef void (*ControllerObserve)(struct ControllerInterface*, struct ObservingInformation);
 // and all the other eventer etc. things here please
 

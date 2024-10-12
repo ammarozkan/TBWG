@@ -9,6 +9,11 @@
 #define EFFECTOR_PLAYER 0x1
 #define EFFECTOR_DIMENSION 0x2
 
+struct EffectListElement {
+	struct ListElementHeader header;
+	struct Effect* effect;
+};
+
 struct Effect {
 	unsigned int ID;
 	uint8_t effectorType;

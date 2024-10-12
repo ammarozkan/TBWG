@@ -16,6 +16,8 @@ void tbwgReorder();
 void tbwgMakeObserveAllCharacters();
 void tbwgStreamWorldEvent(struct Dimension* dim, struct WorldEvent event);
 
+void tbwgTriggerReorderEffects(); // testing function
+
 int tbwgAddCharacter(struct Character* character);
 struct Dimension* tbwgGetFirstDimension();
 struct Dimension* tbwgFindDimensionByPos(unsigned int pos);

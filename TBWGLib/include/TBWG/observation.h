@@ -28,6 +28,12 @@ struct SeeingResourceElement {
     void* resource;
 };
 
+struct Eye {
+    float angle;
+    float level;
+    float speed;
+};
+
 struct ObservingInformation {
     id_number selfid;
 
