@@ -168,8 +168,16 @@ Little wind that moves a paper : 1 Spell Energy
 A fire blowing to burn a oak log: 15 Spell Energy
 
 #### Effects
-Every character can be effected by some effects. These
-effects will be executed in every Reorder Turn.
+Every character can be effected by some effects. These effects may invoked
+differently. Invocation types are clock, turn, hit...
+
+Clock/Tick: In every reorder turn, time passes some. And the clock ticks! Clock/Tick effects
+shall be done.
+
+Turn: When a character's turn came up, Turn effects shall be done.
+
+Hit: When a character gets hitted, the Hit effects shall be done.
+
 
 
 ## Powers
@@ -187,7 +195,12 @@ queue to fighter's base queue to make an additional karate attack.
 
 These kind of eventers can be used in the turn. Every power has a specific
 type. In example punch, karate straight punch, karate lunge punch are
-fight powers.
+fight powers. Every eventer has a energy spending type. Some eventers could have
+a constant energy use, some eventers could have a dynamic energy use.
+
+If a character uses a eventer that enough to spend to base energy requirements but
+not the dynamic ones, character will spend the costs because of trying to work
+this eventer.
 
 ## Events and Vision Levels
 
@@ -498,6 +511,14 @@ struct Effect {
 };
 ```
 
+System somehow should have hit, clock, turn effects. First option is store the effect structs seperately
+for each triggering type. This will gain a bit memory and CPU performance. Second option is store all of the
+structs in one list and seperate them with a uint8_t value. Then when a triggering needed, a function like
+```triggerEffects(EFFECT_TRIGGERTYPE_TICK, effectList, character)```. The second option will be less performance
+wise for CPU and maybe for memory. But will be so much more modular. Or, the first option could be done with
+a new style for modularity. So new style may be needed to finded out.
+
+
 When a character is exiting from a dimension, server should search the dimension invoked
 effects and remove them.
 
@@ -544,28 +565,72 @@ defined just like custom effects.
 
 ```C
 
-#define EVENTER_CLASSIC (1<<0)
-#define EVENTER_FASTMAGIC (1<<1)
-#define EVENTER_FASTCOMBAT (1<<2)
+#define EVENTER_TYPE_CLASSIC (1<<0)
+#define EVENTER_TYPE_FASTMAGIC (1<<1)
+#define EVENTER_TYPE_FASTCOMBAT (1<<2)
+
 
 #define TARGET_ONE (1<<0)
 #define TARGET_AREA (1<<1)
 #define TARGET_POSITION (1<<2)
 
+#define EVENTER_REQUIRED_INFORMATION_POSITION (1<<0)
+#define EVENTER_REQUIRED_INFORMATION_AREA (1<<1)
+#define EVENTER_REQUIRED_INFORMATION_DIRECTION (1<<2)
+
+#define EVENTER_DEFAULT 0x00
+
+struct EventerUses {
+	unsigned int classic, fastmagic, fastcombat, thoughtmagic, movement;
+};
+
+void addEventerUses(struct EventerUses* a, struct EventerUses b);
+int checkRequiredEventers(struct EventerUses, struct EventerUses req);
+
+struct EventerRequiredInformations {
+	iVector position;
+	iVector position2;
+	fVector direction;
+	iVector A,B; // area coordinates A and B
+};
+
+int executerCanExecuteNow(void* eventer, struct World* world, struct Character* user, struct EventerRequiredInformations reqinf, struct Tool* tool);
+
+#define EVENTER_ENERGYUSE_BASE 0x01
+#define EVENTER_ENERGYUSE_BYUSE 0x02
 
 struct Eventer {
 	unsigned int eventerCode;
 	id_number ID;
 
-	int energy, spellEnergy;
-	digits32 eventer_type, target_type;
+	char name[32];
 
-	void (*executer)(void* eventer, struct World*, struct Character*, void* target, struct Tool* tool);
-	int (*canCast)(void* eventer, struct Character*);
+	uint8_t energyType;
+	int baseEnergy, baseSpellEnergy;
+	digits32 eventer_type, required_informations;
+	struct EventerUses costs;
+	int usedInThisTurn; // will be set to zero when turn is beginning newly.
+
+	void (*executer)(void* eventer, struct World*, struct Character*,
+		struct EventerRequiredInformations, struct Tool* tool);
+	int (*canExecute)(void* eventer, struct Character*, struct Tool* tool);
 	void (*notChoosed)(void* eventer, struct World*, struct Character*);// if an eventer needs focus for couple of times, not choosing it
                                        // should be able to break the focus.
+
+    int (*getEnergyUse)(void* eventer, struct World*, struct Character*,
+		struct EventerRequiredInformations, struct Tool* tool);
+	int (*getSpellEnergyUse)(void* eventer, struct World*, struct Character*,
+		struct EventerRequiredInformations, struct Tool* tool);
+	int (*canExecuteNow)(void* eventer, struct World*, struct Character*,
+		struct EventerRequiredInformations, struct Tool* tool);
 };
 ```
+
+When a eventer has EVENTER_ENERGYUSE_BASE in energyType, then the baseEnergy values will be
+the constant energy using values.
+
+When a eventer has EVENTER_ENERGYUSE_BYUSE in energyType, then the baseEnergy values will be the
+minimum spending of this eventer. After spending them, the getEnergyUse functions should be executed.
 
 
 ### AttackInfo Struct and Attacks
