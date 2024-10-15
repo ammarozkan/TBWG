@@ -492,11 +492,15 @@ shall follow these kind of header.
 #define EFFECTOR_PLAYER 0x1
 #define EFFECTOR_DIMENSION 0x2
 
+#define EFFECT_TRIGGER_TYPE_COUNT 3
+#define EFFECT_TRIGGER_TYPE_CLOCK 0x00
+#define EFFECT_TRIGGER_TYPE_TURN 0x01
+#define EFFECT_TRIGGER_TYPE_HIT 0x02
+
 struct Effect {
 	unsigned int ID;
 	uint8_t effectorType;
-	id_number effectorId; // player id if type is EFFECTOR_PLAYER, effector th dimension if
-                    // EFFECTOR_DIMENSION is choosen
+	id_number effectorId; // player-
 
 	int time;
 
@@ -507,7 +511,7 @@ struct Effect {
 	digits32 invokeTimeType;
 
 	struct Character* character;
-	void (*executer)(void* effectptr, struct World*, struct Character* entity);
+	void (*executer)(void* effectptr, struct World*, struct Character* entity, void* relativeInformation);
 };
 ```
 
@@ -518,6 +522,8 @@ structs in one list and seperate them with a uint8_t value. Then when a triggeri
 wise for CPU and maybe for memory. But will be so much more modular. Or, the first option could be done with
 a new style for modularity. So new style may be needed to finded out.
 
+
+Oh! The character struct could have a struct Effect effects[EFFECT_TYPE_COUNT];!!!
 
 When a character is exiting from a dimension, server should search the dimension invoked
 effects and remove them.
