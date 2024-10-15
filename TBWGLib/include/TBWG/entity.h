@@ -12,6 +12,7 @@ typedef void (*CollisionFunction) (struct Entity*, struct Character*);
 
 struct Entity {
 	TBWGType tbwgType;
+	id_number ID;
 	
 	digits32 entityCode;
 	iVector position; fVector direction;

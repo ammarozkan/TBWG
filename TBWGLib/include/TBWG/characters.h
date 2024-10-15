@@ -9,6 +9,7 @@
 #include <TBWG/observation.h>
 #include <TBWG/maths.h>
 #include <TBWG/eventer.h>
+#include <TBWG/effects.h>
 
 
 struct Physiology {
@@ -28,9 +29,9 @@ typedef int (*CanSeen)(struct Character* observer, struct Character* target);
 
 struct Character {
 	TBWGType tbwgType;
+	id_number ID;
 
 	unsigned int characterCode;
-	id_number ID;
 
 	iVector position;
 	struct Dimension* dimension;
@@ -38,6 +39,9 @@ struct Character {
 
 	struct Stats baseStats;
 	struct Stats stats;
+
+	struct Eye baseEye;
+	struct Eye eye;
 
 	iValue hp, e, se;
 	digits32 state;
@@ -51,7 +55,7 @@ struct Character {
 	size_t eventerCount;
 	struct Eventer* eventers;
 
-	struct List tickEffects;
+	struct List effects[EFFECT_TRIGGER_TYPE_COUNT];
 
 	struct Queue baseQueue;
 
@@ -71,5 +75,8 @@ void destroyCharacter(struct Character*);
 int defaultSeeCharacter(struct Character* observer, struct Character* target);
 int defaultSeeWorldEvent(struct Character* observer, struct WorldEvent* target);
 int defaultCanSeen(struct Character* observer, struct Character* target);
+
+void chAddEffect(struct Effect effect, unsigned int effectTriggerType, struct Character*);
+void chTriggerEffect(struct Character* ch, struct World* world, unsigned int effectTriggerType, void* relativeInformation);
 
 #endif /*TBWG_CHARACTERS_H*/

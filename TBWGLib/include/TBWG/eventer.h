@@ -55,13 +55,15 @@ struct Eventer {
 	digits32 eventer_type, required_informations;
 	struct EventerUses costs;
 	int usedInThisTurn; // will be set to zero when turn is beginning newly.
+	struct EventerUses (*getCosts)(void* eventer, struct World*, struct Character*, 
+		struct EventerRequiredInformations, struct Tool* tool);
 
 	void (*executer)(void* eventer, struct World*, struct Character*, 
 		struct EventerRequiredInformations, struct Tool* tool);
 	int (*canExecute)(void* eventer, struct Character*, struct Tool* tool);
 	void (*notChoosed)(void* eventer, struct World*, struct Character*);
 
-	int (*getEnergyUse)(void* eventer, struct World*, struct Character*, 
+	int (*getEnergy)(void* eventer, struct World*, struct Character*, 
 		struct EventerRequiredInformations, struct Tool* tool);
 	int (*getSpellEnergyUse)(void* eventer, struct World*, struct Character*, 
 		struct EventerRequiredInformations, struct Tool* tool);

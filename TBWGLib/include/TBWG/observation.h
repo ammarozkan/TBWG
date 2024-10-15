@@ -6,6 +6,7 @@
 #include <TBWG/stats.h>
 #include <TBWG/maths.h>
 #include <TBWG/worldevents.h>
+#include <TBWG/effects.h>
 
 struct CharacterInformation {
 	id_number ID;
@@ -42,7 +43,7 @@ struct ObservingInformation {
     iVector position; fVector direction;
     digits32 state;
 
-    struct List effects;
+    struct List effects[EFFECT_TRIGGER_TYPE_COUNT];
 
     size_t eventerCount;
     struct Eventer* eventers;
