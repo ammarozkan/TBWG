@@ -53,7 +53,7 @@ struct Character {
 
 	struct EventerUses eventerSpendings;
 	size_t eventerCount;
-	struct Eventer* eventers;
+	struct Eventer* *eventers;
 
 	struct List effects[EFFECT_TRIGGER_TYPE_COUNT];
 
@@ -76,7 +76,9 @@ int defaultSeeCharacter(struct Character* observer, struct Character* target);
 int defaultSeeWorldEvent(struct Character* observer, struct WorldEvent* target);
 int defaultCanSeen(struct Character* observer, struct Character* target);
 
-void chAddEffect(struct Effect effect, unsigned int effectTriggerType, struct Character*);
+void chAddEffect(struct Effect* effect, unsigned int effectTriggerType, struct Character*);
 void chTriggerEffect(struct Character* ch, struct World* world, unsigned int effectTriggerType, void* relativeInformation);
+
+TBWGType* tbwgFindBeingByPosition(struct Dimension* dim, int x, int y);
 
 #endif /*TBWG_CHARACTERS_H*/

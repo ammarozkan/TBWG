@@ -46,7 +46,7 @@ struct ObservingInformation {
     struct List effects[EFFECT_TRIGGER_TYPE_COUNT];
 
     size_t eventerCount;
-    struct Eventer* eventers;
+    struct Eventer* *eventers;
 
 
     size_t characterCount;

@@ -11,6 +11,7 @@ struct tbwgdata {
 struct tbwgdata tbwgInit();
 void tbwgUse(struct tbwgdata* data);
 
+// unique events
 void tbwgTurn();
 void tbwgReorder();
 void tbwgMakeObserveAllCharacters();
@@ -18,9 +19,16 @@ void tbwgStreamWorldEvent(struct Dimension* dim, struct WorldEvent event);
 
 void tbwgTriggerReorderEffects(); // testing function
 
+
+// setters
 int tbwgAddCharacter(struct Character* character);
+
+
+// getters
+struct World* tbwgGetWorld();
 struct Dimension* tbwgGetFirstDimension();
 struct Dimension* tbwgFindDimensionByPos(unsigned int pos);
 struct Dimension* tbwgFindDimensionByID(id_number ID);
+
 
 void interruptTurn(); // will be used when a stopper trap invoked

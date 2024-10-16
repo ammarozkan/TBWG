@@ -6,21 +6,19 @@
 #include <TBWG/world.h>
 #include <TBWG/maths.h>
 
+
+struct Eventer;
+
 #define EVENTER_TYPE_CLASSIC (1<<0)
 #define EVENTER_TYPE_FASTMAGIC (1<<1)
 #define EVENTER_TYPE_FASTCOMBAT (1<<2)
 
-
-#define TARGET_ONE (1<<0)
-#define TARGET_AREA (1<<1)
-#define TARGET_POSITION (1<<2)
 
 #define EVENTER_REQUIRED_INFORMATION_POSITION (1<<0)
 #define EVENTER_REQUIRED_INFORMATION_AREA (1<<1)
 #define EVENTER_REQUIRED_INFORMATION_DIRECTION (1<<2)
 
 #define EVENTER_DEFAULT 0x00
-
 
 struct EventerUses {
 	int classic, fastcombat, movement, 
@@ -44,6 +42,8 @@ int executerCanExecuteNow(void* eventer, struct World* world, struct Character* 
 #define EVENTER_ENERGYUSE_BASE 0x01
 #define EVENTER_ENERGYUSE_BYUSE 0x02
 
+typedef int (*tbwgtypeSetEventerReady)(struct Eventer*, struct Character*, struct World*);
+
 struct Eventer {
 	unsigned int eventerCode;
 	id_number ID;
@@ -54,21 +54,18 @@ struct Eventer {
 	int baseEnergy, baseSpellEnergy;
 	digits32 eventer_type, required_informations;
 	struct EventerUses costs;
-	int usedInThisTurn; // will be set to zero when turn is beginning newly.
-	struct EventerUses (*getCosts)(void* eventer, struct World*, struct Character*, 
+
+	tbwgtypeSetEventerReady setReady;
+
+	int (*canExecutedNow)(void* eventer, struct World*, struct Character*, 
 		struct EventerRequiredInformations, struct Tool* tool);
 
 	void (*executer)(void* eventer, struct World*, struct Character*, 
 		struct EventerRequiredInformations, struct Tool* tool);
-	int (*canExecute)(void* eventer, struct Character*, struct Tool* tool);
-	void (*notChoosed)(void* eventer, struct World*, struct Character*);
 
-	int (*getEnergy)(void* eventer, struct World*, struct Character*, 
-		struct EventerRequiredInformations, struct Tool* tool);
-	int (*getSpellEnergyUse)(void* eventer, struct World*, struct Character*, 
-		struct EventerRequiredInformations, struct Tool* tool);
-	int (*canExecuteNow)(void* eventer, struct World*, struct Character*, 
-		struct EventerRequiredInformations, struct Tool* tool);
+	// when not choosed
+
+	void (*notChoosed)(void* eventer, struct World*, struct Character*);
 };
 
 #define TURNPLAY_END_TURN (1<<1)
@@ -79,6 +76,6 @@ struct TurnPlay {
 	unsigned int specs;
 };
 
-struct Eventer getDefaultPunchEventer();
+struct Eventer* getDefaultPunchEventer();
 
 #endif

@@ -43,9 +43,9 @@ struct Effect {
 
 struct EffectListElement {
 	struct ListElementHeader header;
-	struct Effect effect;
+	struct Effect* effect;
 };
 
-struct Effect getTestingHitEffect(void* effector, uint8_t effectorType); //
+struct Effect* getTestingHitEffect(void* effector); //
 
 #endif /*TBWG_EFFECTS_H*/
