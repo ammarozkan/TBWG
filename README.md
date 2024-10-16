@@ -4,6 +4,12 @@ This game rule standard is created to battle with a lot of creative powers.
 
 # TBWG 1
 
+TBWG is a Server Engine to serve a turn based battle with a lot of creative powers.
+From stopping time to controlling gravity, from seeing really sharply to being
+almostly invisible, from approaching from back to having great reflexes, from throwing
+knifes to switching two seperated things, from teleportation to traveling across
+dimensions etc.
+
 # Game Logic
 
 
@@ -605,32 +611,40 @@ int executerCanExecuteNow(void* eventer, struct World* world, struct Character* 
 #define EVENTER_ENERGYUSE_BASE 0x01
 #define EVENTER_ENERGYUSE_BYUSE 0x02
 
+typedef int (*tbwgtypeSetEventerReady)(struct Eventer*, struct Character*, struct World*);
+
 struct Eventer {
 	unsigned int eventerCode;
 	id_number ID;
 
 	char name[32];
 
-	uint8_t energyType;
+	uint8_t energyValueType;
 	int baseEnergy, baseSpellEnergy;
 	digits32 eventer_type, required_informations;
 	struct EventerUses costs;
-	int usedInThisTurn; // will be set to zero when turn is beginning newly.
+
+	tbwgtypeSetEventerReady setReady;
+
+	int (*canExecutedNow)(void* eventer, struct World*, struct Character*,
+		struct EventerRequiredInformations, struct Tool* tool);
 
 	void (*executer)(void* eventer, struct World*, struct Character*,
 		struct EventerRequiredInformations, struct Tool* tool);
-	int (*canExecute)(void* eventer, struct Character*, struct Tool* tool);
-	void (*notChoosed)(void* eventer, struct World*, struct Character*);// if an eventer needs focus for couple of times, not choosing it
-                                       // should be able to break the focus.
 
-    int (*getEnergyUse)(void* eventer, struct World*, struct Character*,
-		struct EventerRequiredInformations, struct Tool* tool);
-	int (*getSpellEnergyUse)(void* eventer, struct World*, struct Character*,
-		struct EventerRequiredInformations, struct Tool* tool);
-	int (*canExecuteNow)(void* eventer, struct World*, struct Character*,
-		struct EventerRequiredInformations, struct Tool* tool);
+	// when not choosed
+
+	void (*notChoosed)(void* eventer, struct World*, struct Character*);
 };
 ```
+
+When a eventer is a selectible option, in example when the turn of character cames up, the setReady
+function will be called by system. With this, values of eventer may be changed before communicating
+with the interface or using costs by the desire of this eventer. In example, lets say this is a
+magic that required some hand signs first to get that ready. Lets say hand signs wont require any spell energy.
+Then in the first execution, this eventer shouldn't require any spell energy. Then in the second execution,
+this eventer should require some spell energy and some Magic Eventer Use cost. This kind of thing can be done
+with that function.
 
 When a eventer has EVENTER_ENERGYUSE_BASE in energyType, then the baseEnergy values will be
 the constant energy using values.
