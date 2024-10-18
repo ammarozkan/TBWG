@@ -221,13 +221,20 @@ When a character does some hand sign to perform something, some characters may s
 sign the character is doing by checking the vision level of observer and vision hardness
 of this event. In example sharingan users may see more clearly what the character is doing
 in front of him before the sign is done and the thing is performing. (Thats called World
-Events in the library. Look at the World Events section for detailed information.)
-
+Events in the library. Look at the World Events section for detailed information.
 
 ```
 distanceFactor = max(1.0f, pow(distance, 0.25f)/2.0f)
 VisionHardnessFinal = VisionHardness * pow(distance, 0.25f)/2.0f
 ```
+
+### Vision Resistence Standardization
+
+- No Restriction : 0
+- Crouching : 1
+- Grass : 5
+- Much More Grass like Forest or When Top of A Tree: 10
+- Below the Ground : 70
 
 ## Example
 
