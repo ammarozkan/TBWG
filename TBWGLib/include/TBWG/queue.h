@@ -42,6 +42,8 @@ struct QueueCharacterTurn {
 struct QueueCharacterTurn getBasicCharacterTurn();
 void defaultCharacterTurnInvoke(struct QueueCharacterTurn*);
 
+struct QueueEntityTurn getBasicEntityTurn();
+
 struct QueueTimedTurn {
 	struct QueueElementHeader header;
 

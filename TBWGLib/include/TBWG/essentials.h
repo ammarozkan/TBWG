@@ -13,6 +13,7 @@
 #define TBWG_TYPE_TOOL 0x09
 
 #define GET_SIZED_STRUCT(structName) malloc(sizeof(struct structName))
+#define NEW(structName) GET_SIZED_STRUCT(structName)
 
 struct iLimitedValue {
 	int value, max;

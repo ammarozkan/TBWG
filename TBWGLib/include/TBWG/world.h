@@ -3,8 +3,10 @@
 
 #include <TBWG/essentials.h>
 #include <TBWG/lists.h>
+
 struct Entity;
 struct Character;
+struct Being;
 
 struct CharacterListElement {
 	struct ListElementHeader header;
@@ -14,6 +16,11 @@ struct CharacterListElement {
 struct EntityListElement {
 	struct ListElementHeader header;
 	struct Entity* entity;
+};
+
+struct BeingListElement {
+	struct ListElementHeader header;
+	struct Being* being;
 };
 
 struct Dimension {

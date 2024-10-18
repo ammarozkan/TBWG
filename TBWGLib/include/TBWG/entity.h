@@ -2,30 +2,25 @@
 #define TBWG_ENTITY_H
 
 #include<TBWG/characters.h>
+#include <TBWG/being.h>
 
 #define ENTITY_DEFAULT 0x01
 #define ENTITY_ROCK 0x02
 
 struct Entity;
 
-typedef void (*CollisionFunction) (struct Entity*, struct Character*);
+typedef void (*UseEntityFunction)(struct Entity*, struct Being* user);
 
 struct Entity {
-	TBWGType tbwgType;
-	id_number ID;
-	
-	digits32 entityCode;
-	iVector position; fVector direction;
-	float mass; unsigned int visionHardness;
+	struct Being b;
 
-	float visionAngle; unsigned int visionLevel;
-
-	CollisionFunction collisionFunction;
-	
 	HitterFunction hit;
-	
-	CanSeen canSeen;
+	UseEntityFunction use;
 };
+
+
+struct Entity* createDefaultEntity(struct Dimension* dimension, iVector position);
+void destroyEntity(struct Entity*);
 
 
 #endif /*TBWG_ENTITY_H*/
