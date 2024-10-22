@@ -1,8 +1,10 @@
 #ifndef TBWG_WORLD_H
 #define TBWG_WORLD_H
 
+#include <TBWG/maths.h>
 #include <TBWG/essentials.h>
 #include <TBWG/lists.h>
+#include <TBWG/areas.h>
 
 struct Entity;
 struct Character;
@@ -27,6 +29,7 @@ struct Dimension {
 	id_number ID;
 	struct List characterList;
 	struct List entityList;
+	struct List areaList;
 };
 
 struct DimensionListElement {
@@ -44,6 +47,10 @@ struct World createDefaultWorld();
 int addCharacterToWorld(struct World* world, struct Character* character);
 
 struct Character* dimensionGetCharacterByPosition(struct Dimension* dimension, int x, int y);
+struct List dimensionGetAreasOfPosition(struct Dimension* dim, iVector pos);
+struct List dimensionGetInAreaCharacters(struct Dimension* dim, iVector a, iVector b);
+
+void dimensionAddArea(struct Dimension* dim, struct Area* area);
 
 #define GET_CHARACTER_LIST_FROM_DIMENSION(dimension) ((struct DimensionListElement*)dimension)->dimension->characterList
 

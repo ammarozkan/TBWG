@@ -7,6 +7,11 @@ struct ListElementHeader{
 	struct ListElementHeader* next;
 };
 
+struct PtrElementHeader {
+	struct ListElementHeader header;
+	void* ptr;
+};
+
 struct List {
 	struct ListElementHeader* firstelement;
 	struct ListElementHeader* lastelement;
@@ -15,11 +20,16 @@ struct List {
 
 #define ITERATE(list, asthis) for (struct ListElementHeader* asthis = (struct ListElementHeader*)list.firstelement; asthis != NULL; asthis = asthis->next)
 #define ITERATE_(list, asthis, type, next) for (type* asthis = (type*)list.firstelement; asthis != NULL; asthis = asthis next)
+#define ITERATE_STD(list, asthis, type) for (type* asthis = (type*)list.firstelement; asthis != NULL; asthis = (type*)asthis->header.next)
+
+struct List createList();
+void freeListHeaders(struct List);
 
 void addElement(struct List* list, void* element, long unsigned int size);
 void removeElement(struct List* list, void* element);
 void* popElement(struct List* list, void* element);
-struct List createList();
 int listIsEmpty(struct List* list);
+
+struct List subtractList(struct List a, struct List b); // result = a - b // negative doesnt exist
 
 #endif /*TBWG_LISTS_H*/

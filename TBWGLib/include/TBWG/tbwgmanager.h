@@ -22,7 +22,7 @@ void tbwgTriggerReorderEffects(); // testing function
 
 // setters
 int tbwgAddCharacter(struct Character* character);
-
+int tbwgAddArea(struct Dimension* dim, struct Area* area);
 
 // getters
 struct World* tbwgGetWorld();

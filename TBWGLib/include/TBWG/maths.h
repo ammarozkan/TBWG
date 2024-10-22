@@ -36,4 +36,7 @@ float getMaxLookLengthByAngle(float seeingAngle); // radians
 
 float getVisionHardnessFinal(float visionHardness, float distance);
 
+
+int isPositionInside(iVector pos, iVector a, iVector b);
+
 #endif /*TBWG_MATHS_H*/
