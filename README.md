@@ -798,14 +798,24 @@ struct Dimension {
 struct Area {
     int x1, y1, x2, y2;
 
-    void (*whenEntered)(struct Area*, struct Character* enterer);
-    void (*whenExited)(struct Area*, struct Character* exiter);
-    void (*whileInside)(struct Area*, struct Character* insider);
+    void (*whenEntered)(struct Area*, struct Being* enterer);
+    void (*whenExited)(struct Area*, struct Being* exiter);
+    void (*whileInside)(struct Area*, struct Being* insider);
 };
 ```
+The tbwgAddArea function will be used for adding the area to the system. this function will
+control who is inside of the area (needs to be generalized to beings rather than characters)
+and executes whenEntered() for those that are inside.
 
-Are
+When a position change happens, the tbwg system will be controlling which areas needs to execute
+whenExited() or whenEntered().
 
+When reorder queue executed, every areas whileInside() function shall be executed to the beings
+that are inside the area.
+
+May all position changes should be done by the tbwg system rather than effects manually doing that.
+tbwg system could give an interface to effects to handle it. In example public tbwgMoveBeing(struct Being*)
+function.
 
 
 ### Observing Information
