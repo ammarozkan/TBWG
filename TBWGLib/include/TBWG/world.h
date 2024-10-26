@@ -43,14 +43,20 @@ struct World {
 	unsigned int characterCount;
 };
 
-struct World createDefaultWorld();
-int addCharacterToWorld(struct World* world, struct Character* character);
+int dimensionAddArea(struct Dimension* dim, struct Area* area);
+int dimensionAddCharacter(struct Dimension*, struct Character*);
 
 struct Character* dimensionGetCharacterByPosition(struct Dimension* dimension, int x, int y);
 struct List dimensionGetAreasOfPosition(struct Dimension* dim, iVector pos);
 struct List dimensionGetInAreaCharacters(struct Dimension* dim, iVector a, iVector b);
 
-void dimensionAddArea(struct Dimension* dim, struct Area* area);
+
+
+struct World createDefaultWorld();
+int worldAddCharacter(struct World* world, struct Character* character);
+
+
+
 
 #define GET_CHARACTER_LIST_FROM_DIMENSION(dimension) ((struct DimensionListElement*)dimension)->dimension->characterList
 

@@ -11,6 +11,8 @@ struct Being;
 typedef void (*AreaEventerFunction)(struct Area*, struct Being*);
 
 struct Area {
+	char* name;
+
 	iVector a, b; // b > a!
 
 	AreaEventerFunction whenEntered, whenExited, whileInside;
@@ -31,7 +33,7 @@ int isBeingInsideArea(struct Being*, struct Area*);
 
 
 #ifdef TBWG_DEBUG
-struct Area getDebugArea();
+struct Area getDebugArea(iVector a, iVector b);
 #endif /*TBWG_DEBUG*/
 
 #endif /*TBWG_AREAS_H*/

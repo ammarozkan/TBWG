@@ -77,5 +77,6 @@ struct TurnPlay {
 };
 
 struct Eventer* getDefaultPunchEventer();
+struct Eventer* getDefaultWalkEventer();
 
 #endif

@@ -24,10 +24,12 @@ struct List {
 
 struct List createList();
 void freeListHeaders(struct List);
+void freeListsHeaders(struct List*, unsigned int listCount);
 
 void addElement(struct List* list, void* element, long unsigned int size);
-void removeElement(struct List* list, void* element);
+void destroyElement(struct List* list, void* element);
 void* popElement(struct List* list, void* element);
+void decolonizeList(struct List* list);
 int listIsEmpty(struct List* list);
 
 struct List subtractList(struct List a, struct List b); // result = a - b // negative doesnt exist

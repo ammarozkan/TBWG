@@ -17,7 +17,8 @@ void tbwgReorder();
 void tbwgMakeObserveAllCharacters();
 void tbwgStreamWorldEvent(struct Dimension* dim, struct WorldEvent event);
 
-void tbwgTriggerReorderEffects(); // testing function
+void tbwgTriggerEffects(unsigned int effectType, void* relativeInformation);
+void tbwgAreaWhileInsides();
 
 
 // setters
@@ -29,6 +30,10 @@ struct World* tbwgGetWorld();
 struct Dimension* tbwgGetFirstDimension();
 struct Dimension* tbwgFindDimensionByPos(unsigned int pos);
 struct Dimension* tbwgFindDimensionByID(id_number ID);
+
+// changers
+void tbwgMoveBeing(struct Being*, iVector positionChange);
+void tbwgPutBeing(struct Being*, iVector position);
 
 
 void interruptTurn(); // will be used when a stopper trap invoked

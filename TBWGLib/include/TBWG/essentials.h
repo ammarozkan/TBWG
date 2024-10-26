@@ -32,5 +32,6 @@ void getName(Name memPlace, char*);
 id_number getID();
 void tbwgmemcpy(void* dest, void* source, long unsigned int size);
 size_t tbwgstrlen(char* str);
+#define tbwgmalloc malloc
 
 #endif
