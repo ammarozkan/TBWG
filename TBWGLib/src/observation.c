@@ -8,10 +8,10 @@
 struct CharacterInformation getCharacterInformation(struct Character* chr)
 {
 	struct CharacterInformation r;
-	r.ID = chr->ID;
-	r.characterCode = chr->characterCode;
-	r.position = chr->position;
-	r.direction = chr->direction;
+	r.ID = chr->b.ID;
+	r.characterCode = chr->b.code;
+	r.position = chr->b.position;
+	r.direction = chr->b.direction;
 	r.hp = chr->hp;
 	return r;
 }
@@ -20,17 +20,17 @@ struct CharacterInformation getCharacterInformation(struct Character* chr)
 struct ObservingInformation Observe(struct Character* as, struct World* world)
 {
 	struct ObservingInformation obsrv;
-	obsrv.selfid = as->ID;
+	obsrv.selfid = as->b.ID;
 	obsrv.characterStats = as->stats;
 	obsrv.hp = as->hp;
 	obsrv.e = as->e;
 	obsrv.se = as->se;
 
-	obsrv.position = as->position;
+	obsrv.position = as->b.position;
 
 	obsrv.state = as->state;
 
-	obsrv.effects = as->effects;
+	//obsrv.effects = as->effects;
 
 	obsrv.eventerCount = as->eventerCount;
 	obsrv.eventers = as->eventers;
@@ -49,10 +49,10 @@ struct ObservingInformation Observe(struct Character* as, struct World* world)
 		int seeingResult = 0;
 
 		// hmm is it in the vision area?
-		seeingResult = seeingResult || isInVisionArea(as->direction, as->stats.visionAngle, as->position, chr->position);
+		seeingResult = seeingResult || isInVisionArea(as->b.direction, as->b.eye.angle, as->b.position, chr->b.position);
 
 		// okay lets look at the ability check
-		int seeingCheck = as->seeCharacter(as, chr) && chr->canSeen(as, chr);
+		int seeingCheck = as->seeCharacter(as, chr) && chr->b.canSeen((struct Being*)as, (struct Being*)chr);
 
 		seeingResult = seeingResult && seeingCheck;
 
@@ -66,13 +66,13 @@ struct ObservingInformation Observe(struct Character* as, struct World* world)
 			if(*resourceType == TBWG_TYPE_CHARACTER) {
 				struct Character* sr = (struct Character*)resourceType;
 
-				if(!isInVisionArea(sr->direction, sr->stats.visionAngle, sr->position, chr->position)) continue;
+				if(!isInVisionArea(sr->b.direction, sr->b.eye.angle, sr->b.position, chr->b.position)) continue;
 
-				seeingResult = seeingResult || (sr->seeCharacter(sr, chr) && chr->canSeen(sr, chr));
+				seeingResult = seeingResult || (sr->seeCharacter(sr, chr) && chr->b.canSeen((struct Being*)sr, (struct Being*)chr));
 			} else if (*resourceType == TBWG_TYPE_ENTITY) {
 				struct Entity* sr = (struct Entity*)resourceType;
 
-				if(!isInVisionArea(sr->direction, sr->visionAngle, sr->position, chr->position)) continue;
+				if(!isInVisionArea(sr->b.direction, sr->b.eye.angle, sr->b.position, chr->b.position)) continue;
 			}
 		}
 
@@ -94,7 +94,8 @@ seeingSuccesfull:
 
 struct WorldEventInformation ObserveWorldEventInformation(struct Character* as, struct WorldEvent* evnt)
 {
-	struct WorldEventInformation info = {as->ID, "", evnt->position};
+	struct WorldEventInformation info = {as->b.ID, "", evnt->position};
+	if(!isInVisionArea(as->b.direction, as->b.eye.angle, as->b.position, evnt->position)) return info;
 	if(!as->seeWorldEvent(as, evnt)) return info;
 	info.eventName = evnt->name;
 	return info;

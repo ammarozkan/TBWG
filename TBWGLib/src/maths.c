@@ -73,3 +73,10 @@ float getVisionHardnessFinal(float visionHardness, float distance)
 	float distanceFactor = fmax(1.0f, pow(distance, 0.25f)/2.0f);
 	return visionHardness * distanceFactor;
 }
+
+
+
+int isPositionInside(iVector pos, iVector a, iVector b)
+{
+	return (pos.x >= a.x && pos.y >= a.y) && (pos.x <= b.x && pos.y <= b.y);
+}

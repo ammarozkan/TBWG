@@ -73,3 +73,14 @@ struct QueueCharacterTurn getBasicCharacterTurn()
 	r.requirements = 0 | CHARACTER_REQ_ALIVE;
 	return r;
 }
+
+
+struct QueueEntityTurn getBasicEntityTurn(struct Entity* entity)
+{
+	struct QueueEntityTurn r;
+	r.header.listHeader.prior = NULL;
+	r.header.listHeader.next = NULL;
+	r.header.type = QUEUE_ENTITY;
+	r.entity = entity;
+	return r;
+}

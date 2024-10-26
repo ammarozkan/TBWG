@@ -1,6 +1,5 @@
 #include <stdlib.h> // malloc, free
 #include <TBWG/essentials.h>
-#include <TBWG/lists.h>
 
 void tbwgmemcpy(void* _dest, void* _source, long unsigned int size)
 {
@@ -12,64 +11,21 @@ void tbwgmemcpy(void* _dest, void* _source, long unsigned int size)
 	}
 }
 
-struct List createList()
-{
-	struct List result = {.count = 0, .firstelement = NULL, .lastelement = NULL};
-	return result;
-}
-
-
-void addElement(struct List* list, void* elm, size_t size)
-{
-	struct ListElementHeader* element = malloc(size);
-	tbwgmemcpy(element, elm, size);
-
-
-	if (list->firstelement == NULL) list->firstelement = element;
-	
-	if(list->lastelement != NULL) list->lastelement->next = element;
-
-	element->prior = list->lastelement;
-	list->lastelement = element;
-	list->count += 1;
-}
-
-
-void* popElement(struct List* list, void* elm)
-{
-	struct ListElementHeader* element = (struct ListElementHeader*)elm;
-
-	if(element->next == NULL) {
-		list->lastelement = element->prior;
-	} else {
-		element->next->prior = element->prior;
-	}
-
-	if(element->prior == NULL) {
-		list->firstelement = element->next;
-	} else {
-		element->prior->next = element->next;
-	}
-
-	list->count -= 1;
-	return element;
-}
-
-
-void removeElement(struct List* list, void* elm)
-{
-	free(popElement(list, elm));
-}
-
-
-int 
-listIsEmpty(struct List* list)
-{
-	return list->firstelement == NULL || list->lastelement == NULL;
-}
-
 id_number getID()
 {
 	static id_number id = 5;
 	return id++;
+}
+
+size_t tbwgstrlen(char* str)
+{
+	size_t i = 0;
+	for(;str[i]!='\0';i+=1);
+	return i;
+}
+
+
+void getName(Name memPlace, char* n)
+{
+	tbwgmemcpy(memPlace, n, tbwgstrlen(n+1));
 }
