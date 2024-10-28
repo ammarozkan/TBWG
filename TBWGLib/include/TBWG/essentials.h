@@ -19,6 +19,9 @@ struct iLimitedValue {
 	int value, max;
 };
 
+#define TBWG_ID_UNKNOWN 0x00
+#define TBWG_ID_NEW 0x01
+
 typedef uint32_t id_number;
 typedef uint32_t digits32;
 

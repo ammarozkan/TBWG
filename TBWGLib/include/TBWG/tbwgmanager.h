@@ -8,12 +8,13 @@ struct tbwgdata {
 };
 
 
-struct tbwgdata tbwgInit();
+struct tbwgdata* tbwgInit();
 void tbwgUse(struct tbwgdata* data);
 
 // unique events
 void tbwgTurn();
 void tbwgReorder();
+void tbwgInterruptTurn(); // will be used when a stopper trap invoked
 void tbwgMakeObserveAllCharacters();
 void tbwgStreamWorldEvent(struct Dimension* dim, struct WorldEvent event);
 
@@ -36,4 +37,3 @@ void tbwgMoveBeing(struct Being*, iVector positionChange);
 void tbwgPutBeing(struct Being*, iVector position);
 
 
-void interruptTurn(); // will be used when a stopper trap invoked
