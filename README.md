@@ -353,9 +353,9 @@ id_number getID()
 }
 ```
 
-## Server
+## Core (Core to be the Server)
 
-Server creates queue, when a character's turn came up, server will send the information
+Core creates queue, when a character's turn came up, server will send the information
 that character gets and ask the controller to what to do for that character. Executes
 effects when the Reorder Turn came up.
 
@@ -395,7 +395,7 @@ character struct (take a look at the struct Character).
 
 #### Reorder Turns
 
-Server will add every character's base queue to the start of the queue in order
+Core will add every character's base queue to the start of the queue in order
 of character's speed.
 
 ```C
@@ -406,7 +406,7 @@ struct QueueReorderTurn {
 
 #### Character's Turn
 
-Server will ask to the controller to choose what character will do in the turn.
+Core will ask to the controller to choose what character will do in the turn.
 Will choose an eventer.
 
 Now Character's Turn Queue Structure Definition:
@@ -903,7 +903,7 @@ void tbwgStreamWorldEvent(struct Dimension* dim, struct WorldEvent event);
 
 #### Controller Communicating System (CCS)
 
-Server should listen to the invoking client connection requests all the time.
+Core should listen to the invoking client connection requests all the time.
 When a client wants to join, server needs to accept it and then ask it which character
 to choose in server. If there's no empty characters, controller should be able to
 join as a new character aswell.
@@ -1050,12 +1050,144 @@ struct tbwgdata {
 };
 
 
-struct tbwgdata tbwgInit();
+struct tbwgdata* tbwgInit();
+void tbwgUse(struct tbwgdata* data);
+
+// unique events
+void tbwgTurn();
+void tbwgReorder();
+void tbwgInterruptTurn(); // will be used when a stopper trap invoked
+void tbwgMakeObserveAllCharacters();
+void tbwgStreamWorldEvent(struct Dimension* dim, struct WorldEvent event);
+
+void tbwgTriggerEffects(unsigned int effectType, void* relativeInformation);
+void tbwgAreaWhileInsides();
+
+
+// setters
+int tbwgAddCharacter(struct Character* character);
+int tbwgAddArea(struct Dimension* dim, struct Area* area);
+
+// getters
+struct World* tbwgGetWorld();
+struct Dimension* tbwgGetFirstDimension();
+struct Dimension* tbwgFindDimensionByPos(unsigned int pos);
+struct Dimension* tbwgFindDimensionByID(id_number ID);
+
+// changers
+void tbwgMoveBeing(struct Being*, iVector positionChange);
+void tbwgPutBeing(struct Being*, iVector position);
+```
+
+When the game starts, TBWG Manager should be inited with tbwgInit(). If more than one tbwgs will be
+inited, returned pointer of tbwgInit should be saved and the tbwgUse function should be used for
+switching the tbwg datas.
+
+tbwgReorder does the reordering.
+
+tbwgTurn pops the next thing on queue list and executes it.
+
+tbwgInterruptTurn created to be used in effects, eventers, areas etc. Interrupts the current
+turn. So the character's, that is making decisions, turn will be interrupted.
+
+tbwgMakeObserveAllCharacters will make all characters observe the what they can observe.
+
+tbwgStreamWorldEvent created to be used in effects, eventers, areas etc. Streams a world event
+to hint some information about the movement.
+
+
+
+## Communication (Server, Client)
+
+
+A communication standard should be defined to work with this type of fight game.
+I'll call the defined standard as **TBWGCON 1**.
+
+Before getting to it, some section may include somethings like (CP. x) and some structs include something like
+```unsigned int nextchapter;``` Those are the client manipulators. Client manipulators are being used to return
+to some segment in the process. aka JMP instructor.
+
+### Joining
+
+Clients will want to join the game in any time. That could be before the game starts, while in game, or after the game.
+
+When a client tries to join, should make the first entrance with the checking pkg. (CP. 1)
+
+```C
+
+struct CheckingPackage {
+	char[4] tbwgname; 	// server standard name, defaultly "TBWG". that may changed by the creator when the creator is
+						// creating a custom server.
+	unsigned int version[3]; // v[0].v[1].v[2] = MAJOR.Minor.patch
+};
 
 ```
 
-When the game starts, TBWG Manager should be inited.
+Then server responds with the closest server type and the version to introduced pkg. if the pkg is not supported
+by the server, otherwise server responds with the error code 0.
 
+```C
 
+struct WelcomingPackage {
+	struct CheckingPackage ip; // same as client sended one if supported by server, otherwise closest to that
+	unsigned int errcode; // will be used as .errcode = UNSUPPORTEDVERSION | UNSUPPORTEDGAME;
+	unsigned int nextchapter; // what should client do?
+};
 
+```
 
+If server is okay with the version, client sends a name(may nickname). (CP. 2)
+
+```C
+
+struct IntroducementPackage {
+	unsigned int nameSize; // max 32
+	char name[nameSize]; // max 32 sized
+};
+
+```
+
+Server responds.
+
+```C
+
+struct IntroducementResponse {
+	unsigned int errcode;
+	unsigned int nextchapter;
+};
+
+```
+
+Client continues to reading if no error has been maden. (CP. 3)
+
+```C
+
+struct TBWGInformator {
+	uint16_t characterCount;
+	struct TBWGCONCharacterInfo charinfo[characterCount];
+};
+
+```
+
+Client sends the choosen character.
+
+```C
+
+struct CharacterSelection {
+	int selection; // if this selection is -1, client selects to create a character.
+};
+
+```
+
+If client choosed an existing character, but that one wasn't available:
+
+```C
+
+struct CharacterSelectionError {
+};
+
+```
+
+If client choosed a character is available, then we can say connection is succesfully done for this standard.
+
+If client choosed to create a character, then we continue on **Character Creation** section.
