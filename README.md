@@ -1095,7 +1095,10 @@ tbwgMakeObserveAllCharacters will make all characters observe the what they can 
 tbwgStreamWorldEvent created to be used in effects, eventers, areas etc. Streams a world event
 to hint some information about the movement.
 
-
+```
+-- -- Part After Here is Not Done Yet -- --
+Communication and networking still being developed.
+```
 
 ## Communication (Server, Client)
 
@@ -1191,3 +1194,6 @@ struct CharacterSelectionError {
 If client choosed a character is available, then we can say connection is succesfully done for this standard.
 
 If client choosed to create a character, then we continue on **Character Creation** section.
+
+
+Bit of warning, ommunication not done.
