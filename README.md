@@ -1095,13 +1095,13 @@ tbwgMakeObserveAllCharacters will make all characters observe the what they can 
 tbwgStreamWorldEvent created to be used in effects, eventers, areas etc. Streams a world event
 to hint some information about the movement.
 
-```
--- -- Part After Here is Not Done Yet -- --
-Communication and networking still being developed.
-```
+
 
 ## Communication (Server, Client)
 
+```
+Parts after here can change any time. Being planned.
+```
 
 A communication standard should be defined to work with this type of fight game.
 I'll call the defined standard as **TBWGCON 1**.
@@ -1110,18 +1110,56 @@ Before getting to it, some section may include somethings like (CP. x) and some 
 ```unsigned int nextchapter;``` Those are the client manipulators. Client manipulators are being used to return
 to some segment in the process. aka JMP instructor.
 
+### Encryption
+
+Before the all connection and data transfering, besides the communication standard, an encryption system
+is needed. Whatever the system and client uses, the encrypted communication needs to support all the basic
+communication. I recommend the encryption has the ability to hide the packages even from the clients. Maybe,
+needs to be hard to crack even in a client perspective (to prevent cheats).
+
+#### Thought of Standard
+idee pour le cryptage de communication
+
+```
+---socket connection---
+encrypt(sample1) => enc1  ------------>  decrypt(enc1) == sample1
+decrypt(enc2) == sample2  <------------  encrypt(sample2) => enc2
+```
+
+
+
 ### Joining
 
+```C
+
+	struct TBWGConHeader {
+		char[4] tbwgname;
+		uint8_t version[3];
+		uint8_t pkgcode;
+	};
+
+	// basic std packages
+
+	// pkgcode : 7
+	struct TBWGWait {
+		struct TBWGConHeader header;
+	};
+
+```
+
 Clients will want to join the game in any time. That could be before the game starts, while in game, or after the game.
+
+#### Chapter 1
 
 When a client tries to join, should make the first entrance with the checking pkg. (CP. 1)
 
 ```C
 
-struct CheckingPackage {
+// pkgcode : 0
+struct TBWGCheckingPackage {
 	char[4] tbwgname; 	// server standard name, defaultly "TBWG". that may changed by the creator when the creator is
 						// creating a custom server.
-	unsigned int version[3]; // v[0].v[1].v[2] = MAJOR.Minor.patch
+	uint8_t version[3]; // v[0].v[1].v[2] = MAJOR.Minor.patch
 };
 
 ```
@@ -1131,20 +1169,25 @@ by the server, otherwise server responds with the error code 0.
 
 ```C
 
-struct WelcomingPackage {
+// pkgcode : 1
+struct TBWGWelcomingPackage {
 	struct CheckingPackage ip; // same as client sended one if supported by server, otherwise closest to that
-	unsigned int errcode; // will be used as .errcode = UNSUPPORTEDVERSION | UNSUPPORTEDGAME;
-	unsigned int nextchapter; // what should client do?
+	uint32_t errcode; // will be used as .errcode = UNSUPPORTEDVERSION | UNSUPPORTEDGAME;
+	uint32_t nextchapter; // what should client do?
 };
 
 ```
+
+#### Chapter 2
 
 If server is okay with the version, client sends a name(may nickname). (CP. 2)
 
 ```C
 
-struct IntroducementPackage {
-	unsigned int nameSize; // max 32
+// pkgcode : 2
+struct TBWGIntroducementPackage {
+	struct TBWGConHeader header;
+	uint32_t nameSize; // max 32
 	char name[nameSize]; // max 32 sized
 };
 
@@ -1154,18 +1197,25 @@ Server responds.
 
 ```C
 
-struct IntroducementResponse {
-	unsigned int errcode;
-	unsigned int nextchapter;
+// pkgcode : 3
+struct TBWGIntroducementResponse {
+	struct TBWGConHeader header;
+	uint32_t errcode;
+	uint32_t nextchapter;
 };
 
 ```
+
+#### Chapter 3
 
 Client continues to reading if no error has been maden. (CP. 3)
 
 ```C
 
+// pkgcode : 4
 struct TBWGInformator {
+	struct TBWGConHeader header;
+
 	uint16_t characterCount;
 	struct TBWGCONCharacterInfo charinfo[characterCount];
 };
@@ -1176,8 +1226,14 @@ Client sends the choosen character.
 
 ```C
 
+#define CHARACTERSELECTION_OPTION_CREATE (1 << 0)
+
+// pkgcode : 5
 struct CharacterSelection {
-	int selection; // if this selection is -1, client selects to create a character.
+	struct TBWGConHeader header;
+
+	uint8_t selection;
+	uint8_t options; // CHARACTERSELECTION_OPTION_CREATE, etc.
 };
 
 ```
@@ -1186,7 +1242,15 @@ If client choosed an existing character, but that one wasn't available:
 
 ```C
 
+#define CHARSELECTERR_NOPERMISSION 0x0
+#define CHARSELECTERR_ALREADYINUSE 0x1
+
+// pkgcode : 6
 struct CharacterSelectionError {
+	struct TBWGConHeader header;
+
+	uint32_t characterSelectionErrorCode;
+	uint32_t nextchapter;
 };
 
 ```
@@ -1196,4 +1260,57 @@ If client choosed a character is available, then we can say connection is succes
 If client choosed to create a character, then we continue on **Character Creation** section.
 
 
-Bit of warning, ommunication not done.
+#### Character Creation
+
+##### Chapter 10
+
+###### If Server Wants to Decide the Character
+
+If the server, wants to decide what character that client should have; server sends the wait code:
+
+```C
+
+// pkgcode : 7
+struct TBWGWait {
+	struct TBWGConHeader header;
+};
+
+```
+
+and then after a while:
+
+```C
+
+// pkgcode : 8
+struct TBWGNewCharacterInfo {
+	struct TBWGConHeader header;
+	struct TBWGCONCharacterInfo charinfo;
+};
+
+```
+
+and then we can say connection is succesfully done for this standard.
+
+###### If Server Lets the Client Create the Character
+
+```
+
+dont know how yet. client should choose one of character to create in the world.
+or maybe character can create a character from scratch? i dont know surely.
+
+```
+
+
+### Playing
+
+```
+
+will going to be planned.
+
+```
+
+
+
+
+
+
