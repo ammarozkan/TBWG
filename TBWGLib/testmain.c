@@ -54,8 +54,7 @@ int main(int argc, char*argv[])
 		printf("%s!\n",elm->name);
 	}
 
-	struct tbwgdata data = tbwgInit();
-	tbwgUse(&data);
+	tbwgInit();
 
 	printf("Reorder test!\n");
 	tbwgReorder();
@@ -68,15 +67,20 @@ int main(int argc, char*argv[])
 
 	printf("Character creation test!\n");
 
-	struct Character* character1 = createDefaultCharacter(tbwgGetFirstDimension(&data), getiVector(1,0));
-	struct Character* character2 = createDefaultCharacter(tbwgGetFirstDimension(&data), getiVector(0,0));
-	struct Character* character3 = createDefaultCharacter(tbwgGetFirstDimension(&data), getiVector(0,1));
+	struct Character* character1 = createDefaultCharacter(tbwgGetFirstDimension(), getiVector(1,0));
+	chAddEffect(getTestingHitEffect(NULL), EFFECT_TRIGGER_TYPE_HIT, character1);
+
+	struct Character* character2 = createDefaultCharacter(tbwgGetFirstDimension(), getiVector(0,0));
+	struct Character* character3 = createDefaultCharacter(tbwgGetFirstDimension(), getiVector(0,1));
 
 	printf("Adding character to tbwgmanager\n");
 
 	tbwgAddCharacter(character1);
 	tbwgAddCharacter(character2);
 	tbwgAddCharacter(character3);
+
+	struct Area debugArea = getDebugArea(getiVector(5,5), getiVector(12,12));
+	tbwgAddArea(tbwgGetFirstDimension(), &debugArea);
 
 	printf("Reordering again!\n");
 

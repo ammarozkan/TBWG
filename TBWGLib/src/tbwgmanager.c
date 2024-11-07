@@ -7,12 +7,13 @@
 
 struct tbwgdata* data;
 
-struct tbwgdata
+struct tbwgdata*
 tbwgInit()
 {
-	struct tbwgdata result;
-	result.queue = createQueue();
-	result.world = createDefaultWorld();
+	struct tbwgdata* result = NEW(tbwgdata);
+	result->queue = createQueue();
+	result->world = createDefaultWorld();
+	data = result;
 	return result;
 }
 
