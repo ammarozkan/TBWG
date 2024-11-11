@@ -11,3 +11,8 @@ network interface. we want to play this game with pals, you know.
 
 When a character is exiting from a dimension, server should search the dimension invoked effects and remove them.
 
+## code is not following any standard
+
+Complex, un-understandable code over here.
+
+Howdimngeddoin that
