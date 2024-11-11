@@ -1121,9 +1121,10 @@ needs to be hard to crack even in a client perspective (to prevent cheats).
 idee pour le cryptage de communication
 
 ```
----socket connection---
+------------------------ socket connection ----------------------
 encrypt(sample1) => enc1  ------------>  decrypt(enc1) == sample1
 decrypt(enc2) == sample2  <------------  encrypt(sample2) => enc2
+--------------then encrypted communication goes on---------------
 ```
 
 
@@ -1171,7 +1172,7 @@ by the server, otherwise server responds with the error code 0.
 
 // pkgcode : 1
 struct TBWGWelcomingPackage {
-	struct CheckingPackage ip; // same as client sended one if supported by server, otherwise closest to that
+	struct TBWGCheckingPackage ip; // same as client sended one if supported by server, otherwise closest to that
 	uint32_t errcode; // will be used as .errcode = UNSUPPORTEDVERSION | UNSUPPORTEDGAME;
 	uint32_t nextchapter; // what should client do?
 };
@@ -1185,10 +1186,12 @@ If server is okay with the version, client sends a name(may nickname). (CP. 2)
 ```C
 
 // pkgcode : 2
+#define STD_NAME_SIZE 32 // or maybe your server would choose to use more?
+
 struct TBWGIntroducementPackage {
 	struct TBWGConHeader header;
 	uint32_t nameSize; // max 32
-	char name[nameSize]; // max 32 sized
+	char name[STD_NAME_SIZE]; // max 32 sized
 };
 
 ```
@@ -1221,6 +1224,8 @@ struct TBWGInformator {
 };
 
 ```
+
+(damn you can't use a struct inside defined non-constant variable in the struct itself. but. but. but. chicken.)
 
 Client sends the choosen character.
 
@@ -1255,7 +1260,7 @@ struct CharacterSelectionError {
 
 ```
 
-If client choosed a character is available, then we can say connection is succesfully done for this standard.
+If client choosed an available character, then we can say connection is succesfully done for this standard.
 
 If client choosed to create a character, then we continue on **Character Creation** section.
 
@@ -1300,12 +1305,108 @@ or maybe character can create a character from scratch? i dont know surely.
 
 ```
 
+```
+I thought about it, and I'll not think about it from now on, for now. I need to make sure that game 
+can be executed and worked/played on the line.
+```
 
-### Playing
+#### Maybe, Connection is Okay! From both sides?
+
+After connection is done, and ready to run: Server and Client gets sure about that.
+
+Server and Client sends that package to each other and check that they're same.
+
+```C
+
+// pkgcode: 200 (y)
+struct TBWGSure {
+    struct TBWGConHeader header;
+    char name[STD_NAME_SIZE];
+    struct TBWGCONCharacterInfo charinfo;
+    uint8_t errcode; // should be zero if connection is okay!
+};
 
 ```
 
-will going to be planned.
+Or maybe that last part is a bit nonnecessary. I'm not sure.
+
+### Playing
+
+Boom. Playin'
+
+In the playing part, we just need a couple of standards that provides:
+
+```C
+
+struct ControllerInterface {
+    // receivers
+    ControllerObserve observer;
+    ReceiveWorldEvent receiveWorldEvent;
+
+    // request responsers
+    ControllerChooseEventer chooseEventer;
+};
+
+```
+
+the interface! Then we're ready to go. And everything is okay.
+
+#### Observer
+
+That could be the largest package. There's two ways of doing that.
+
+##### First Way
+
+- Get a header that indicates count of everything. So we know the size of package and how many
+informations we're getting.
+- Read the whole package with reading the calculated size of bytes.
+- We're okay!
+
+##### Second Way
+
+- Just read all of them with reading a standardized size of bytes.
+
+##### Choosing the First Way
+
+First way is good.
+
+```C
+
+struct TBWGConObservingInformationHeader {
+    uint32_t effectCounts[EFFECT_TRIGGER_TYPE_COUNT];
+    uint32_t eventerCount;
+    uint32_t characterInformationCount;
+    uint32_t entityInformationCount;
+};
+
+```
+
+```C
+
+struct TBWGConObservingInformation {
+    id_number selfid;
+
+    struct Stats characterStats;
+    iValue hp, e, se;
+    iVector position; fVector direction;
+    digits32 state;
+
+    struct List effects[EFFECT_TRIGGER_TYPE_COUNT];
+    struct Eventer eventers[eventerCount];
+    struct CharacterInformation charInfos[CharacterInformationCount];
+    struct EntityInformation entityInfos[entityInformationCount];
+};
+
+```
+
+
+#### World Event
+
+#### Choose Eventer
+
+```
+
+not ready yet
 
 ```
 
