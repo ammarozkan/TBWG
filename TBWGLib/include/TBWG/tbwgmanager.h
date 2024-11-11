@@ -10,6 +10,7 @@ struct tbwgdata {
 
 struct tbwgdata* tbwgInit();
 void tbwgUse(struct tbwgdata* data);
+struct tbwgdata* tbwgGetUsenData();
 
 // unique events
 void tbwgTurn();

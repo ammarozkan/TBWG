@@ -88,7 +88,8 @@ int main(int argc, char*argv[])
 
 	printf("Printing queue\n");
 
-	ITERATE(data.queue.queueElements, element) {
+
+	ITERATE(tbwgGetUsenData()->queue.queueElements, element) {
 		struct QueueElementHeader* hed = (struct QueueElementHeader*)element;
 		printf("Turn:%u ", hed->type);
 		if(hed->type == QUEUE_CHARACTER) printf("Character:0x%x", ((struct QueueCharacterTurn*)hed)->character);
@@ -103,7 +104,7 @@ int main(int argc, char*argv[])
 
 		printf("Printing queue again\n");
 
-		ITERATE(data.queue.queueElements, element) {
+		ITERATE(tbwgGetUsenData()->queue.queueElements, element) {
 			struct QueueElementHeader* hed = (struct QueueElementHeader*)element;
 			printf("Turn:%u ", hed->type);
 			if(hed->type == QUEUE_CHARACTER) printf("Character:0x%x", ((struct QueueCharacterTurn*)hed)->character);

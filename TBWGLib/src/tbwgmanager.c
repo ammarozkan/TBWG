@@ -23,6 +23,14 @@ tbwgUse(struct tbwgdata* udata)
 	data = udata;
 }
 
+struct tbwgdata*
+tbwgGetUsenData()
+{
+	return data;
+}
+
+
+
 struct World* tbwgGetWorld()
 {
 	return &(data->world);
