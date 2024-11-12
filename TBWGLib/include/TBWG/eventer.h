@@ -34,7 +34,7 @@ struct EventerRequiredInformations {
 	iVector position;
 	iVector position2;
 	fVector direction;
-	iVector A,B; // area coordinates A and B
+	iVector A,B;
 };
 
 int executerCanExecuteNow(void* eventer, struct World* world, struct Character* user, struct EventerRequiredInformations reqinf, struct Tool* tool);
@@ -68,11 +68,12 @@ struct Eventer {
 	void (*notChoosed)(void* eventer, struct World*, struct Character*);
 };
 
-#define TURNPLAY_END_TURN (1<<1)
+#define TURNPLAY_END_TURN 		(1<<1)
+#define TURNPLAY_CHOOSED_NONE 	(1<<2)
 
 struct TurnPlay {
 	unsigned int eventer_th;
-	struct EventerRequiredInformations requiredInformations; // if target is NULL, then choosing failed.
+	struct EventerRequiredInformations requiredInformations;
 	unsigned int specs;
 };
 
