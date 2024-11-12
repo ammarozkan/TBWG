@@ -984,18 +984,66 @@ pass from the perspective of a character to a communicator.
 ```C
 struct ControllerInterface;
 
-typedef void (*ControllerObserve)(struct ControllerInterface*, struct ObservingInformation*);
-// and all the other eventer etc. things here please
+struct EventerInformation {
+    unsigned int eventerCode;
+    char name[32];
 
-struct ControllerInterface {
-    struct Controller* controller;
-    ControllerObserve observer;
+    uint8_t energyValueType;
+    int minEnergy, minSpellEnergy;
+    int maxEnergy, maxSpellEnergy;
+
+    struct EventerUses costs;
 };
 
-void sendObservationToController(struct ControllerInterface*, struct ObservingInformation obsInfo);
+struct EventerInformation* getEventerInformationsFromEventers(size_t eventerCount, struct Eventer* eventers);
 
-struct ControllerInterface getDefaultControllerInterface(struct Controller* controller);
+typedef void (*ControllerObserve)(struct ControllerInterface*, struct ObservingInformation);
+// and all the other eventer etc. things here please
+
+typedef void (*ReceiveWorldEvent)(struct ControllerInterface*, struct WorldEventInformation);
+
+typedef struct TurnPlay (*ControllerChooseEventer)(struct ControllerInterface*, id_number chooserId, 
+    digits32 allowedEventerTypes, size_t eventerCount, struct Eventer** eventers, struct EventerUses restUses);
+
+struct ControllerInterface {
+    // receivers
+    ControllerObserve observer;
+    ReceiveWorldEvent receiveWorldEvent;
+
+    // request responsers
+    ControllerChooseEventer chooseEventer;
+};
+
+struct ControllerInterface* getDefaultControllerInterface();
+
+struct ControllerInterface* getstdioControllerInterface();
 ```
+
+##### Turn Play
+
+Turn Play is a indicator that returned from selection. Indicates what the character is doing depending
+on the interface communicators (aka player) choice.
+
+```C
+
+struct EventerRequiredInformations {
+    iVector position;
+    iVector position2;
+    fVector direction;
+    iVector A,B; // area coordinates A and B
+};
+
+#define TURNPLAY_END_TURN       (1<<1)
+#define TURNPLAY_CHOOSED_NONE   (1<<2)
+
+struct TurnPlay {
+    unsigned int eventer_th; // selected eventer's order in the list
+    struct EventerRequiredInformations requiredInformations; // is the information needed by the eventer
+    unsigned int specs; // is the special specializations to playing. (for example TURNPLAY_END_TURN or TURNPLAY_CHOOSED_NONE).
+};
+
+```
+
 
 ##### Custom Interface Example
 
@@ -1402,15 +1450,58 @@ struct TBWGConObservingInformation {
 
 #### World Event
 
+World Event is really straightforward.
+
+This needed to be sent:
+
+```C
+
+struct WorldEventInformation {
+    id_number selfid;
+    char* eventName;
+    iVector position;
+};
+
+```
+
+For standardizing the size of information, the sent information should be something like;
+
+```C
+
+#define STD_EVENTNAME_SIZE STD_NAME_SIZE
+struct TBWGConWorldEventInformation {
+    id_number selfid;
+    char eventName[STD_EVENTNAME_SIZE];
+    iVector position;
+};
+
+```
+
+this. So, its good to go.
+
+
 #### Choose Eventer
+
+So the function is;
+
+```C
+
+typedef struct TurnPlay (*ControllerChooseEventer)(struct ControllerInterface*, id_number chooserId, 
+    digits32 allowedEventerTypes, size_t eventerCount, struct Eventer** eventers, struct EventerUses restUses);
+
+```
+
+this. We need to send those parameters and get struct TurnPlay as Server and visa versa.
+
+##### Getting the Information
+
+
 
 ```
 
 not ready yet
 
 ```
-
-
 
 
 
