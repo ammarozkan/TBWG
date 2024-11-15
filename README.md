@@ -1282,7 +1282,7 @@ Client sends the choosen character.
 #define CHARACTERSELECTION_OPTION_CREATE (1 << 0)
 
 // pkgcode : 5
-struct CharacterSelection {
+struct TBWGCharacterSelection {
 	struct TBWGConHeader header;
 
 	uint8_t selection;
@@ -1299,7 +1299,7 @@ If client choosed an existing character, but that one wasn't available:
 #define CHARSELECTERR_ALREADYINUSE 0x1
 
 // pkgcode : 6
-struct CharacterSelectionError {
+struct TBWGCharacterSelectionError {
 	struct TBWGConHeader header;
 
 	uint32_t characterSelectionErrorCode;
@@ -1421,6 +1421,7 @@ First way is good.
 ```C
 
 struct TBWGConObservingInformationHeader {
+    struct TBWGConHeader header;
     uint32_t effectCounts[EFFECT_TRIGGER_TYPE_COUNT];
     uint32_t eventerCount;
     uint32_t characterInformationCount;
@@ -1432,6 +1433,7 @@ struct TBWGConObservingInformationHeader {
 ```C
 
 struct TBWGConObservingInformation {
+    struct TBWGConHeader header;
     id_number selfid;
 
     struct Stats characterStats;
@@ -1470,6 +1472,7 @@ For standardizing the size of information, the sent information should be someth
 
 #define STD_EVENTNAME_SIZE STD_NAME_SIZE
 struct TBWGConWorldEventInformation {
+    struct TBWGConHeader header;
     id_number selfid;
     char eventName[STD_EVENTNAME_SIZE];
     iVector position;
@@ -1493,16 +1496,60 @@ typedef struct TurnPlay (*ControllerChooseEventer)(struct ControllerInterface*, 
 
 this. We need to send those parameters and get struct TurnPlay as Server and visa versa.
 
+For sending to the client I'll do the same thing like the observing information:
+
+```C
+
+struct TBWGConEventerOptionsInformationHeader {
+    struct TBWGConHeader header;
+    uint32_t eventerCount;
+};
+
+```
+
+```C
+
+struct TBWGConEventerOptionsInformation {
+    struct TBWGConHeader header;
+    id_number chooserId;
+    digits32 allowedEventerTypes;
+    struct EventerUses restUses;
+    struct EventerInformation eventers[eventerCount]; // a static struct that has values of informations for a eventer
+};
+
+```
+
+
+Definition of the eventer information:
+
+```C
+struct TBWGConEventerInformation {
+    unsigned int eventerCode;
+    id_number ID;
+    uint32_t energy, spellEnergy;
+    digits32 eventer_type, required_informations;
+    char name[32];
+    struct EventerUses costs;
+};
+```
+
+And then when client makes his move:
+
+```C
+struct TBWGConTurnPlay {
+    struct TBWGConHeader header;
+    unsigned int eventer_th;
+    struct EventerRequiredInformations requiredInformations;
+    unsigned int specs;
+};
+```
+
+And everything is good to go.
+
 ##### Getting the Information
-
-
 
 ```
 
 not ready yet
 
 ```
-
-
-
-
