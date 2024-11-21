@@ -1557,7 +1557,7 @@ And everything is good to go.
 
 ### tbwgcon1's library to use
 
-Here is the developed functions that can be usen for TBWGCON1
+Here is the planned functions that can be usen for TBWGCON1
 
 ```C
 // Sets the header for other functions to use.
