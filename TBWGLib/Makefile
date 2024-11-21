@@ -14,6 +14,10 @@ lib:
 clean:
 	rm objs/*
 
+glassbreaker:
+	rm -r objs
+	rm -r libs
+	rm testout
 
 
 debugtest:

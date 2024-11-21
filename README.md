@@ -1194,6 +1194,12 @@ decrypt(enc2) == sample2  <------------  encrypt(sample2) => enc2
 		struct TBWGConHeader header;
 	};
 
+    // pkgcode: 96
+    struct TBWGWTH {
+        struct TBWGConHeader header;
+        uint32_t errcode;
+    };
+
 ```
 
 Clients will want to join the game in any time. That could be before the game starts, while in game, or after the game.
@@ -1221,7 +1227,7 @@ by the server, otherwise server responds with the error code 0.
 // pkgcode : 1
 struct TBWGWelcomingPackage {
 	struct TBWGCheckingPackage ip; // same as client sended one if supported by server, otherwise closest to that
-	uint32_t errcode; // will be used as .errcode = UNSUPPORTEDVERSION | UNSUPPORTEDGAME;
+	uint32_t errcode; // will be used as .errcode = TBWGCON1_ERR_UNSUPPORTEDVERSION | TBWGCON1_ERR_UNSUPPORTEDGAME;
 	uint32_t nextchapter; // what should client do?
 };
 
@@ -1264,7 +1270,7 @@ Client continues to reading if no error has been maden. (CP. 3)
 ```C
 
 // pkgcode : 4
-struct TBWGInformator {
+struct TBWGCharacterInformator {
 	struct TBWGConHeader header;
 
 	uint16_t characterCount;
@@ -1279,14 +1285,14 @@ Client sends the choosen character.
 
 ```C
 
-#define CHARACTERSELECTION_OPTION_CREATE (1 << 0)
+#define TBWGCON1_CHRSLCTOPT_CREATE (1 << 0)
 
 // pkgcode : 5
 struct TBWGCharacterSelection {
 	struct TBWGConHeader header;
 
 	uint8_t selection;
-	uint8_t options; // CHARACTERSELECTION_OPTION_CREATE, etc.
+	uint8_t options; // TBWGCON1_CHRSLCTOPT_CREATE, etc.
 };
 
 ```
@@ -1548,8 +1554,35 @@ And everything is good to go.
 
 ##### Getting the Information
 
-```
 
-not ready yet
+### tbwgcon1's library to use
 
+Here is the developed functions that can be usen for TBWGCON1
+
+```C
+// Sets the header for other functions to use.
+// This function is useful when the programmer
+// wants to do custom stuff. So they no need to
+// program entire stuff again.
+int tbwgcon1SetHeader(struct TBWGConHeader);
+
+// returns a socket that is proper for using in server
+int tbwgcon1GetProperServerSocket(int socket, uint32_t ip, uint16_t port);
+
+// creates a client socket and connects it to the server (not doing
+// tbwgcon1 stuff)
+int tbwgcon1GetProperClientSocket(int socket, uint32_t ip, uint16_t port);
+
+// tries to read a [pkgcode] coded tbwgcon1 package. If there's no such package
+// will just going to ignore the data. If there's a package but its not the expected
+// code, will read it but with returning 0. If there's a package that is needed,
+// then will read it and will return 1.
+int tbwgcon1ReceivePackage(void* memptr, uint8_t pkgcode);
+
+// Sends the package
+int tbwgcon1SendPackage(void* memptr, uint8_t pkgcode);
+
+// These two functions does what they're have in their names.
+uint32_t tbwgcon1GetObservingInformationSize(struct TBWGConObservingInformationHeader);
+uint32_t tbwgcon1GetEventerOptionsInformationSize(struct TBWGConEventerOptionsInformationHeader);
 ```
