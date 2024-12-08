@@ -1,4 +1,4 @@
-#include <TBWG_net/tbwgcon1.h>
+#include <TBWG_net/tbwgcon1_essentials.h>
 
 
 int tbwgcon1SetHeader(struct TBWGConHeader);
@@ -11,4 +11,3 @@ int tbwgcon1SendPackage(int socket, void* memptr, uint8_t pkgcode);
 
 uint32_t tbwgcon1GetObservingInformationSize(struct TBWGConObservingInformationHeader);
 uint32_t tbwgcon1GetEventerOptionsInformationSize(struct TBWGConEventerOptionsInformationHeader);
-
