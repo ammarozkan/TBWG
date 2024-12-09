@@ -6,7 +6,7 @@ debuglib:
 
 
 lib:
-	gcc src/* -I include -c
+	gcc src/* tbwgnetsrc/* -I include -c
 	mv *.o objs/
 	ar rcs libtbwg.a objs/*.o
 	mv *.a libs/
