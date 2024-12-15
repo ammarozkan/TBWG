@@ -1,5 +1,11 @@
 //	tbwgcon1_essentials.h is the file that contains structs that defined in TBWGCON1
 
+#include <TBWG/essentials.h>
+#include <TBWG/maths.h>
+#include <TBWG/stats.h>
+#include <TBWG/effects.h>
+#include <TBWG/eventer.h>
+#include <TBWG/observation.h>
 
 #define TBWGCON1_ERR_UNSUPPORTEDVERSION (1<<0)
 #define TBWGCON1_ERR_UNSUPPORTEDGAME (1<<1)
@@ -14,54 +20,83 @@
 #define STD_EVENTNAME_SIZE STD_NAME_SIZE
 
 
+struct TBWGConCharacterInformation {
+    uint32_t code;
+    iValue hp, e, se;
+};
+
+
+struct TBWGConEffectInformation {
+    id_number ID;
+    uint32_t code;
+};
+
+
+
+struct TBWGConUsersEventerInformation {
+    unsigned int eventerCode;
+    id_number ID;
+    uint8_t energyValueType;
+    uint32_t energy, spellEnergy;
+    digits32 eventer_type, required_informations;
+    char name[32];
+    struct EventerUses costs;
+};
+
+
 struct TBWGConHeader {
-	char[4] tbwgname;
+	char tbwgname[4];
 	uint8_t version[3];
 	uint8_t pkgcode;
 };
 
+
+
+/***                      TBWGCon Packages                       ***/
+
+
 // pkgcode : 7
-struct TBWGWait {
+struct TBWGConWait {
 	struct TBWGConHeader header;
 };
 
 // pkgcode : 0
-struct TBWGCheckingPackage {
-	char[4] tbwgname;
+struct TBWGConCheckingPackage {
+	char tbwgname[4];
 	uint8_t version[3];
 };
 
 // pkgcode : 1
-struct TBWGWelcomingPackage {
-	struct TBWGCheckingPackage ip;
+struct TBWGConWelcomingPackage {
+	struct TBWGConCheckingPackage ip;
 	uint32_t errcode;
 	uint32_t nextchapter;
 };
 
 // pkgcode : 2
-struct TBWGIntroducementPackage {
+struct TBWGConIntroducementPackage {
 	struct TBWGConHeader header;
 	uint32_t nameSize;
 	char name[STD_NAME_SIZE];
 };
 
 // pkgcode : 3
-struct TBWGIntroducementResponse {
+struct TBWGConIntroducementResponse {
 	struct TBWGConHeader header;
 	uint32_t errcode;
 	uint32_t nextchapter;
 };
 
 // pkgcode : 4
-struct TBWGCharacterInformator {
+struct TBWGConCharacterInformator {
 	struct TBWGConHeader header;
 
 	uint16_t characterCount;
-	struct TBWGCONCharacterInfo charinfo[characterCount];
+	struct TBWGConCharacterInfo* charinfo; // UBERSTRUCTESH!
 };
 
 // pkgcode : 5
-struct TBWGCharacterSelection {
+struct TBWGConCharacterSelection {
 	struct TBWGConHeader header;
 
 	uint8_t selection;
@@ -69,7 +104,7 @@ struct TBWGCharacterSelection {
 };
 
 // pkgcode : 6
-struct TBWGCharacterSelectionError {
+struct TBWGConCharacterSelectionError {
 	struct TBWGConHeader header;
 
 	uint32_t characterSelectionErrorCode;
@@ -77,18 +112,18 @@ struct TBWGCharacterSelectionError {
 };
 
 // pkgcode : 8
-struct TBWGNewCharacterInfo {
+struct TBWGConNewCharacterInfo {
 	struct TBWGConHeader header;
-	struct TBWGCONCharacterInfo charinfo;
+	struct TBWGConCharacterInformation charinfo;
 };
 
 
 
 // pkgcode: 200 (y)
-struct TBWGSure {
+struct TBWGConSure {
     struct TBWGConHeader header;
     char name[STD_NAME_SIZE];
-    struct TBWGCONCharacterInfo charinfo;
+    struct TBWGConCharacterInformation charinfo;
     uint8_t errcode; // should be zero if connection is okay!
 };
 
@@ -116,10 +151,10 @@ struct TBWGConObservingInformation {
     iVector position; fVector direction;
     digits32 state;
 
-    struct List effects[EFFECT_TRIGGER_TYPE_COUNT];
-    struct Eventer eventers[eventerCount];
-    struct CharacterInformation charInfos[CharacterInformationCount];
-    struct EntityInformation entityInfos[entityInformationCount];
+    struct TBWGConEffectInformation* effects[EFFECT_TRIGGER_TYPE_COUNT]; // UBERSTRUCTESH
+    struct TBWGConUsersEventerInformation* eventers; // UBERSTRUCTESH!
+    struct CharacterInformation* charInfos; // UBERSTRUCTESH!
+    struct EntityInformation* entityInfos; // UBERSTRUCTESH!
 };
 
 // pkgcode: 35
@@ -154,7 +189,7 @@ struct TBWGConEventerOptionsInformation {
     id_number chooserId;
     digits32 allowedEventerTypes;
     struct EventerUses restUses;
-    struct EventerInformation eventers[eventerCount]; // a static struct that has values of informations for a eventer
+    struct TBWGConEventerInformation* eventers; // UBERSTRUCTESH!
 };
 
 

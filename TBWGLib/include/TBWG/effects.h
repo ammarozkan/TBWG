@@ -26,7 +26,8 @@ struct Character;
 #define EFFECT_TRIGGER_TYPE_AFTER_STATGIVING 0x04
 
 struct Effect {
-	unsigned int ID;
+	id_number ID;
+	uint32_t code;
 	uint8_t effectorType;
 	id_number effectorId; // player-
 	void* effector;

@@ -34,6 +34,7 @@ struct Effect* getTestingHitEffect(void* effector)
 	printf("Testing effect creation.\n");
 	struct TestingHitEffect* f = GET_SIZED_STRUCT(TestingHitEffect);
 	f->effect.ID = getID();
+	f->effect.code = 0;
 
 	printf("Effector type retrieving.\n");
 	TBWGType effectorType = TBWG_TYPE_UNKNOWN;

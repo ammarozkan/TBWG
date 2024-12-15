@@ -1,4 +1,6 @@
 #include <TBWG_net/tbwgcon1.h>
+#include <TBWG/essentials.h>
+#include <sys/socket.h> // read, write
 
 int pkgcodesize[64] = {};
 
@@ -7,16 +9,16 @@ struct TBWGConHeader header;
 unsigned int getpkgsize(uint8_t pkgcode)
 {
 	switch(pkgcode) {
-	case 0: return sizeof(struct TBWGCheckingPackage);
-	case 1: return sizeof(struct TBWGWelcomingPackage);
-	case 2: return sizeof(struct TBWGIntroducementPackage);
-	case 1: return sizeof(struct TBWGIntroducementResponse);
-	case 4: return sizeof(struct TBWGCharacterInformator);
-	case 5: return sizeof(struct TBWGCharacterSelection);
-	case 6: return sizeof(struct TBWGCharacterSelectionError);
-	case 7: return sizeof(struct TBWGWait);
-	case 8: return sizeof(struct TBWGNewCharacterInfo);
-	case 200: return sizeof(struct TBWGSure);
+	case 0: return sizeof(struct TBWGConCheckingPackage);
+	case 1: return sizeof(struct TBWGConWelcomingPackage);
+	case 2: return sizeof(struct TBWGConIntroducementPackage);
+	case 3: return sizeof(struct TBWGConIntroducementResponse);
+	case 4: return sizeof(struct TBWGConCharacterInformator);
+	case 5: return sizeof(struct TBWGConCharacterSelection);
+	case 6: return sizeof(struct TBWGConCharacterSelectionError);
+	case 7: return sizeof(struct TBWGConWait);
+	case 8: return sizeof(struct TBWGConNewCharacterInfo);
+	case 200: return sizeof(struct TBWGConSure);
 	case 33: return sizeof(struct TBWGConObservingInformationHeader);
 	case 34: return sizeof(struct TBWGConObservingInformation);
 	case 35: return sizeof(struct TBWGConWorldEventInformation);
@@ -43,7 +45,7 @@ int tbwgcon1ReceivePackage(int socket_fd, void* memptr, uint8_t pkgcode)
 	// this function should see the pkgcode not set bro damn // wait it actually makes sense my fault
 	// saooo sage to forgot. saaauusage. got it? sousage coder. my b
 
-	int readen = read(socket_fd,memptr,4096);
+	int readen = recv(socket_fd,memptr,4096,0);
 	if (readen == 0) return -2;
 
 	struct TBWGConHeader* h = (struct TBWGConHeader*)memptr;
@@ -61,5 +63,26 @@ int tbwgcon1SendPackage(int socket_fd, void* memptr, uint8_t pkgcode)
 	return 0;
 }
 
-uint32_t tbwgcon1GetObservingInformationSize(struct TBWGConObservingInformationHeader);
-uint32_t tbwgcon1GetEventerOptionsInformationSize(struct TBWGConEventerOptionsInformationHeader);
+uint32_t tbwgcon1GetObservingInformationSize(struct TBWGConObservingInformationHeader h)
+{
+	uint32_t size = sizeof(struct TBWGConObservingInformation) - sizeof(void*)*(EFFECT_TRIGGER_TYPE_COUNT+3); 
+															   //ignoring ptrs that in the struct
+
+	for (unsigned int i = 0 ; i < EFFECT_TRIGGER_TYPE_COUNT ; i += 1) {
+		size += h.effectCounts[i] * sizeof(struct TBWGConEffectInformation);
+	}
+	size += h.eventerCount * sizeof(struct TBWGConEventerInformation);
+	size += h.characterInformationCount * sizeof(struct TBWGConCharacterInformation);
+	size += h.entityInformationCount * sizeof(struct EntityInformation);
+
+	return size;
+}
+
+uint32_t tbwgcon1GetEventerOptionsInformationSize(struct TBWGConEventerOptionsInformationHeader h)
+{
+	uint32_t size = sizeof(struct TBWGConEventerOptionsInformation) - sizeof(void*);
+																	//ignoring ptrs that in the struct
+	size += h.eventerCount * sizeof(struct TBWGConEventerInformation);
+
+	return size;
+}
