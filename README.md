@@ -312,6 +312,10 @@ Effects:
 In the program system, there will be two part that seperated from each other: Server
 and Controller.
 
+## Used Functions
+
+malloc()
+
 ## Deep Down Systems
 
 ### Lists
@@ -511,7 +515,8 @@ shall follow these kind of header.
 #define EFFECT_TRIGGER_TYPE_HIT 0x02
 
 struct Effect {
-	unsigned int ID;
+	id_number ID;
+	uint32_t code;
 	uint8_t effectorType;
 	id_number effectorId; // player-
 
@@ -1145,7 +1150,7 @@ to hint some information about the movement.
 
 
 
-## Communication (Server, Client)
+## Communication (Server, Client), TBWGCON 1
 
 ```
 Parts after here can change any time. Being planned.
@@ -1158,12 +1163,27 @@ Before getting to it, some section may include somethings like (CP. x) and some 
 ```unsigned int nextchapter;``` Those are the client manipulators. Client manipulators are being used to return
 to some segment in the process. aka JMP instructor.
 
+In the header file, you'll see some struct definitions that shows a UBERSTRUCTESH! When this is being showed, 
+the pointers will be indicating that the structure is containing elements of those type. And 
+needs to be seperated by their counts. The pointers will be pointing those as a result.
+
+### Used Functions
+
+malloc(), free(), read(), write()
+
 ### Encryption
 
 Before the all connection and data transfering, besides the communication standard, an encryption system
 is needed. Whatever the system and client uses, the encrypted communication needs to support all the basic
 communication. I recommend the encryption has the ability to hide the packages even from the clients. Maybe,
 needs to be hard to crack even in a client perspective (to prevent cheats).
+
+#### Secure Network Software Communicator
+
+I thought about a design about a three structural communication design. First one is the server. Server should
+be pure. Second one is the client. And the third one is the SNSC. SNSC will communicate with clients securely and
+then send the required packages to the server. SNSC will could be involved with keys and subscribement things etc.
+
 
 #### Thought of Standard
 idee pour le cryptage de communication
@@ -1174,7 +1194,6 @@ encrypt(sample1) => enc1  ------------>  decrypt(enc1) == sample1
 decrypt(enc2) == sample2  <------------  encrypt(sample2) => enc2
 --------------then encrypted communication goes on---------------
 ```
-
 
 
 ### Joining
@@ -1279,7 +1298,7 @@ struct TBWGCharacterInformator {
 
 ```
 
-(damn you can't use a struct inside defined non-constant variable in the struct itself. but. but. but. chicken.)
+(damn you can't use a "struct inside defined non-constant variable" in the struct itself. but. but. but. chicken.)
 
 Client sends the choosen character.
 
@@ -1557,7 +1576,7 @@ And everything is good to go.
 
 ### tbwgcon1's library to use
 
-Here is the planned functions that can be usen for TBWGCON1
+Here is the developed functions that can be usen for TBWGCON1
 
 ```C
 // Sets the header for other functions to use.
@@ -1574,9 +1593,9 @@ int tbwgcon1GetProperServerSocket(int socket, uint32_t ip, uint16_t port);
 int tbwgcon1GetProperClientSocket(int socket, uint32_t ip, uint16_t port);
 
 // tries to read a [pkgcode] coded tbwgcon1 package. If there's no such package
-// will just going to ignore the data. If there's a package but its not the expected
+// will just going to ignore the data and return -1. If there's a package but its not the expected
 // code, will read it but with returning 0. If there's a package that is needed,
-// then will read it and will return 1.
+// then will read it and will return 1. If theres no any data, will return -2.
 int tbwgcon1ReceivePackage(void* memptr, uint8_t pkgcode);
 
 // Sends the package
