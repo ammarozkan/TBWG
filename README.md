@@ -1604,4 +1604,18 @@ int tbwgcon1SendPackage(void* memptr, uint8_t pkgcode);
 // These two functions does what they're have in their names.
 uint32_t tbwgcon1GetObservingInformationSize(struct TBWGConObservingInformationHeader);
 uint32_t tbwgcon1GetEventerOptionsInformationSize(struct TBWGConEventerOptionsInformationHeader);
+
+// This thing directly handles the first connection thing while accepting. -1 if first sent data
+// is not cool. -2 if the requested version and server type is not supported.
+int tbwgcon1Accept(int sv_fd);
+
+// This thing directly handles the first connection thing while connecting. -1 if checking package
+// is couldnt be sent. -2 if theres no welcoming package to process. -3 if server sent a failure
+// (case of -3 is for now. need to be changed to something inevitable. nah, I mean something more
+// effective like I stated earlier in the connecting segment in this paper.)
+int tbwgcon1Connect(char* ip_c, uint16_t port);
+
+// Closes the socket connection. Could be required for not wanting to get involved with close
+// while writing the server or client with tbwgcon1 functions.
+int tbwgcon1Close(int sock);
 ```
