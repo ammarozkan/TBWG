@@ -1,6 +1,7 @@
 necessarydirs:
 	@if [ ! -d objs ]; then mkdir objs; fi
 	@if [ ! -d libs ]; then mkdir libs; fi
+	@if [ ! -d outs ]; then mkdir outs; fi
 
 tbwgnetlib:
 	make cleanobjs; make necessarydirs
@@ -17,15 +18,16 @@ tbwglib:
 	mv *.a libs/
 
 tbwgnetdebuglib:
+	echo "Net Debug Lib Compile!"
 	make cleanobjs; make necessarydirs
-	gcc tbwgnetsrc/* -I include -DTBWG_DEBUG -c
+	gcc -DTBWG_DEBUG tbwgnetsrc/* -I include -c
 	mv *.o objs/
 	ar rcs libtbwgnetdebug.a objs/*.o
 	mv *.a libs/
 
 tbwgdebuglib:
 	make cleanobjs; make necessarydirs
-	gcc src/* -I include -DTBWG_DEBUG -c
+	gcc -DTBWG_DEBUG src/* -I include -c
 	mv *.o objs/
 	ar rcs libtbwgdebug.a objs/*.o
 	mv *.a libs/
@@ -51,14 +53,31 @@ clean:
 glassbreaker:
 	rm -r objs
 	rm -r libs
-	rm testout
+	rm -r outs
 
 
 debugtest:
 	echo debug test starts!
-	gcc -DTBWG_DEBUG testmain.c -I include/ -L libs -ltbwgdebug -ltbwgnet -lm -o testout
+	gcc -DTBWG_DEBUG testmain.c -I include/ -L libs -ltbwgdebug -ltbwgnet -lm -o outs/testout
 	./testout
 test:
 	echo test starts!
-	gcc testmain.c -I include/ -L libs -ltbwg -ltbwgnet -lm -o testout
-	./testout
+	gcc testmain.c -I include/ -L libs -ltbwg -ltbwgnet -lm -o outs/testout
+	./
+
+nettest:
+	make tbwgnetlib
+	echo nettest starts!
+	gcc tbwgcontest.c -I include/ -L libs -ltbwgnet -o outs/tbwgcontest.out
+
+	./outs/tbwgcontest.out
+
+debugnettest:
+	make tbwgnetdebuglib
+	echo ""
+	echo ""
+	echo "-------------nettest starts!"
+	echo ""
+	gcc tbwgcontest.c -I include/ -L libs -ltbwgnetdebug -o outs/tbwgcontest.out
+
+	./outs/tbwgcontest.out
