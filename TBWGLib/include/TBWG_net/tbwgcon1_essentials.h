@@ -74,6 +74,7 @@ struct TBWGConWelcomingPackage {
 };
 
 // pkgcode : 2
+#define TBWGCON1_INTRODUCEMENTPACKAGE 2
 struct TBWGConIntroducementPackage {
 	struct TBWGConHeader header;
 	uint32_t nameSize;
@@ -81,6 +82,7 @@ struct TBWGConIntroducementPackage {
 };
 
 // pkgcode : 3
+#define TBWGCON1_INTRODUCEMENTRESPONSE 3
 struct TBWGConIntroducementResponse {
 	struct TBWGConHeader header;
 	uint32_t errcode;

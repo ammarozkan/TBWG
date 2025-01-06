@@ -3,31 +3,39 @@
 
 #include <stdio.h>
 
+char* svnm = "SV";
+char* clnm = "CL";
+
+char* putname;
+
+void itssv(){putname=svnm;}
+void itscl(){putname=clnm;}
+
 //
 //
 //			SERVER TEST
 //
 //
 
-int servertest()
+int failure(char* text, int val, int req)
 {
-	printf("SV:Initting global recv ptr for server.\n");
-	tbwgcon1InitGlobalRecvPtr();
+	char res[128];
+	sprintf(res, "%s:%s\n\0", putname, text);
+	int err = (req == 0 && val <= 0) || (req != 0 && val != req);
+	if (err) printf(res,val);
+	return err;
+}
 
-	printf("SV:Initializing the inertia tensor.\n");
-	int sck = tbwgcon1GetProperServerSocket("127.0.0.1", 5045);
+void testprint(char* text)
+{
+	printf("%s:%s\n",putname,text);
+}
 
-	printf("SV:Is it sick?\n");
-	if (sck <= 0) {
-		printf("SV:Dang it is indeed with %i.\n", sck);
-		return sck;
-	} //
-
-	printf("SV:Aight.\n");
-
+int accepttest(int svsock)
+{
 	printf("SV:Trying to accept!\n");
 
-	int cl_fd = tbwgcon1Accept(sck);
+	int cl_fd = tbwgcon1Accept(svsock);
 
 	if (cl_fd == -1) {
 		printf("SV:Non cool request!\n");
@@ -35,7 +43,36 @@ int servertest()
 		printf("SV:Non cool version!\n");
 	}
 
-	printf("SV:We're doing good. Closing.\n");
+	if (cl_fd < 0) return cl_fd;
+	tbwgcon1Close(cl_fd);
+	return 1;
+}
+
+int servertest()
+{
+	putname = svnm;
+	int erv = 0;
+
+	int cl_fd;
+	testprint("Initting global recv ptr for server.");
+	tbwgcon1InitGlobalRecvPtr();
+
+	testprint("Initializing the inertia tensor.");
+	int sck = tbwgcon1GetProperServerSocket("127.0.0.1", 5045);
+
+	if(failure("Server socket generation failed with %i", sck, 0)) return -1;
+
+	testprint("Aight.");
+
+	if (failure("Accept test failure with %i", accepttest(sck), 0)) return -1;
+	testprint("Did good.");
+
+	testprint("Start again for other one.");
+
+	if (failure("Accept test failure with %i", accepttest(sck), -4)) return -1;
+
+	testprint("Good one.");
+	return 1000;
 	//tbwgcon1Close(cl_fd);
 }
 
@@ -48,38 +85,38 @@ int servertest()
 
 int connecttest()
 {
-	printf("CL:Going to connect.\n");
-	int sck = tbwgcon1Connect("127.0.0.1", 5045);
+	testprint("Going to connect.");
+	int sck = tbwgcon1Connect("127.0.0.1", 5045,"John");
 
-	printf("CL:Is it sick?\n");
-	if (sck <= 0) {
-		printf("CL:Dang it is indeed with %i\n",sck);
-		return sck;
-	}
+	testprint("Is it sick?");
+	if(failure("Dang it is indeed with %i", sck, 0)) return sck;
 
-	printf("CL:Aight. Closing.\n");
+	testprint("Aight. Closing.");
+
 	//tbwgcon1Close(sck);
-	printf("CL:Closed.\n");
-	return 0;
+	testprint("Closed.");
+	return 1;
 }
 
 int clienttest()
 {
 	sleep(1);
-	printf("CL:Initting global recv ptr for client.\n");
+	testprint("Initting global recv ptr for client.");
 	tbwgcon1InitGlobalRecvPtr();
 
-	if(connecttest() == 0) printf("CL:No Problem 1!\n");
+	if (failure("Connect test failure with %i\n", connecttest(), 0)) return -1;
 
-	printf("CL:Now trying with a different header...\n");
+	testprint("Now trying with a different header...");
 
 	struct TBWGConHeader header = {.tbwgname = {'a','b','1','2'}, .version = {0,0,0}};
 	tbwgcon1SetHeader(header);
 
-	printf("CL:Trying to connect again.\n");
-	if(connecttest() == 0) printf("CL:No Problem 2!\n");
+	testprint("Trying to connect again.");
+	if (failure("Connect test failure with %i\n", connecttest(), -2)) return -1;
 
-	printf("Whats going on LOL.\n");
+	tbwgcon1SetDefaultHeader();
+
+	testprint("Whats going on LOL.");
 
 	return 0;
 }
@@ -89,7 +126,17 @@ int clienttest()
 
 int main()
 {
-	if (fork() == 0) servertest();
-	else clienttest();
+	int res = 0;
+	if (fork() == 0) {
+		itssv();
+		res = servertest();
+	} else {
+		itscl();
+		res = clienttest();
+	}
+
+decide:
+	if(res == -1) testprint("fail.");
+	else testprint("SUCCESS!");
 	return 0;
 }

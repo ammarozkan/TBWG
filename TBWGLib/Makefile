@@ -32,6 +32,15 @@ tbwgdebuglib:
 	ar rcs libtbwgdebug.a objs/*.o
 	mv *.a libs/
 
+tbwgessentialslib:
+	echo "Essential Lib"
+	make necessarydirs
+	gcc src/essentials.c  -I include -c -o essentialslibo.o
+	gcc src/lists.c  -I include -c -o esslistslibo.o
+	ar rcs libs/libtbwgessentials.a essentialslibo.o esslistslibo.o
+	rm essentialslibo.o esslistslibo.o
+
+
 debug:
 	make tbwgnetdebuglib
 	make tbwgdebuglib
@@ -68,7 +77,7 @@ test:
 nettest:
 	make tbwgnetlib
 	echo nettest starts!
-	gcc tbwgcontest.c -I include/ -L libs -ltbwgnet -o outs/tbwgcontest.out
+	gcc tbwgcontest.c -I include/ -L libs -ltbwgnet -ltbwgessentials -o outs/tbwgcontest.out
 
 	./outs/tbwgcontest.out
 
@@ -78,6 +87,6 @@ debugnettest:
 	echo ""
 	echo "-------------nettest starts!"
 	echo ""
-	gcc tbwgcontest.c -I include/ -L libs -ltbwgnetdebug -o outs/tbwgcontest.out
+	gcc tbwgcontest.c -I include/ -L libs -ltbwgnetdebug -ltbwgessentials -o outs/tbwgcontest.out
 
 	./outs/tbwgcontest.out

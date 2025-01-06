@@ -53,6 +53,21 @@ int tbwgcon1SetHeader(struct TBWGConHeader h)
 	return 1;
 }
 
+
+int tbwgcon1SetDefaultHeader()
+{
+	struct TBWGConHeader header = {.tbwgname = {'t','b','w','g'}, .version = {0,0,0}};
+	return tbwgcon1SetHeader(header);
+}
+
+
+struct TBWGConHeader tbwgcon1GetHeader(uint8_t pkgcode)
+{
+	struct TBWGConHeader h = header;
+	h.pkgcode = pkgcode;
+	return h;
+}
+
 int tbwgcon1HeaderCheck(struct TBWGConHeader h)
 {
 	for (unsigned int i = 0 ; i < 4 ; i += 1) {
@@ -139,14 +154,12 @@ int tbwgcon1ReceivePackage(int socket_fd, void* memptr, uint8_t pkgcode)
 	return 0;
 }
 
-int tbwgcon1SendPackage(int socket_fd, void* memptr, uint8_t pkgcode)
+int tbwgcon1SendPackage(int socket_fd, void* memptr, uint8_t pkgcode, size_t size)
 {
 	struct TBWGConHeader* h = (struct TBWGConHeader*)memptr;
 	*h = header;
 	h->pkgcode = pkgcode;
-	send(socket_fd, memptr, getpkgsize(pkgcode), 0);
-
-	return 0;
+	return send(socket_fd, memptr, size, 0) == size;
 }
 
 
@@ -203,13 +216,26 @@ int justsend(int socket_fd, void* mem, size_t size)
 	else return 1;
 }
 
-int tbwgcon1Accept(int sv_fd)
+struct TBWGConCheckingPackage getNearest(struct TBWGConCheckingPackage* cpkg)
+{
+	struct TBWGConCheckingPackage near_cpkg = *(struct TBWGConCheckingPackage*)&header;
+	return near_cpkg;
+}
+
+int tbwgcon1Accept(int sv_fd, struct List characterList)
 {
 	DEBUG_PRINT("tbwgcon1Accept","begin");
 	struct sockaddr_in addr;
 	socklen_t size = (socklen_t)sizeof(addr);
 
 	int cl_fd = accept(sv_fd, (struct sockaddr*)&addr, &size);
+	int wrongversion = 0;
+
+chapter1:
+	if (wrongversion == 2) {
+		close(cl_fd);
+		return -4; // wrong version twice
+	}
 
 	if (!justread(cl_fd, GLB_RECV, sizeof(struct TBWGConCheckingPackage))) {
 		close(cl_fd);
@@ -217,16 +243,24 @@ int tbwgcon1Accept(int sv_fd)
 	}
 	DEBUG_PRINT("tbwgcon1Accept","checking package readed");
 
-	if( tbwgcon1HeaderCheck(*(struct TBWGConHeader*)GLB_RECV) != 0) { // header and the checking thing has the same start
-		close(cl_fd);
-		return -2; // non-cool header
-	}
-	DEBUG_PRINT("tbwgcon1Accept","checking package is okay");
-
 	struct TBWGConWelcomingPackage pkg;
 	pkg.ip = *(struct TBWGConCheckingPackage*)GLB_RECV;
 	pkg.errcode = 0;
 	pkg.nextchapter = 2;
+
+	if( tbwgcon1HeaderCheck(*(struct TBWGConHeader*)GLB_RECV) != 0 ) { // header and the checking thing has the same start
+		DEBUG_PRINT("tbwgcon1Accept","header check incorrect lets send the nearest supported one");
+		pkg.ip = getNearest((struct TBWGConCheckingPackage*)GLB_RECV);
+		pkg.errcode = 0; pkg.nextchapter = 1;
+		if(!justsend(cl_fd, &pkg, sizeof(struct TBWGConWelcomingPackage))) {
+			close(cl_fd);
+			return -2;
+		}
+		wrongversion += 1;
+		goto chapter1;
+	}
+
+	DEBUG_PRINT("tbwgcon1Accept","checking package is okay");
 
 	if(!justsend(cl_fd, &pkg, sizeof(struct TBWGConWelcomingPackage))) {
 		close(cl_fd);
@@ -235,13 +269,55 @@ int tbwgcon1Accept(int sv_fd)
 
 	DEBUG_PRINT("tbwgcon1Accept","Welcoming Package sent");
 
+chapter2: // FINALLY we can use Receive and Send Package funcs from tbwgcon1
+
+	DEBUG_PRINT("tbwgcon1Accept","Receiving the introducement pkg.");
+
+	int r = tbwgcon1ReceivePackage(cl_fd, GLB_RECV, TBWGCON1_INTRODUCEMENTPACKAGE);
+	if (r == -1) {
+		close(cl_fd);
+		DEBUG_PRINT("tbwgcon1Accept", "Nothing came up from receiving.");
+		return -4;
+	} else if(r == 0) {
+		close(cl_fd);
+		DEBUG_PRINT("tbwgcon1Accept", "Unexpected package receivement.");
+		return -5;
+	}
+
+	struct TBWGConIntroducementPackage* intrd = GLB_RECV;
+#ifdef TBWG_DEBUG
+	printf("THE NAME IS %s!!!!!!\n", intrd->name);
+#endif
+
+	DEBUG_PRINT("tbwgcon1Accept", "Introducement package is good! Really gooooodddd!!!!");
+
+	DEBUG_PRINT("tbwgcon1Accept","Introducement Response is going up.");
+
+	struct TBWGConIntroducementResponse intrdresp = {.errcode = 0, .nextchapter = 3};
+	if (!tbwgcon1SendPackage(cl_fd, &intrdresp, TBWGCON1_INTRODUCEMENTRESPONSE, sizeof(intrdresp))) {
+		close(cl_fd);
+		DEBUG_PRINT("tbwgcon1Accept","Damn introducement response can't be sended.");
+		return -6;
+	}
+
+	DEBUG_PRINT("tbwgcon1Accept","Entering to chapter3!");
+
+chapter3:
+
 	return cl_fd;
 }
 
-int tbwgcon1Connect(char* ip_c, uint16_t port)
+
+
+int tbwgcon1Connect(char* ip_c, uint16_t port, char* name)
 {
+	int r; // will be used in result of returns
+
 	DEBUG_PRINT("tbwgcon1Connect","begin");
 	int cl_fd = tbwgcon1GetProperClientSocket(ip_c, port);
+
+chapter1:
+	DEBUG_PRINT("tbwgcon1Connect", "chapter1");
 
 	if(!justsend(cl_fd, &header, sizeof(struct TBWGConCheckingPackage))) {
 		close(cl_fd);
@@ -256,8 +332,52 @@ int tbwgcon1Connect(char* ip_c, uint16_t port)
 	DEBUG_PRINT("tbwgcon1Connect","welcoming package readen!");
 
 	struct TBWGConWelcomingPackage* pkg = GLB_RECV;
-	if (pkg->nextchapter == 2) return 1; // YEAAAH!
+	if (pkg->nextchapter == 2) goto chapter2; // YEAAAH!
+	else if (pkg->nextchapter == 1) goto chapter1;
 	else return -3; // sad.
+
+chapter2:
+	
+	DEBUG_PRINT("tbwgcon1Connect","introducement package will be sent.");
+	struct TBWGConIntroducementPackage intrd = {.header = tbwgcon1GetHeader(TBWGCON1_INTRODUCEMENTPACKAGE), .nameSize = tbwgstrlen(name)};
+	tbwgmemcpy(intrd.name, name, tbwgstrlen(name)+1);
+	if(!justsend(cl_fd, &intrd, sizeof(struct TBWGConIntroducementPackage))) {
+		close(cl_fd);
+		DEBUG_PRINT("tbwgcon1Connect","introducement package had an error while sending.");
+		return -4; // introducement package couldnt be sent
+	}
+	DEBUG_PRINT("tbwgcon1Connect","okay. now response is being waited.\n");
+
+	r = tbwgcon1ReceivePackage(cl_fd, GLB_RECV, TBWGCON1_INTRODUCEMENTRESPONSE);
+	if (r == -1) {
+		close(cl_fd);
+		DEBUG_PRINT("tbwgcon1Connect", "Nothing came up from receiving response.");
+		return -5;
+	} else if(r == 0) {
+		close(cl_fd);
+		DEBUG_PRINT("tbwgcon1Connect", "Unexpected package receivement of response.");
+		return -6;
+	}
+
+	DEBUG_PRINT("tbwgcon1Connect","Introducement Response readed well.");
+
+	struct TBWGConIntroducementResponse* intrdresp = GLB_RECV;
+
+	DEBUG_PRINT("tbwgcon1Connect","If statements on the introducement response.");
+
+	if (intrdresp->nextchapter == 3) goto chapter3;
+	else if(intrdresp->nextchapter == 2) goto chapter2;
+	else if(intrdresp->nextchapter == 1) goto chapter1;
+	else if(intrdresp->errcode != 0) {
+		close(cl_fd);
+		DEBUG_PRINT("tbwgcon1Connect","DAMN. Introducement response rejected us...");
+		return -7;
+	}
+
+	DEBUG_PRINT("tbwgcon1Connect","Everything is good. Entering to chapter3.");
+chapter3:
+
+	return 1;
 }
 
 
