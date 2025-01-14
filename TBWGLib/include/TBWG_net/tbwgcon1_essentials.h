@@ -20,9 +20,16 @@
 #define STD_EVENTNAME_SIZE STD_NAME_SIZE
 
 
+
 struct TBWGConCharacterInformation {
     uint32_t code;
     iValue hp, e, se;
+};
+
+
+struct TBWGConMidCharacterInformation {
+    void* systematicPtr; // a pointer to help the tbwgmanager find the character. will be returned back to the system
+    struct TBWGConCharacterInformation inf;
 };
 
 
@@ -56,6 +63,7 @@ struct TBWGConHeader {
 
 
 // pkgcode : 7
+#define TBWGCON1_WAIT 7
 struct TBWGConWait {
 	struct TBWGConHeader header;
 };
@@ -94,7 +102,7 @@ struct TBWGConCharacterInformator {
 	struct TBWGConHeader header;
 
 	uint16_t characterCount;
-	struct TBWGConCharacterInfo* charinfo; // UBERSTRUCTESH!
+	struct TBWGConCharacterInformation* charinfo; // UBERSTRUCTESH!
 };
 
 // pkgcode : 5
@@ -114,6 +122,7 @@ struct TBWGConCharacterSelectionError {
 };
 
 // pkgcode : 8
+#define TBWGCON1_NEWCHARACTERINFO 8
 struct TBWGConNewCharacterInfo {
 	struct TBWGConHeader header;
 	struct TBWGConCharacterInformation charinfo;

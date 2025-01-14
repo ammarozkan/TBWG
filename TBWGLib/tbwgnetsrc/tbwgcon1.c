@@ -222,7 +222,7 @@ struct TBWGConCheckingPackage getNearest(struct TBWGConCheckingPackage* cpkg)
 	return near_cpkg;
 }
 
-int tbwgcon1Accept(int sv_fd, struct List characterList)
+int tbwgcon1Accept(int sv_fd, struct List characterList, tbwgcon1CharacterDecider charDecider, void* decidersptr)
 {
 	DEBUG_PRINT("tbwgcon1Accept","begin");
 	struct sockaddr_in addr;
@@ -293,16 +293,41 @@ chapter2: // FINALLY we can use Receive and Send Package funcs from tbwgcon1
 
 	DEBUG_PRINT("tbwgcon1Accept","Introducement Response is going up.");
 
-	struct TBWGConIntroducementResponse intrdresp = {.errcode = 0, .nextchapter = 3};
+	struct TBWGConIntroducementResponse intrdresp = {.errcode = 0, .nextchapter = 10}; // im not doing chapter 3 for now.
 	if (!tbwgcon1SendPackage(cl_fd, &intrdresp, TBWGCON1_INTRODUCEMENTRESPONSE, sizeof(intrdresp))) {
 		close(cl_fd);
 		DEBUG_PRINT("tbwgcon1Accept","Damn introducement response can't be sended.");
 		return -6;
 	}
 
-	DEBUG_PRINT("tbwgcon1Accept","Entering to chapter3!");
 
 chapter3:
+	DEBUG_PRINT("tbwgcon1Accept","Entering to chapter3!");
+	goto tbwgconsurepart;
+
+chapter10:
+	DEBUG_PRINT("tbwgcon1Accept","Entering to chapter4!");
+	struct TBWGConWait ch10wait;
+	if (!tbwgcon1SendPackage(cl_fd, &ch10wait, TBWGCON1_WAIT, sizeof(ch10wait))) {
+		close(cl_fd);
+		DEBUG_PRINT("tbwgcon1Accept","Wait can't be sended.");
+		return -101;
+	}
+	DEBUG_PRINT("tbwgcon1Accept","Wait sent!");
+
+	struct TBWGConNewCharacterInfo itsinfo = {.charinfo = charDecider(decidersptr)};
+	if (!tbwgcon1SendPackage(cl_fd, &itsinfo, TBWGCON1_NEWCHARACTERINFO, sizeof(itsinfo))) {
+		close(cl_fd);
+		DEBUG_PRINT("tbwgcon1Accept", "New character info can't be sended.");
+		return -102;
+	}
+	DEBUG_PRINT("tbwgcon1Accept","New character info sent!");
+
+	goto tbwgconsurepart;
+
+tbwgconsurepart:
+	
+
 
 	return cl_fd;
 }
@@ -366,6 +391,7 @@ chapter2:
 	DEBUG_PRINT("tbwgcon1Connect","If statements on the introducement response.");
 
 	if (intrdresp->nextchapter == 3) goto chapter3;
+	if (intrdresp->nextchapter == 10) goto chapter10;
 	else if(intrdresp->nextchapter == 2) goto chapter2;
 	else if(intrdresp->nextchapter == 1) goto chapter1;
 	else if(intrdresp->errcode != 0) {
@@ -375,7 +401,15 @@ chapter2:
 	}
 
 	DEBUG_PRINT("tbwgcon1Connect","Everything is good. Entering to chapter3.");
+
 chapter3:
+	goto tbwgconsurepart;
+
+chapter10:
+	DEBUG_PRINT("tbwgcon1Connect","Eeeeyy chapter10 man!");
+	goto tbwgconsurepart;
+
+tbwgconsurepart:
 
 	return 1;
 }

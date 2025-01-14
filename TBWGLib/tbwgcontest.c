@@ -31,11 +31,18 @@ void testprint(char* text)
 	printf("%s:%s\n",putname,text);
 }
 
+struct TBWGConCharacterInformation testingcharacterdecider(void* ptr)
+{
+	iValue t = {.value = 5, .max = 5};
+	struct TBWGConCharacterInformation inf = {32, t, t, t};
+	return inf;
+}
+
 int accepttest(int svsock)
 {
 	printf("SV:Trying to accept!\n");
 
-	int cl_fd = tbwgcon1Accept(svsock);
+	int cl_fd = tbwgcon1Accept(svsock, createList(),testingcharacterdecider, NULL);
 
 	if (cl_fd == -1) {
 		printf("SV:Non cool request!\n");
