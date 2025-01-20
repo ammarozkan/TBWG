@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 
+#define REFERENCE_CHARACTER_CODE 32 // this is the character code that is needed to pass to client
+
 char* svnm = "SV";
 char* clnm = "CL";
 
@@ -31,18 +33,22 @@ void testprint(char* text)
 	printf("%s:%s\n",putname,text);
 }
 
-struct TBWGConCharacterInformation testingcharacterdecider(void* ptr)
+struct TBWGConMidCharacterInformation testingcharacterdecider(void* ptr)
 {
 	iValue t = {.value = 5, .max = 5};
-	struct TBWGConCharacterInformation inf = {32, t, t, t};
-	return inf;
+	struct TBWGConCharacterInformation inf = {REFERENCE_CHARACTER_CODE, t, t, t};
+	struct TBWGConMidCharacterInformation result = {.inf = inf, .systematicPtr = NULL};
+	return result;
 }
 
 int accepttest(int svsock)
 {
-	printf("SV:Trying to accept!\n");
+	printf("\n\n\n");
+	testprint("Trying to accept!");
 
-	int cl_fd = tbwgcon1Accept(svsock, createList(),testingcharacterdecider, NULL);
+	struct TBWGConServerResult res = tbwgcon1Accept(svsock, createList(),testingcharacterdecider, NULL);
+	printf("FROMSERVER: NAME IS %s and CHARACTER IS %u!\n", res.name, res.midinf.inf.code);
+	int cl_fd = res.socket;
 
 	if (cl_fd == -1) {
 		printf("SV:Non cool request!\n");
@@ -93,7 +99,12 @@ int servertest()
 int connecttest()
 {
 	testprint("Going to connect.");
-	int sck = tbwgcon1Connect("127.0.0.1", 5045,"John");
+	char* name = "John";
+	struct TBWGConClientResult res = tbwgcon1Connect("127.0.0.1", 5045,name);
+	printf("FROMCLIENT: NAME IS %s and CHARACTER IS %u!\n", name, res.inf.code);
+	if (failure("Dang whats that character with %i", res.inf.code, REFERENCE_CHARACTER_CODE)) return -22;
+
+	int sck = res.socket;
 
 	testprint("Is it sick?");
 	if(failure("Dang it is indeed with %i", sck, 0)) return sck;

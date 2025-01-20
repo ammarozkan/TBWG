@@ -138,14 +138,14 @@ int tbwgcon1GetProperClientSocket(char* ip_c, uint16_t port)
 
 	return client_fd;
 }
-
+#include <errno.h>
 int tbwgcon1ReceivePackage(int socket_fd, void* memptr, uint8_t pkgcode)
 {
 	// this function should see the pkgcode not set bro damn // wait it actually makes sense my fault
 	// saooo sage to forgot. saaauusage. got it? sousage coder. my b
 
 	int readen = recv(socket_fd,memptr,4096,0);
-	if (readen == 0) return -2;
+	if (readen == 0 || (readen == -1 && errno == 9)) return -2;
 
 	struct TBWGConHeader* h = (struct TBWGConHeader*)memptr;
 
@@ -222,7 +222,13 @@ struct TBWGConCheckingPackage getNearest(struct TBWGConCheckingPackage* cpkg)
 	return near_cpkg;
 }
 
-int tbwgcon1Accept(int sv_fd, struct List characterList, tbwgcon1CharacterDecider charDecider, void* decidersptr)
+struct TBWGConServerResult tbwgcon1GetSvError(int err)
+{
+	struct TBWGConServerResult r = {.socket = err};
+	return r;
+}
+
+struct TBWGConServerResult tbwgcon1Accept(int sv_fd, struct List characterList, tbwgcon1CharacterDecider charDecider, void* decidersptr)
 {
 	DEBUG_PRINT("tbwgcon1Accept","begin");
 	struct sockaddr_in addr;
@@ -234,12 +240,12 @@ int tbwgcon1Accept(int sv_fd, struct List characterList, tbwgcon1CharacterDecide
 chapter1:
 	if (wrongversion == 2) {
 		close(cl_fd);
-		return -4; // wrong version twice
+		return tbwgcon1GetSvError(-4); // wrong version twice
 	}
 
 	if (!justread(cl_fd, GLB_RECV, sizeof(struct TBWGConCheckingPackage))) {
 		close(cl_fd);
-		return -1; // non-cool connection request
+		return tbwgcon1GetSvError(-1); // non-cool connection request
 	}
 	DEBUG_PRINT("tbwgcon1Accept","checking package readed");
 
@@ -254,7 +260,7 @@ chapter1:
 		pkg.errcode = 0; pkg.nextchapter = 1;
 		if(!justsend(cl_fd, &pkg, sizeof(struct TBWGConWelcomingPackage))) {
 			close(cl_fd);
-			return -2;
+			return tbwgcon1GetSvError(-2);
 		}
 		wrongversion += 1;
 		goto chapter1;
@@ -264,7 +270,7 @@ chapter1:
 
 	if(!justsend(cl_fd, &pkg, sizeof(struct TBWGConWelcomingPackage))) {
 		close(cl_fd);
-		return -3; // non-cool sent of checking package
+		return tbwgcon1GetSvError(-3); // non-cool sent of checking package
 	}
 
 	DEBUG_PRINT("tbwgcon1Accept","Welcoming Package sent");
@@ -277,14 +283,18 @@ chapter2: // FINALLY we can use Receive and Send Package funcs from tbwgcon1
 	if (r == -1) {
 		close(cl_fd);
 		DEBUG_PRINT("tbwgcon1Accept", "Nothing came up from receiving.");
-		return -4;
+		return tbwgcon1GetSvError(-4);
 	} else if(r == 0) {
 		close(cl_fd);
 		DEBUG_PRINT("tbwgcon1Accept", "Unexpected package receivement.");
-		return -5;
+		return tbwgcon1GetSvError(-5);
 	}
 
 	struct TBWGConIntroducementPackage* intrd = GLB_RECV;
+	size_t namesize = tbwgstrlen(intrd->name) + 1;
+	char* name = tbwgmalloc(namesize);
+	tbwgmemcpy(name, intrd->name, namesize);
+
 #ifdef TBWG_DEBUG
 	printf("THE NAME IS %s!!!!!!\n", intrd->name);
 #endif
@@ -297,29 +307,30 @@ chapter2: // FINALLY we can use Receive and Send Package funcs from tbwgcon1
 	if (!tbwgcon1SendPackage(cl_fd, &intrdresp, TBWGCON1_INTRODUCEMENTRESPONSE, sizeof(intrdresp))) {
 		close(cl_fd);
 		DEBUG_PRINT("tbwgcon1Accept","Damn introducement response can't be sended.");
-		return -6;
+		return tbwgcon1GetSvError(-6);
 	}
 
 
 chapter3:
 	DEBUG_PRINT("tbwgcon1Accept","Entering to chapter3!");
-	goto tbwgconsurepart;
+	goto chapter10;
 
 chapter10:
-	DEBUG_PRINT("tbwgcon1Accept","Entering to chapter4!");
+	DEBUG_PRINT("tbwgcon1Accept","Entering to chapter10!");
 	struct TBWGConWait ch10wait;
 	if (!tbwgcon1SendPackage(cl_fd, &ch10wait, TBWGCON1_WAIT, sizeof(ch10wait))) {
 		close(cl_fd);
 		DEBUG_PRINT("tbwgcon1Accept","Wait can't be sended.");
-		return -101;
+		return tbwgcon1GetSvError(-101);
 	}
 	DEBUG_PRINT("tbwgcon1Accept","Wait sent!");
 
-	struct TBWGConNewCharacterInfo itsinfo = {.charinfo = charDecider(decidersptr)};
+	struct TBWGConMidCharacterInformation midinfo = charDecider(decidersptr);
+	struct TBWGConNewCharacterInfo itsinfo = {.charinfo = midinfo.inf};
 	if (!tbwgcon1SendPackage(cl_fd, &itsinfo, TBWGCON1_NEWCHARACTERINFO, sizeof(itsinfo))) {
 		close(cl_fd);
 		DEBUG_PRINT("tbwgcon1Accept", "New character info can't be sended.");
-		return -102;
+		return tbwgcon1GetSvError(-102);
 	}
 	DEBUG_PRINT("tbwgcon1Accept","New character info sent!");
 
@@ -327,14 +338,18 @@ chapter10:
 
 tbwgconsurepart:
 	
-
-
-	return cl_fd;
+	struct TBWGConServerResult serverres = {.socket = cl_fd, .name = name, .midinf = midinfo};
+	return serverres;
 }
 
 
+struct TBWGConClientResult tbwgcon1GetClError(int errcode)
+{
+	struct TBWGConClientResult r = {.socket = errcode};
+	return r;
+}
 
-int tbwgcon1Connect(char* ip_c, uint16_t port, char* name)
+struct TBWGConClientResult tbwgcon1Connect(char* ip_c, uint16_t port, char* name)
 {
 	int r; // will be used in result of returns
 
@@ -346,20 +361,20 @@ chapter1:
 
 	if(!justsend(cl_fd, &header, sizeof(struct TBWGConCheckingPackage))) {
 		close(cl_fd);
-		return -1; // checking package couldnt be sent
+		return tbwgcon1GetClError(-1); // checking package couldnt be sent
 	}
 	DEBUG_PRINT("tbwgcon1Connect","checking package sent!");
 
 	if(!justread(cl_fd, GLB_RECV, sizeof(struct TBWGConWelcomingPackage))) {
 		close (cl_fd);
-		return -2; // theres no welcoming package to process.
+		return tbwgcon1GetClError(-2); // theres no welcoming package to process.
 	}
 	DEBUG_PRINT("tbwgcon1Connect","welcoming package readen!");
 
 	struct TBWGConWelcomingPackage* pkg = GLB_RECV;
 	if (pkg->nextchapter == 2) goto chapter2; // YEAAAH!
 	else if (pkg->nextchapter == 1) goto chapter1;
-	else return -3; // sad.
+	else return tbwgcon1GetClError(-3); // sad.
 
 chapter2:
 	
@@ -369,7 +384,7 @@ chapter2:
 	if(!justsend(cl_fd, &intrd, sizeof(struct TBWGConIntroducementPackage))) {
 		close(cl_fd);
 		DEBUG_PRINT("tbwgcon1Connect","introducement package had an error while sending.");
-		return -4; // introducement package couldnt be sent
+		return tbwgcon1GetClError(-4); // introducement package couldnt be sent
 	}
 	DEBUG_PRINT("tbwgcon1Connect","okay. now response is being waited.\n");
 
@@ -377,11 +392,11 @@ chapter2:
 	if (r == -1) {
 		close(cl_fd);
 		DEBUG_PRINT("tbwgcon1Connect", "Nothing came up from receiving response.");
-		return -5;
+		return tbwgcon1GetClError(-5);
 	} else if(r == 0) {
 		close(cl_fd);
 		DEBUG_PRINT("tbwgcon1Connect", "Unexpected package receivement of response.");
-		return -6;
+		return tbwgcon1GetClError(-6);
 	}
 
 	DEBUG_PRINT("tbwgcon1Connect","Introducement Response readed well.");
@@ -397,7 +412,7 @@ chapter2:
 	else if(intrdresp->errcode != 0) {
 		close(cl_fd);
 		DEBUG_PRINT("tbwgcon1Connect","DAMN. Introducement response rejected us...");
-		return -7;
+		return tbwgcon1GetClError(-7);
 	}
 
 	DEBUG_PRINT("tbwgcon1Connect","Everything is good. Entering to chapter3.");
@@ -407,11 +422,30 @@ chapter3:
 
 chapter10:
 	DEBUG_PRINT("tbwgcon1Connect","Eeeeyy chapter10 man!");
+
+chapter10pkgretr:
+
+	DEBUG_PRINT("tbwgcon1Connect","Reading package for chapter10");	
+	r = tbwgcon1ReceivePackage(cl_fd, GLB_RECV, TBWGCON1_NEWCHARACTERINFO);
+	if (r == -1) {
+		close(cl_fd);
+		DEBUG_PRINT("tbwgcon1Connect", "Nothing came up from receiving response. (newcharinf)");
+		return tbwgcon1GetClError(-105);
+	} else if(r == 0) {
+		close(cl_fd);
+		if (((struct TBWGConHeader*)GLB_RECV)->pkgcode == TBWGCON1_WAIT) goto chapter10pkgretr;
+		DEBUG_PRINT("tbwgcon1Connect", "Unexpected package receivement of response. (newcharinf)");
+		return tbwgcon1GetClError(-106);
+	}
+	struct TBWGConNewCharacterInfo info = *(struct TBWGConNewCharacterInfo*)GLB_RECV;
+	printf("DACIHAHIEIJGDLJAKGKLJDAKLJGDKLJALGKJ %u",info.charinfo.code);
 	goto tbwgconsurepart;
 
 tbwgconsurepart:
+	DEBUG_PRINT("tbwgcon1Connect","Connection sure?");
 
-	return 1;
+	struct TBWGConClientResult clientres = {.socket = cl_fd, .inf = info.charinfo};
+	return clientres;
 }
 
 

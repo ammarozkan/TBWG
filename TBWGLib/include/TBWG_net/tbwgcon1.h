@@ -21,9 +21,9 @@ uint32_t tbwgcon1GetObservingInformationSize(struct TBWGConObservingInformationH
 uint32_t tbwgcon1GetEventerOptionsInformationSize(struct TBWGConEventerOptionsInformationHeader);
 
 
-typedef struct TBWGCONCharacterInfo (*tbwgcon1CharacterDecider)(void* ptr);
+typedef struct TBWGConMidCharacterInformation (*tbwgcon1CharacterDecider)(void* ptr);
 
-int tbwgcon1Accept(int sv_sock, struct List characterList, tbwgcon1CharacterDecider, void* decidersptr);
-int tbwgcon1Connect(char* ip_c, uint16_t port, char* name);
+struct TBWGConServerResult tbwgcon1Accept(int sv_sock, struct List characterList, tbwgcon1CharacterDecider, void* decidersptr);
+struct TBWGConClientResult tbwgcon1Connect(char* ip_c, uint16_t port, char* name);
 int tbwgcon1Close(int sock);
 

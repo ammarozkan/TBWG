@@ -28,7 +28,18 @@ struct TBWGConCharacterInformation {
 
 
 struct TBWGConMidCharacterInformation {
-    void* systematicPtr; // a pointer to help the tbwgmanager find the character. will be returned back to the system
+    void* systematicPtr; // a pointer to help the local tbwgmanager find the character. will be returned back to the system
+    struct TBWGConCharacterInformation inf;
+};
+
+struct TBWGConServerResult {
+    int socket;
+    char* name;
+    struct TBWGConMidCharacterInformation midinf;
+};
+
+struct TBWGConClientResult {
+    int socket;
     struct TBWGConCharacterInformation inf;
 };
 
