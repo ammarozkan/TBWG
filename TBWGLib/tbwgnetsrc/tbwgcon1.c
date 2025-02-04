@@ -12,6 +12,13 @@
 #define DEBUG_PRINT(x,y)
 #endif /*TBWG_DEBUG*/
 
+#define TBWG_SLOW
+#ifdef TBWG_SLOW
+#define TSLEEP(x) sleep(x)
+#else
+#define TSLEEP(x) //printf("notslowingdown.\n");
+#endif
+
 #define GLB_RECV globalrecvptr
 
 void* globalrecvptr;
@@ -238,11 +245,20 @@ struct TBWGConServerResult tbwgcon1Accept(int sv_fd, struct List characterList, 
 	int wrongversion = 0;
 
 chapter1:
+	TSLEEP(1);
+	DEBUG_PRINT("tbwgcon1Accept","chapter1");
 	if (wrongversion == 2) {
+		struct TBWGConQuit quit = {.header = tbwgcon1GetHeader(TBWGCON1_QUIT), .errcode = TBWGCON1_VERCONTERR_TOOMANYTRIES};
+		DEBUG_PRINT("tbwgcon1Accept","sending QUIT");
+		if(!justsend(cl_fd, &quit, sizeof(struct TBWGConQuit))) {
+			close(cl_fd);
+			return tbwgcon1GetSvError(-8);
+		}
 		close(cl_fd);
 		return tbwgcon1GetSvError(-4); // wrong version twice
 	}
 
+	TSLEEP(1);
 	if (!justread(cl_fd, GLB_RECV, sizeof(struct TBWGConCheckingPackage))) {
 		close(cl_fd);
 		return tbwgcon1GetSvError(-1); // non-cool connection request
@@ -254,6 +270,8 @@ chapter1:
 	pkg.errcode = 0;
 	pkg.nextchapter = 2;
 
+	TSLEEP(1);
+	DEBUG_PRINT("tbwgcon1Accept","checking package is okay");
 	if( tbwgcon1HeaderCheck(*(struct TBWGConHeader*)GLB_RECV) != 0 ) { // header and the checking thing has the same start
 		DEBUG_PRINT("tbwgcon1Accept","header check incorrect lets send the nearest supported one");
 		pkg.ip = getNearest((struct TBWGConCheckingPackage*)GLB_RECV);
@@ -266,8 +284,6 @@ chapter1:
 		goto chapter1;
 	}
 
-	DEBUG_PRINT("tbwgcon1Accept","checking package is okay");
-
 	if(!justsend(cl_fd, &pkg, sizeof(struct TBWGConWelcomingPackage))) {
 		close(cl_fd);
 		return tbwgcon1GetSvError(-3); // non-cool sent of checking package
@@ -276,6 +292,7 @@ chapter1:
 	DEBUG_PRINT("tbwgcon1Accept","Welcoming Package sent");
 
 chapter2: // FINALLY we can use Receive and Send Package funcs from tbwgcon1
+	TSLEEP(1);
 
 	DEBUG_PRINT("tbwgcon1Accept","Receiving the introducement pkg.");
 
@@ -301,6 +318,7 @@ chapter2: // FINALLY we can use Receive and Send Package funcs from tbwgcon1
 
 	DEBUG_PRINT("tbwgcon1Accept", "Introducement package is good! Really gooooodddd!!!!");
 
+	TSLEEP(1);
 	DEBUG_PRINT("tbwgcon1Accept","Introducement Response is going up.");
 
 	struct TBWGConIntroducementResponse intrdresp = {.errcode = 0, .nextchapter = 10}; // im not doing chapter 3 for now.
@@ -312,11 +330,15 @@ chapter2: // FINALLY we can use Receive and Send Package funcs from tbwgcon1
 
 
 chapter3:
+	TSLEEP(1);
 	DEBUG_PRINT("tbwgcon1Accept","Entering to chapter3!");
 	goto chapter10;
 
 chapter10:
+	TSLEEP(1);
 	DEBUG_PRINT("tbwgcon1Accept","Entering to chapter10!");
+
+	goto donotsendwaitonchapter10;
 	struct TBWGConWait ch10wait;
 	if (!tbwgcon1SendPackage(cl_fd, &ch10wait, TBWGCON1_WAIT, sizeof(ch10wait))) {
 		close(cl_fd);
@@ -324,9 +346,12 @@ chapter10:
 		return tbwgcon1GetSvError(-101);
 	}
 	DEBUG_PRINT("tbwgcon1Accept","Wait sent!");
+	TSLEEP(1);
+donotsendwaitonchapter10:
 
 	struct TBWGConMidCharacterInformation midinfo = charDecider(decidersptr);
 	struct TBWGConNewCharacterInfo itsinfo = {.charinfo = midinfo.inf};
+	printf("---------------Im sending the character %u\n",itsinfo.charinfo.code);
 	if (!tbwgcon1SendPackage(cl_fd, &itsinfo, TBWGCON1_NEWCHARACTERINFO, sizeof(itsinfo))) {
 		close(cl_fd);
 		DEBUG_PRINT("tbwgcon1Accept", "New character info can't be sended.");
@@ -366,12 +391,14 @@ chapter1:
 	DEBUG_PRINT("tbwgcon1Connect","checking package sent!");
 
 	if(!justread(cl_fd, GLB_RECV, sizeof(struct TBWGConWelcomingPackage))) {
+		DEBUG_PRINT("tbwgcon1Connect","welcoming package is not good. (prob a QUIT REQUEST)");
 		close (cl_fd);
 		return tbwgcon1GetClError(-2); // theres no welcoming package to process.
 	}
 	DEBUG_PRINT("tbwgcon1Connect","welcoming package readen!");
 
 	struct TBWGConWelcomingPackage* pkg = GLB_RECV;
+	printf("GOING %u\n",pkg->nextchapter);
 	if (pkg->nextchapter == 2) goto chapter2; // YEAAAH!
 	else if (pkg->nextchapter == 1) goto chapter1;
 	else return tbwgcon1GetClError(-3); // sad.
@@ -387,6 +414,7 @@ chapter2:
 		return tbwgcon1GetClError(-4); // introducement package couldnt be sent
 	}
 	DEBUG_PRINT("tbwgcon1Connect","okay. now response is being waited.\n");
+
 
 	r = tbwgcon1ReceivePackage(cl_fd, GLB_RECV, TBWGCON1_INTRODUCEMENTRESPONSE);
 	if (r == -1) {
@@ -432,13 +460,16 @@ chapter10pkgretr:
 		DEBUG_PRINT("tbwgcon1Connect", "Nothing came up from receiving response. (newcharinf)");
 		return tbwgcon1GetClError(-105);
 	} else if(r == 0) {
-		close(cl_fd);
-		if (((struct TBWGConHeader*)GLB_RECV)->pkgcode == TBWGCON1_WAIT) goto chapter10pkgretr;
-		DEBUG_PRINT("tbwgcon1Connect", "Unexpected package receivement of response. (newcharinf)");
-		return tbwgcon1GetClError(-106);
+		if (((struct TBWGConHeader*)GLB_RECV)->pkgcode == TBWGCON1_WAIT) {
+			DEBUG_PRINT("tbwgcon1Connect","I'm WAITing");
+			goto chapter10pkgretr;
+		} else {
+			DEBUG_PRINT("tbwgcon1Connect", "Unexpected package receivement of response. (newcharinf)");
+			return tbwgcon1GetClError(-106);
+		}
 	}
 	struct TBWGConNewCharacterInfo info = *(struct TBWGConNewCharacterInfo*)GLB_RECV;
-	printf("DACIHAHIEIJGDLJAKGKLJDAKLJGDKLJALGKJ %u",info.charinfo.code);
+	printf("DACIHAHIEIJGDLJAKGKLJDAKLJGDKLJALGKJ %u\n",info.charinfo.code);
 	goto tbwgconsurepart;
 
 tbwgconsurepart:

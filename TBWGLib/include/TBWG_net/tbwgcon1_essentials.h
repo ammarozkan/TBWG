@@ -15,6 +15,7 @@
 
 #define TBWGCON1_CHRSLCTERR_NOPERMISSION 0x0
 #define TBWGCON1_CHRSLCTERR_ALREADYINUSE 0x1
+#define TBWGCON1_VERCONTERR_TOOMANYTRIES 0x2
 
 #define STD_NAME_SIZE 32
 #define STD_EVENTNAME_SIZE STD_NAME_SIZE
@@ -77,6 +78,13 @@ struct TBWGConHeader {
 #define TBWGCON1_WAIT 7
 struct TBWGConWait {
 	struct TBWGConHeader header;
+};
+
+// pkgcode : 9
+#define TBWGCON1_QUIT 9
+struct TBWGConQuit {
+    struct TBWGConHeader header;
+    uint32_t errcode;
 };
 
 // pkgcode : 0

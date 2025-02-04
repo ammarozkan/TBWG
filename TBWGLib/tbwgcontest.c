@@ -85,6 +85,7 @@ int servertest()
 	if (failure("Accept test failure with %i", accepttest(sck), -4)) return -1;
 
 	testprint("Good one.");
+	sleep(1);
 	return 1000;
 	//tbwgcon1Close(cl_fd);
 }
@@ -102,6 +103,7 @@ int connecttest()
 	char* name = "John";
 	struct TBWGConClientResult res = tbwgcon1Connect("127.0.0.1", 5045,name);
 	printf("FROMCLIENT: NAME IS %s and CHARACTER IS %u!\n", name, res.inf.code);
+	if (res.socket == -2) return -2;
 	if (failure("Dang whats that character with %i", res.inf.code, REFERENCE_CHARACTER_CODE)) return -22;
 
 	int sck = res.socket;
@@ -124,7 +126,7 @@ int clienttest()
 
 	if (failure("Connect test failure with %i\n", connecttest(), 0)) return -1;
 
-	testprint("Now trying with a different header...");
+	testprint("-------------------Now trying with a different header...");
 
 	struct TBWGConHeader header = {.tbwgname = {'a','b','1','2'}, .version = {0,0,0}};
 	tbwgcon1SetHeader(header);
@@ -135,6 +137,7 @@ int clienttest()
 	tbwgcon1SetDefaultHeader();
 
 	testprint("Whats going on LOL.");
+	sleep(1);
 
 	return 0;
 }
