@@ -12,12 +12,6 @@
 #define DEBUG_PRINT(x,y)
 #endif /*TBWG_DEBUG*/
 
-#define TBWG_SLOW
-#ifdef TBWG_SLOW
-#define TSLEEP(x) sleep(x)
-#else
-#define TSLEEP(x) //printf("notslowingdown.\n");
-#endif
 
 #define GLB_RECV globalrecvptr
 
@@ -245,7 +239,6 @@ struct TBWGConServerResult tbwgcon1Accept(int sv_fd, struct List characterList, 
 	int wrongversion = 0;
 
 chapter1:
-	TSLEEP(1);
 	DEBUG_PRINT("tbwgcon1Accept","chapter1");
 	if (wrongversion == 2) {
 		struct TBWGConQuit quit = {.header = tbwgcon1GetHeader(TBWGCON1_QUIT), .errcode = TBWGCON1_VERCONTERR_TOOMANYTRIES};
@@ -258,7 +251,6 @@ chapter1:
 		return tbwgcon1GetSvError(-4); // wrong version twice
 	}
 
-	TSLEEP(1);
 	if (!justread(cl_fd, GLB_RECV, sizeof(struct TBWGConCheckingPackage))) {
 		close(cl_fd);
 		return tbwgcon1GetSvError(-1); // non-cool connection request
@@ -270,7 +262,6 @@ chapter1:
 	pkg.errcode = 0;
 	pkg.nextchapter = 2;
 
-	TSLEEP(1);
 	DEBUG_PRINT("tbwgcon1Accept","checking package is okay");
 	if( tbwgcon1HeaderCheck(*(struct TBWGConHeader*)GLB_RECV) != 0 ) { // header and the checking thing has the same start
 		DEBUG_PRINT("tbwgcon1Accept","header check incorrect lets send the nearest supported one");
@@ -292,7 +283,6 @@ chapter1:
 	DEBUG_PRINT("tbwgcon1Accept","Welcoming Package sent");
 
 chapter2: // FINALLY we can use Receive and Send Package funcs from tbwgcon1
-	TSLEEP(1);
 
 	DEBUG_PRINT("tbwgcon1Accept","Receiving the introducement pkg.");
 
@@ -318,7 +308,6 @@ chapter2: // FINALLY we can use Receive and Send Package funcs from tbwgcon1
 
 	DEBUG_PRINT("tbwgcon1Accept", "Introducement package is good! Really gooooodddd!!!!");
 
-	TSLEEP(1);
 	DEBUG_PRINT("tbwgcon1Accept","Introducement Response is going up.");
 
 	struct TBWGConIntroducementResponse intrdresp = {.errcode = 0, .nextchapter = 10}; // im not doing chapter 3 for now.
@@ -330,24 +319,21 @@ chapter2: // FINALLY we can use Receive and Send Package funcs from tbwgcon1
 
 
 chapter3:
-	TSLEEP(1);
 	DEBUG_PRINT("tbwgcon1Accept","Entering to chapter3!");
 	goto chapter10;
 
 chapter10:
-	TSLEEP(1);
 	DEBUG_PRINT("tbwgcon1Accept","Entering to chapter10!");
 
-	goto donotsendwaitonchapter10;
-	struct TBWGConWait ch10wait;
-	if (!tbwgcon1SendPackage(cl_fd, &ch10wait, TBWGCON1_WAIT, sizeof(ch10wait))) {
-		close(cl_fd);
-		DEBUG_PRINT("tbwgcon1Accept","Wait can't be sended.");
-		return tbwgcon1GetSvError(-101);
+	if (0) {
+		struct TBWGConWait ch10wait;
+		if (!tbwgcon1SendPackage(cl_fd, &ch10wait, TBWGCON1_WAIT, sizeof(ch10wait))) {
+			close(cl_fd);
+			DEBUG_PRINT("tbwgcon1Accept","Wait can't be sended.");
+			return tbwgcon1GetSvError(-101);
+		}
+		DEBUG_PRINT("tbwgcon1Accept","Wait sent!");
 	}
-	DEBUG_PRINT("tbwgcon1Accept","Wait sent!");
-	TSLEEP(1);
-donotsendwaitonchapter10:
 
 	struct TBWGConMidCharacterInformation midinfo = charDecider(decidersptr);
 	struct TBWGConNewCharacterInfo itsinfo = {.charinfo = midinfo.inf};
@@ -469,7 +455,7 @@ chapter10pkgretr:
 		}
 	}
 	struct TBWGConNewCharacterInfo info = *(struct TBWGConNewCharacterInfo*)GLB_RECV;
-	printf("DACIHAHIEIJGDLJAKGKLJDAKLJGDKLJALGKJ %u\n",info.charinfo.code);
+	//printf("DACIHAHIEIJGDLJAKGKLJDAKLJGDKLJALGKJ %u\n",info.charinfo.code);
 	goto tbwgconsurepart;
 
 tbwgconsurepart:

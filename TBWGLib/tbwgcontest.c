@@ -22,7 +22,7 @@ void itscl(){putname=clnm;}
 int failure(char* text, int val, int req)
 {
 	char res[128];
-	sprintf(res, "%s:%s\n\0", putname, text);
+	sprintf(res, "%s:%s (%i)\n\0", putname, text, req);
 	int err = (req == 0 && val <= 0) || (req != 0 && val != req);
 	if (err) printf(res,val);
 	return err;
@@ -56,9 +56,10 @@ int accepttest(int svsock)
 		printf("SV:Non cool version!\n");
 	}
 
-	if (cl_fd < 0) return cl_fd;
+	int ret = 1;
+	if (cl_fd < 0) ret = cl_fd;
 	tbwgcon1Close(cl_fd);
-	return 1;
+	return ret;
 }
 
 int servertest()
@@ -66,7 +67,6 @@ int servertest()
 	putname = svnm;
 	int erv = 0;
 
-	int cl_fd;
 	testprint("Initting global recv ptr for server.");
 	tbwgcon1InitGlobalRecvPtr();
 
@@ -81,13 +81,13 @@ int servertest()
 	testprint("Did good.");
 
 	testprint("Start again for other one.");
+	sleep(1);
 
 	if (failure("Accept test failure with %i", accepttest(sck), -4)) return -1;
 
 	testprint("Good one.");
 	sleep(1);
 	return 1000;
-	//tbwgcon1Close(cl_fd);
 }
 
 
@@ -113,7 +113,7 @@ int connecttest()
 
 	testprint("Aight. Closing.");
 
-	//tbwgcon1Close(sck);
+	tbwgcon1Close(sck);
 	testprint("Closed.");
 	return 1;
 }
