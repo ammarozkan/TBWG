@@ -33,6 +33,7 @@ void testprint(char* text)
 	printf("%s:%s\n",putname,text);
 }
 
+/*
 struct TBWGConMidCharacterInformation testingcharacterdecider(void* ptr)
 {
 	iValue t = {.value = 5, .max = 5};
@@ -40,13 +41,19 @@ struct TBWGConMidCharacterInformation testingcharacterdecider(void* ptr)
 	struct TBWGConMidCharacterInformation result = {.inf = inf, .systematicPtr = NULL};
 	return result;
 }
-
+*/
 int accepttest(int svsock)
 {
 	printf("\n\n\n");
 	testprint("Trying to accept!");
 
-	struct TBWGConServerResult res = tbwgcon1Accept(svsock, createList(),testingcharacterdecider, NULL);
+	struct List charinfoList = createList();
+	struct TBWGConCharacterInformation examplechar = {.code = 32};
+
+	struct TBWGConPtsizedCharacterInformationListElement charinfelm = {.charinf.inf = examplechar, .charinf.systematicPtr = NULL};
+	addElement(&charinfoList, (void*)&charinfelm, sizeof(struct TBWGConPtsizedCharacterInformationListElement));
+
+	struct TBWGConServerResult res = tbwgcon1Accept(svsock, charinfoList,NULL, NULL);
 	printf("FROMSERVER: NAME IS %s and CHARACTER IS %u!\n", res.name, res.midinf.inf.code);
 	int cl_fd = res.socket;
 
@@ -79,11 +86,11 @@ int servertest()
 
 	if (failure("Accept test failure with %i", accepttest(sck), 0)) return -1;
 	testprint("Did good.");
-
+	
 	testprint("Start again for other one.");
 	sleep(1);
 
-	if (failure("Accept test failure with %i", accepttest(sck), -4)) return -1;
+	if (failure("Accept test failure with %i", accepttest(sck), -64)) return -1;
 
 	testprint("Good one.");
 	sleep(1);
@@ -130,6 +137,7 @@ int clienttest()
 
 	struct TBWGConHeader header = {.tbwgname = {'a','b','1','2'}, .version = {0,0,0}};
 	tbwgcon1SetHeader(header);
+	
 
 	testprint("Trying to connect again.");
 	if (failure("Connect test failure with %i\n", connecttest(), -2)) return -1;

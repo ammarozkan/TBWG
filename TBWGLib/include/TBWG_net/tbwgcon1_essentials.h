@@ -17,9 +17,8 @@
 #define TBWGCON1_CHRSLCTERR_ALREADYINUSE 0x1
 #define TBWGCON1_VERCONTERR_TOOMANYTRIES 0x2
 
-#define STD_NAME_SIZE 32
-#define STD_EVENTNAME_SIZE STD_NAME_SIZE
-
+#define TBWGCON1_STD_NAME_SIZE 32
+#define TBWGCON1_STD_EVENTNAME_SIZE TBWGCON1_STD_NAME_SIZE
 
 
 struct TBWGConCharacterInformation {
@@ -28,15 +27,20 @@ struct TBWGConCharacterInformation {
 };
 
 
-struct TBWGConMidCharacterInformation {
+struct TBWGConPtsizedCharacterInformation {
     void* systematicPtr; // a pointer to help the local tbwgmanager find the character. will be returned back to the system
     struct TBWGConCharacterInformation inf;
+};
+
+struct TBWGConPtsizedCharacterInformationListElement {
+    struct ListElementHeader header;
+    struct TBWGConPtsizedCharacterInformation charinf;
 };
 
 struct TBWGConServerResult {
     int socket;
     char* name;
-    struct TBWGConMidCharacterInformation midinf;
+    struct TBWGConPtsizedCharacterInformation midinf;
 };
 
 struct TBWGConClientResult {
@@ -74,87 +78,61 @@ struct TBWGConHeader {
 /***                      TBWGCon Packages                       ***/
 
 
-// pkgcode : 7
-#define TBWGCON1_WAIT 7
-struct TBWGConWait {
-	struct TBWGConHeader header;
+
+#define TBWGCON1_ENTERINGPACKAGE 0
+// pkgcode : 0
+struct TBWGConEnteringPackage {
+    struct TBWGConHeader header; // tbwgname and version will be checked there
+    uint32_t namesize;
+    char name[TBWGCON1_STD_NAME_SIZE]; // max 32 sized
+};
+
+#define TBWGCON1_ENTERINGRESPONSE 1
+// pkgcode : 1
+struct TBWGConEnteringResponse {
+    struct TBWGConHeader header; // returns the closest tbwgname and version
+    uint32_t errcode;
+    uint32_t nextchapter; // returns 1 if version not supported else 2
 };
 
 // pkgcode : 9
-#define TBWGCON1_QUIT 9
 struct TBWGConQuit {
     struct TBWGConHeader header;
     uint32_t errcode;
 };
 
-// pkgcode : 0
-struct TBWGConCheckingPackage {
-	char tbwgname[4];
-	uint8_t version[3];
-};
+#define TBWGCON1_MAX_AVAILABLE_CHARACTER_COUNT 16
 
-// pkgcode : 1
-struct TBWGConWelcomingPackage {
-	struct TBWGConCheckingPackage ip;
-	uint32_t errcode;
-	uint32_t nextchapter;
-};
-
-// pkgcode : 2
-#define TBWGCON1_INTRODUCEMENTPACKAGE 2
-struct TBWGConIntroducementPackage {
-	struct TBWGConHeader header;
-	uint32_t nameSize;
-	char name[STD_NAME_SIZE];
-};
-
-// pkgcode : 3
-#define TBWGCON1_INTRODUCEMENTRESPONSE 3
-struct TBWGConIntroducementResponse {
-	struct TBWGConHeader header;
-	uint32_t errcode;
-	uint32_t nextchapter;
-};
-
+#define TBWGCON1_CHARACTERINFORMATOR 4
 // pkgcode : 4
 struct TBWGConCharacterInformator {
-	struct TBWGConHeader header;
+    struct TBWGConHeader header;
 
-	uint16_t characterCount;
-	struct TBWGConCharacterInformation* charinfo; // UBERSTRUCTESH!
+    uint16_t characterCount;
+    struct TBWGConCharacterInformation charinfo[TBWGCON1_MAX_AVAILABLE_CHARACTER_COUNT];
 };
 
+#define TBWGCON1_CHARACTERSELECTION 5
 // pkgcode : 5
 struct TBWGConCharacterSelection {
-	struct TBWGConHeader header;
+    struct TBWGConHeader header;
 
-	uint8_t selection;
-	uint8_t options; // CHARACTERSELECTION_OPTION_CREATE, etc.
+    uint8_t selection;
+    uint8_t options;
 };
 
+
+#define TBWGCON1_CHARSELECTERR_NOPERMISSION 0x0
+#define TBWGCON1_CHARSELECTERR_ALREADYINUSE 0x1
+#define TBWGCON1_CHARSELECTERR_CHOOSEDABOVE 0x2
+
+#define TBWGCON1_CHARACTERSELECTIONERROR 6
 // pkgcode : 6
 struct TBWGConCharacterSelectionError {
-	struct TBWGConHeader header;
-
-	uint32_t characterSelectionErrorCode;
-	uint32_t nextchapter;
-};
-
-// pkgcode : 8
-#define TBWGCON1_NEWCHARACTERINFO 8
-struct TBWGConNewCharacterInfo {
-	struct TBWGConHeader header;
-	struct TBWGConCharacterInformation charinfo;
-};
-
-
-
-// pkgcode: 200 (y)
-struct TBWGConSure {
     struct TBWGConHeader header;
-    char name[STD_NAME_SIZE];
-    struct TBWGConCharacterInformation charinfo;
-    uint8_t errcode; // should be zero if connection is okay!
+
+    uint32_t errcode;
+    uint32_t nextchapter;
 };
 
 
@@ -191,7 +169,7 @@ struct TBWGConObservingInformation {
 struct TBWGConWorldEventInformation {
     struct TBWGConHeader header;
     id_number selfid;
-    char eventName[STD_EVENTNAME_SIZE];
+    char eventName[TBWGCON1_STD_EVENTNAME_SIZE];
     iVector position;
 };
 
