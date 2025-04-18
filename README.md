@@ -1225,75 +1225,56 @@ Clients will want to join the game in any time. That could be before the game st
 
 #### Chapter 1
 
-When a client tries to join, should make the first entrance with the checking pkg. (CP. 1)
-
 ```C
 
+#define STD_NAME_SIZE 32
+
 // pkgcode : 0
-struct TBWGCheckingPackage {
-	char[4] tbwgname; 	// server standard name, defaultly "TBWG". that may changed by the creator when the creator is
-						// creating a custom server.
-	uint8_t version[3]; // v[0].v[1].v[2] = MAJOR.Minor.patch
+struct TBWGConEnteringPackage {
+    struct TBWGConHeader header; // tbwgname and version will be checked there
+    uint32_t namesize;
+    char name[STD_NAME_SIZE]; // max 32 sized
 };
 
 ```
 
-Then server responds with the closest server type and the version to introduced pkg. if the pkg is not supported
-by the server, otherwise server responds with the error code 0.
+
+Server responds
 
 ```C
 
 // pkgcode : 1
-struct TBWGWelcomingPackage {
-	struct TBWGCheckingPackage ip; // same as client sended one if supported by server, otherwise closest to that
-	uint32_t errcode; // will be used as .errcode = TBWGCON1_ERR_UNSUPPORTEDVERSION | TBWGCON1_ERR_UNSUPPORTEDGAME;
-	uint32_t nextchapter; // what should client do?
+struct TBWGConEnteringResponse {
+    struct TWBGConHeader header; // returns the closest tbwgname and version
+    uint32_t errcode;
+    uint32_t nextchapter; // returns 1 if version not supported else 2
+};
+
+```
+
+if server is tired of trying versions, server sends
+```C
+
+// pkgcode : 9
+struct TBWGConQuit {
+    struct TBWGConHeader header;
+    uint32_t errcode;
 };
 
 ```
 
 #### Chapter 2
 
-If server is okay with the version, client sends a name(may nickname). (CP. 2)
-
-```C
-
-// pkgcode : 2
-#define STD_NAME_SIZE 32 // or maybe your server would choose to use more?
-
-struct TBWGIntroducementPackage {
-	struct TBWGConHeader header;
-	uint32_t nameSize; // max 32
-	char name[STD_NAME_SIZE]; // max 32 sized
-};
-
-```
-
-Server responds.
-
-```C
-
-// pkgcode : 3
-struct TBWGIntroducementResponse {
-	struct TBWGConHeader header;
-	uint32_t errcode;
-	uint32_t nextchapter;
-};
-
-```
-
-#### Chapter 3
-
 Client continues to reading if no error has been maden. (CP. 3)
 
 ```C
 
 // pkgcode : 4
-struct TBWGCharacterInformator {
+struct TBWGConCharacterInformator {
 	struct TBWGConHeader header;
 
 	uint16_t characterCount;
-	struct TBWGCONCharacterInfo charinfo[characterCount];
+	struct TBWGConCharacterInformation charinfo[characterCount];
 };
 
 ```
@@ -1304,14 +1285,12 @@ Client sends the choosen character.
 
 ```C
 
-#define TBWGCON1_CHRSLCTOPT_CREATE (1 << 0)
-
 // pkgcode : 5
-struct TBWGCharacterSelection {
+struct TBWGConCharacterSelection {
 	struct TBWGConHeader header;
 
 	uint8_t selection;
-	uint8_t options; // TBWGCON1_CHRSLCTOPT_CREATE, etc.
+	uint8_t options;
 };
 
 ```
@@ -1324,7 +1303,7 @@ If client choosed an existing character, but that one wasn't available:
 #define CHARSELECTERR_ALREADYINUSE 0x1
 
 // pkgcode : 6
-struct TBWGCharacterSelectionError {
+struct TBWGConCharacterSelectionError {
 	struct TBWGConHeader header;
 
 	uint32_t characterSelectionErrorCode;
@@ -1333,75 +1312,11 @@ struct TBWGCharacterSelectionError {
 
 ```
 
-If client choosed an available character, then we can say connection is succesfully done for this standard.
+If client choosed an available character (server should return errcode 0 anyway),
+then we can say connection is succesfully done for this standard.
 
-If client choosed to create a character, then we continue on **Character Creation** section.
 
 
-#### Character Creation
-
-##### Chapter 10
-
-###### If Server Wants to Decide the Character
-
-If the server, wants to decide what character that client should have; server sends the wait code:
-
-```C
-
-// pkgcode : 7
-struct TBWGWait {
-	struct TBWGConHeader header;
-};
-
-```
-
-and then after a while:
-
-```C
-
-// pkgcode : 8
-struct TBWGNewCharacterInfo {
-	struct TBWGConHeader header;
-	struct TBWGCONCharacterInfo charinfo;
-};
-
-```
-
-and then we can say connection is succesfully done for this standard.
-
-###### If Server Lets the Client Create the Character
-
-```
-
-dont know how yet. client should choose one of character to create in the world.
-or maybe character can create a character from scratch? i dont know surely.
-
-```
-
-```
-I thought about it, and I'll not think about it from now on, for now. I need to make sure that game 
-can be executed and worked/played on the line.
-```
-
-#### Maybe, Connection is Okay! From both sides?
-
-After connection is done, and ready to run: Server and Client gets sure about that.
-
-Server and Client sends that package to each other and check that they're same.
-
-```C
-
-// pkgcode: 200 (y)
-struct TBWGSure {
-    struct TBWGConHeader header;
-    char name[STD_NAME_SIZE];
-    struct TBWGCONCharacterInfo charinfo;
-    uint8_t errcode; // should be zero if connection is okay!
-};
-
-```
-
-Or maybe that last part is a bit nonnecessary. I'm not sure.
 
 ### Playing
 
