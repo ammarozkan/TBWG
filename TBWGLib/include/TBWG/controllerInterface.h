@@ -37,6 +37,7 @@ struct ControllerInterface {
 };
 
 struct ControllerInterface* getDefaultControllerInterface();
+int tbwgIsDefaultControllerInterface(struct ControllerInterface* interface);
 
 struct ControllerInterface* getstdioControllerInterface();
 

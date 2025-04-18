@@ -256,8 +256,8 @@ chapter2:
 	DEBUG_PRINT("tbwgcon1Accept","character informator sent!");
 
 	r = tbwgcon1ReceivePackage(cl_fd, GLB_RECV, TBWGCON1_CHARACTERSELECTION);
-	if (r == -1) TBWGCON1_BROKEUPSERVERWITHERROR("Nothing came up from receiving.",-1)
-	else if(r == 0) TBWGCON1_BROKEUPSERVERWITHERROR("unexpected package receivement.",-2);
+	if (r == -1) TBWGCON1_BROKEUPSERVERWITHERROR("Nothing came up from receiving.",-4)
+	else if(r == 0) TBWGCON1_BROKEUPSERVERWITHERROR("unexpected package receivement.",-5);
 	DEBUG_PRINT("tbwgcon1Accept","character selection receivement OK!");
 
 	struct TBWGConCharacterSelection charsl = *(struct TBWGConCharacterSelection*)GLB_RECV;
@@ -340,7 +340,7 @@ chapter2:
 	DEBUG_PRINT("tbwgcon1Connect","Character Informator OK!");
 	struct TBWGConCharacterInformator cinfer = *(struct TBWGConCharacterInformator*)GLB_RECV;
 
-	printf("CLIENT READS %u CHARACTER INFOS.\n",cinfer.characterCount);
+	//printf("CLIENT READS %u CHARACTER INFOS.\n",cinfer.characterCount);
 
 	if (cinfer.characterCount == 0) TBWGCON1_BROKEUPCLIENTWITHERROR("not enough characters to choose.",-7);
 

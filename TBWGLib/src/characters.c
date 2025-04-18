@@ -86,7 +86,7 @@ struct Character* createDefaultCharacter(struct Dimension* dimension, iVector po
 
 	character->headHit = character->bodyHit = character->armHit = character->legHit = characterDefaultHit;
 
-	character->controllerInterface = getstdioControllerInterface();
+	character->controllerInterface = getDefaultControllerInterface();
 
 	character->seeCharacter = defaultSeeCharacter;
 	character->b.canSeen = defaultCanSeen;

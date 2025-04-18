@@ -48,6 +48,14 @@ struct ControllerInterface* getDefaultControllerInterface()
 	return interface;
 }
 
+int tbwgIsDefaultControllerInterface(struct ControllerInterface* interface)
+{
+	int obs = interface->observer == defaultControllerObserve;
+	int chosevntr = interface->chooseEventer == defaultControllerChooseEventer;
+	int recvworldevnt = interface->receiveWorldEvent == defaultControllerWorldEventObserve;
+	return obs && chosevntr && recvworldevnt;
+}
+
 
 
 
