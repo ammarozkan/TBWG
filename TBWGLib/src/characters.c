@@ -128,3 +128,10 @@ void chTriggerEffect(struct Character* chr, struct World* world, unsigned int ef
 		effect->executer((void*)effect, world, chr, relativeInformation);
 	}
 }
+
+
+void chChangeControllerInterface(struct Character* chr, struct ControllerInterface* newInterface)
+{
+	free(chr->controllerInterface);
+	chr->controllerInterface = newInterface;
+}

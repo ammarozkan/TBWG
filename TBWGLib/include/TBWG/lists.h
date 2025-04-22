@@ -31,6 +31,7 @@ void destroyElement(struct List* list, void* element);
 void* popElement(struct List* list, void* element);
 void decolonizeList(struct List* list);
 int listIsEmpty(struct List* list);
+unsigned int getElementCountOfList(struct List list);
 
 struct List subtractList(struct List a, struct List b); // result = a - b // negative doesnt exist
 

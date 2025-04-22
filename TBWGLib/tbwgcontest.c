@@ -42,6 +42,26 @@ struct TBWGConMidCharacterInformation testingcharacterdecider(void* ptr)
 	return result;
 }
 */
+
+uint8_t CharacterSelector(struct TBWGConCharacterInformator cinfer)
+{
+selectacharacter:
+	printf("SELECT A CHARACTER:\n");
+	for(unsigned int i = 0 ; i < cinfer.characterCount ; i += 1) {
+		struct TBWGConCharacterInformation inf = cinfer.charinfo[i];
+		printf("%u:Character[%u]\n",i,inf.code);
+	}
+	unsigned int selection = 0;
+	//scanf("%u",selection);
+	if (selection < cinfer.characterCount) return selection;
+	else {
+		printf("Beyond limit.\n");
+		goto selectacharacter;
+	}
+}
+
+
+
 int accepttest(int svsock)
 {
 	printf("\n\n\n");
@@ -53,7 +73,7 @@ int accepttest(int svsock)
 	struct TBWGConPtsizedCharacterInformationListElement charinfelm = {.charinf.inf = examplechar, .charinf.systematicPtr = NULL};
 	addElement(&charinfoList, (void*)&charinfelm, sizeof(struct TBWGConPtsizedCharacterInformationListElement));
 
-	struct TBWGConServerResult res = tbwgcon1Accept(svsock, charinfoList,NULL, NULL);
+	struct TBWGConServerResult res = tbwgcon1Accept(svsock, charinfoList,NULL);
 	printf("FROMSERVER: NAME IS %s and CHARACTER IS %u!\n", res.name, res.midinf.inf.code);
 	int cl_fd = res.socket;
 
@@ -108,7 +128,7 @@ int connecttest()
 {
 	testprint("Going to connect.");
 	char* name = "John";
-	struct TBWGConClientResult res = tbwgcon1Connect("127.0.0.1", 5045,name);
+	struct TBWGConClientResult res = tbwgcon1Connect("127.0.0.1", 5045,name,CharacterSelector);
 	printf("FROMCLIENT: NAME IS %s and CHARACTER IS %u!\n", name, res.inf.code);
 	if (res.socket == -2) return -2;
 	if (failure("Dang whats that character with %i", res.inf.code, REFERENCE_CHARACTER_CODE)) return -22;

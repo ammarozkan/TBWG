@@ -31,6 +31,7 @@ struct ObservingInformation Observe(struct Character* as, struct World* world)
 	obsrv.state = as->state;
 
 	//obsrv.effects = as->effects;
+	for(unsigned int i = 0 ; i < EFFECT_TRIGGER_TYPE_COUNT; i += 1)obsrv.effects[i] = as->b.effects[i];
 
 	obsrv.eventerCount = as->eventerCount;
 	obsrv.eventers = as->eventers;
@@ -83,6 +84,8 @@ seeingSuccesfull:
 			obsrv.characterCount += 1;
 		}
 	}
+
+	// entities not detected here, do that
 
 	void* realEyezRealize = malloc(sizeof(struct CharacterInformation)*obsrv.characterCount);
 	tbwgmemcpy(realEyezRealize, obsrv.charInfos, sizeof(struct CharacterInformation)*obsrv.characterCount);

@@ -60,6 +60,8 @@ void destroyCharacter(struct Character*);
 int defaultSeeCharacter(struct Character* observer, struct Character* target);
 int defaultSeeWorldEvent(struct Character* observer, struct WorldEvent* target);
 
+void chChangeControllerInterface(struct Character*, struct ControllerInterface* newInterface);
+
 void chAddEffect(struct Effect* effect, unsigned int effectTriggerType, struct Character*);
 void chTriggerEffect(struct Character* ch, struct World* world, unsigned int effectTriggerType, void* relativeInformation);
 

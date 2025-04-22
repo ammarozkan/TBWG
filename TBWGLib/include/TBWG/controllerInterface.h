@@ -41,4 +41,13 @@ int tbwgIsDefaultControllerInterface(struct ControllerInterface* interface);
 
 struct ControllerInterface* getstdioControllerInterface();
 
+
+void defaultControllerObserve(struct ControllerInterface*, struct ObservingInformation obsInfo);
+
+void defaultControllerWorldEventObserve(struct ControllerInterface*, struct WorldEventInformation obsInfo);
+
+
+struct TurnPlay defaultControllerChooseEventer(struct ControllerInterface*, id_number chooserId, digits32 allowedEventerTypes, 
+    size_t eventerCount, struct Eventer** eventers, struct EventerUses restUses);
+
 #endif /*TBWG_CONTROLLERINTERFACE_H*/

@@ -11,3 +11,11 @@ debugserverdemo:
 
 glassbreaker:
 	rm -r outs
+
+
+completecompile:
+	make outsdir
+	cd TBWGLib
+	make tbwgessentials lib
+	cd ..
+	make serverdemo

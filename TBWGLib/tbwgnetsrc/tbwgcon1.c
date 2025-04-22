@@ -122,7 +122,8 @@ int tbwgcon1ReceivePackage(int socket_fd, void* memptr, uint8_t pkgcode)
 	// saooo sage to forgot. saaauusage. got it? sousage coder. my b
 
 	int readen = recv(socket_fd,memptr,4096,0);
-	if (readen == 0 || (readen == -1 && errno == 9)) return -2;
+	if (readen == 0) return -1;
+	if (readen == -1 && errno == 9) return -2;
 
 	struct TBWGConHeader* h = (struct TBWGConHeader*)memptr;
 
@@ -199,7 +200,7 @@ struct TBWGConClientResult tbwgcon1GetClError(int errcode)
 
 #define TBWGCON1_BROKEUPSERVERWITHERROR(str,errcode) {close(cl_fd);DEBUG_PRINT("tbwgcon1Accept",str);return tbwgcon1GetSvError(errcode);}
 
-struct TBWGConServerResult tbwgcon1Accept(int sv_fd, struct List characterList, tbwgcon1CharacterDecider charDecider, void* decidersptr)
+struct TBWGConServerResult tbwgcon1Accept(int sv_fd, struct List characterList, void* decidersptr)
 {
 	DEBUG_PRINT("tbwgcon1Accept","begin");
 	struct TBWGConPtsizedCharacterInformation midinfo = {.systematicPtr = NULL}; char name[32]; int cl_fd = 0; int r;
@@ -218,7 +219,7 @@ chapter1:
 	DEBUG_PRINT("tbwgcon1Accept","chapter1!");
 
 	r = tbwgcon1ReceivePackage(cl_fd, GLB_RECV, TBWGCON1_ENTERINGPACKAGE);
-	if (r == -1) TBWGCON1_BROKEUPSERVERWITHERROR("Nothing came up from receiving.",-1)
+	if (r < 0) TBWGCON1_BROKEUPSERVERWITHERROR("Nothing came up from receiving.",-1)
 	else if(r == 0) TBWGCON1_BROKEUPSERVERWITHERROR("unexpected package receivement.",-2);
 	DEBUG_PRINT("tbwgcon1Accept","Entering Package OK!");
 
@@ -256,7 +257,7 @@ chapter2:
 	DEBUG_PRINT("tbwgcon1Accept","character informator sent!");
 
 	r = tbwgcon1ReceivePackage(cl_fd, GLB_RECV, TBWGCON1_CHARACTERSELECTION);
-	if (r == -1) TBWGCON1_BROKEUPSERVERWITHERROR("Nothing came up from receiving.",-4)
+	if (r < 0) TBWGCON1_BROKEUPSERVERWITHERROR("Nothing came up from receiving.",-4)
 	else if(r == 0) TBWGCON1_BROKEUPSERVERWITHERROR("unexpected package receivement.",-5);
 	DEBUG_PRINT("tbwgcon1Accept","character selection receivement OK!");
 
@@ -301,7 +302,7 @@ chapter3:
 
 #define TBWGCON1_BROKEUPCLIENTWITHERROR(str,errcode) { close(cl_fd); DEBUG_PRINT("tbwgcon1Connect", str); return tbwgcon1GetClError(errcode); }
 
-struct TBWGConClientResult tbwgcon1Connect(char* ip_c, uint16_t port, char* name)
+struct TBWGConClientResult tbwgcon1Connect(char* ip_c, uint16_t port, char* name, tbwgcon1CharacterSelector charSelector)
 {
 	int cl_fd = 0; struct TBWGConCharacterInformation info; int r;
 
@@ -318,7 +319,7 @@ chapter1:
 	tbwgcon1SendPackage(cl_fd, (void*)&ent, TBWGCON1_ENTERINGPACKAGE, sizeof(ent));
 
 	r = tbwgcon1ReceivePackage(cl_fd, GLB_RECV, TBWGCON1_ENTERINGRESPONSE);
-	if (r == -1) TBWGCON1_BROKEUPCLIENTWITHERROR("Nothing came up from receiving.",-1)
+	if (r < 0) TBWGCON1_BROKEUPCLIENTWITHERROR("Nothing came up from receiving.",-1)
 	else if(r == 0) TBWGCON1_BROKEUPCLIENTWITHERROR("unexpected package receivement.",-2);
 	DEBUG_PRINT("tbwgcon1Connect","Entering Response OK!");
 
@@ -335,7 +336,7 @@ chapter2:
 	DEBUG_PRINT("tbwgcon1Connect","chapter 2!");
 
 	r = tbwgcon1ReceivePackage(cl_fd, GLB_RECV, TBWGCON1_CHARACTERINFORMATOR);
-	if (r == -1) TBWGCON1_BROKEUPCLIENTWITHERROR("Nothing came up from receiving.",-5)
+	if (r < 0) TBWGCON1_BROKEUPCLIENTWITHERROR("Nothing came up from receiving.",-5)
 	else if(r == 0) TBWGCON1_BROKEUPCLIENTWITHERROR("unexpected package receivement.",-6);
 	DEBUG_PRINT("tbwgcon1Connect","Character Informator OK!");
 	struct TBWGConCharacterInformator cinfer = *(struct TBWGConCharacterInformator*)GLB_RECV;
@@ -346,11 +347,25 @@ chapter2:
 
 
 	DEBUG_PRINT("tbwgcon1Connect","Generating character selection!");
-	struct TBWGConCharacterSelection charsl = {.selection = 0, .options = 0};
+	struct TBWGConCharacterSelection charsl = {.selection = charSelector(cinfer), .options = 0};
 
 	DEBUG_PRINT("tbwgcon1Connect","Sending character selection!");
 	tbwgcon1SendPackage(cl_fd, (void*)&charsl, TBWGCON1_CHARACTERSELECTION, sizeof(charsl));
 	DEBUG_PRINT("tbwgcon1Connect","Character selection sent!");
+
+	r = tbwgcon1ReceivePackage(cl_fd, GLB_RECV, TBWGCON1_CHARACTERSELECTIONERROR);
+	if (r < 0) TBWGCON1_BROKEUPCLIENTWITHERROR("Nothing came up from receiving.",-8)
+	else if(r == 0) TBWGCON1_BROKEUPCLIENTWITHERROR("unexpected package receivement.",-9);
+	DEBUG_PRINT("tbwgcon1Connect","Character selection error OK!");
+
+	struct TBWGConCharacterSelectionError charsl_err = *(struct TBWGConCharacterSelectionError*)GLB_RECV;
+
+	if (charsl_err.errcode != 0) {
+		DEBUG_PRINT("tbwgcon1Connect","Character selection has an error.\n");
+		if (charsl_err.nextchapter == 2) goto chapter2;
+		else TBWGCON1_BROKEUPCLIENTWITHERROR("Character selection error with no backchapters.",-10);
+	}
+	
 
 	info = cinfer.charinfo[charsl.selection];
 

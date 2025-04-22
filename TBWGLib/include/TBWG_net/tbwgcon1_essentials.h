@@ -140,6 +140,7 @@ struct TBWGConCharacterSelectionError {
 //// ////  Playing  //// ////
 
 // pkgcode: 33
+#define TBWGCON1_OBSERVINGINFORMATIONHEADER 33
 struct TBWGConObservingInformationHeader {
     struct TBWGConHeader header;
     uint32_t effectCounts[EFFECT_TRIGGER_TYPE_COUNT];
@@ -149,6 +150,7 @@ struct TBWGConObservingInformationHeader {
 };
 
 
+#define TBWGCON1_OBSERVINGINFORMATION 34
 // pkgcode: 34
 struct TBWGConObservingInformation {
     struct TBWGConHeader header;
@@ -159,12 +161,13 @@ struct TBWGConObservingInformation {
     iVector position; fVector direction;
     digits32 state;
 
-    struct TBWGConEffectInformation* effects[EFFECT_TRIGGER_TYPE_COUNT]; // UBERSTRUCTESH
-    struct TBWGConUsersEventerInformation* eventers; // UBERSTRUCTESH!
-    struct CharacterInformation* charInfos; // UBERSTRUCTESH!
-    struct EntityInformation* entityInfos; // UBERSTRUCTESH!
+    //struct TBWGConEffectInformation* effects[EFFECT_TRIGGER_TYPE_COUNT]; // UBERSTRUCTESH
+    //struct TBWGConUsersEventerInformation* eventers; // UBERSTRUCTESH!
+    //struct CharacterInformation* charInfos; // UBERSTRUCTESH!
+    //struct EntityInformation* entityInfos; // UBERSTRUCTESH!
 };
 
+#define TBWGCON1_WORLDEVENTINFORMATION 35
 // pkgcode: 35
 struct TBWGConWorldEventInformation {
     struct TBWGConHeader header;

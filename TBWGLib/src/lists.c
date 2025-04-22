@@ -96,6 +96,12 @@ listIsEmpty(struct List* list)
 	return list->firstelement == NULL || list->lastelement == NULL;
 }
 
+
+unsigned int getElementCountOfList(struct List list)
+{
+	return list.count;
+}
+
 struct List subtractList(struct List a, struct List b) // result = a - b // negative doesnt exist
 {
 	struct List result = createList();

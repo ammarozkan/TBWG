@@ -29,7 +29,17 @@ struct List getAvailableCharacterInfos()
 	return ptsizedCharInfos;
 }
 
-#define PLAYER_COUNT 1
+void ENTERTOCONT()
+{
+    printf("Please press ENTER to continue\n");
+
+    char myChar = 0;
+    while (myChar != '\n' && myChar  != '\r') { 
+        myChar = getchar(); 
+    }
+}
+
+#define PLAYER_COUNT 2
 int main(int argc, char*argv[])
 {
 	// TBWG
@@ -40,7 +50,11 @@ int main(int argc, char*argv[])
 
 	printf("Adding characters.\n");
 	struct Character* character1 = createDefaultCharacter(tbwgGetFirstDimension(), getiVector(1,0));
+	character1->b.code = 32;
 	tbwgAddCharacter(character1);
+	struct Character* character2 = createDefaultCharacter(tbwgGetFirstDimension(), getiVector(-1,0));
+	character2->b.code = 22;
+	tbwgAddCharacter(character2);
 
 	// TBWG NET
 	printf("TBWGCON header initializing.\n");
@@ -57,7 +71,7 @@ int main(int argc, char*argv[])
 		printf("Creating character infos list.\n");
 		struct List charinfoList = getAvailableCharacterInfos();
 		printf("Awaiting for connection\n");
-		struct TBWGConServerResult res = tbwgcon1Accept(server_socket, charinfoList, NULL, NULL);
+		struct TBWGConServerResult res = tbwgcon1Accept(server_socket, charinfoList, NULL);
 		printf("Decolonizing charinfoList\n");
 		decolonizeList(&charinfoList);
 
@@ -69,14 +83,21 @@ int main(int argc, char*argv[])
 
 		printf("GREAT CONNECTION! Hello %s.\n",res.name);
 		// network interface initialization here
+		struct ControllerInterface* intf = tbwgcon1GetNetworkedControllerInterface(res.socket,res.name);
+		//struct ControllerInterface* intf = getstdioControllerInterface();
+		intf->chooseEventer = defaultControllerChooseEventer;
+		struct Character* chr = (struct Character*)(res.midinf.systematicPtr);
+		chChangeControllerInterface(chr, intf);
 	}
 
 	// GAME
 	printf("GAME!\n");
 
+
 	for(unsigned int i = 0 ; i < 16 ; i += 1) {
 		printf("%uth turn\n",i);
 		tbwgTurn();
+		ENTERTOCONT();
 	}
 	printf("Server is closing.\n");
 	tbwgcon1Close(server_socket);
