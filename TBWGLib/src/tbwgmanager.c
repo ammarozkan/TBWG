@@ -172,7 +172,7 @@ void tbwgTurn()
 	struct QueueElementHeader* queueElement = queuePop(&(data->queue));
 
 	if(queueElement->type == QUEUE_CHARACTER) tbwgCharacterTurn((struct QueueCharacterTurn*)queueElement);
-	else if(queueElement->type == QUEUE_REORDER) tbwgReorder(data);
+	else if(queueElement->type == QUEUE_REORDER) tbwgReorder();
 
 	free(queueElement);
 }
