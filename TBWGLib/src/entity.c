@@ -19,8 +19,7 @@ struct Entity* createDefaultEntity(struct Dimension* dimension, iVector position
 	entity->b.baseQueue = createQueue();
 
 	struct QueueEntityTurn* defaultEntityTurn = NEW(QueueEntityTurn);
-	(*defaultEntityTurn) = getBasicEntityTurn();
-	defaultEntityTurn->entity = entity;
+	(*defaultEntityTurn) = getBasicEntityTurn(entity);
 	queueAddTurn(&(entity->b.baseQueue), (struct QueueElementHeader*)defaultEntityTurn);
 }
 
