@@ -302,6 +302,8 @@ chapter3:
 
 #define TBWGCON1_BROKEUPCLIENTWITHERROR(str,errcode) { close(cl_fd); DEBUG_PRINT("tbwgcon1Connect", str); return tbwgcon1GetClError(errcode); }
 
+#include <unistd.h>
+
 struct TBWGConClientResult tbwgcon1Connect(char* ip_c, uint16_t port, char* name, tbwgcon1CharacterSelector charSelector)
 {
 	int cl_fd = 0; struct TBWGConCharacterInformation info; int r;
@@ -335,7 +337,10 @@ chapter1:
 chapter2:
 	DEBUG_PRINT("tbwgcon1Connect","chapter 2!");
 
+	// need to wait here a bit but its not waiting. dah. ?
+	sleep(1);
 	r = tbwgcon1ReceivePackage(cl_fd, GLB_RECV, TBWGCON1_CHARACTERINFORMATOR);
+	DEBUG_PRINT("tbwgcon1Connect","Character Informator Readed!"); // without this print here, its not working.
 	if (r < 0) TBWGCON1_BROKEUPCLIENTWITHERROR("Nothing came up from receiving.",-5)
 	else if(r == 0) TBWGCON1_BROKEUPCLIENTWITHERROR("unexpected package receivement.",-6);
 	DEBUG_PRINT("tbwgcon1Connect","Character Informator OK!");
