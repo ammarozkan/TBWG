@@ -1443,6 +1443,9 @@ For sending to the client I'll do the same thing like the observing information:
 struct TBWGConEventerOptionsInformationHeader {
     struct TBWGConHeader header;
     uint32_t eventerCount;
+    id_number chooserId;
+    digits32 allowedEventerTypes;
+    struct EventerUses restUses;
 };
 
 ```
@@ -1451,10 +1454,7 @@ struct TBWGConEventerOptionsInformationHeader {
 
 struct TBWGConEventerOptionsInformation {
     struct TBWGConHeader header;
-    id_number chooserId;
-    digits32 allowedEventerTypes;
-    struct EventerUses restUses;
-    struct EventerInformation eventers[eventerCount]; // a static struct that has values of informations for a eventer
+    struct TBWGConEventerInformation eventers[eventerCount]; // a static struct that has values of informations for a eventer
 };
 
 ```

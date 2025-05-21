@@ -37,8 +37,9 @@ tbwgessentialslib:
 	make necessarydirs
 	gcc src/essentials.c  -I include -c -o essentialslibo.o
 	gcc src/lists.c  -I include -c -o esslistslibo.o
-	ar rcs libs/libtbwgessentials.a essentialslibo.o esslistslibo.o
-	rm essentialslibo.o esslistslibo.o
+	gcc src/maths.c -I include -c -o essmathslibo.o
+	ar rcs libs/libtbwgessentials.a essentialslibo.o esslistslibo.o essmathslibo.o
+	rm essentialslibo.o esslistslibo.o essmathslibo.o
 
 
 debug:

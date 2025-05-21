@@ -5,16 +5,6 @@
 #include <arpa/inet.h> // inet_addr
 #include <unistd.h>
 
-#ifdef TBWG_DEBUG
-#include <stdio.h>
-#define DEBUG_PRINT(func,txt) printf("DEBUG:%s %s\n",func,txt)
-#else
-#define DEBUG_PRINT(x,y)
-#endif /*TBWG_DEBUG*/
-
-
-#define GLB_RECV globalrecvptr
-
 void* globalrecvptr;
 
 struct TBWGConHeader header;
@@ -382,4 +372,22 @@ chapter2:
 int tbwgcon1Close(int sock)
 {
 	return close(sock);
+}
+
+
+// Essential Usage Functions
+
+
+struct TBWGConEventerInformation tbwgconConvertToEventerInformation(struct Eventer e)
+{
+	struct TBWGConEventerInformation r;
+	r.eventerCode = e.eventerCode;
+	r.ID = e.ID;
+	r.energy = e.baseEnergy;
+	r.spellEnergy = e.baseSpellEnergy;
+	r.eventer_type = e.eventer_type;
+	r.required_informations = e.required_informations;
+	r.costs = e.costs;
+	tbwgmemcpy(r.name, e.name, 32);
+	return r;
 }

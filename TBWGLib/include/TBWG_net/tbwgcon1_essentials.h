@@ -178,9 +178,14 @@ struct TBWGConWorldEventInformation {
 
 
 
+#define TBWGCON1_EVENTEROPTIONSINFORMATIONHEADER 36
 // pkgcode: 36
 struct TBWGConEventerOptionsInformationHeader {
     struct TBWGConHeader header;
+    
+    id_number chooserId;
+    digits32 allowedEventerTypes;
+    struct EventerUses restUses;
     uint32_t eventerCount;
 };
 
@@ -194,16 +199,16 @@ struct TBWGConEventerInformation {
     struct EventerUses costs;
 };
 
+struct TBWGConEventerInformation tbwgconConvertToEventerInformation(struct Eventer);
+
+#define TBWGCON1_EVENTEROPTIONSINFORMATION 38
 // pkgcode: 38
 struct TBWGConEventerOptionsInformation {
     struct TBWGConHeader header;
-    id_number chooserId;
-    digits32 allowedEventerTypes;
-    struct EventerUses restUses;
-    struct TBWGConEventerInformation* eventers; // UBERSTRUCTESH!
+    //struct TBWGConEventerInformation* eventers; // UBERSTRUCTESH!
 };
 
-
+#define TBWGCON1_TURNPLAY 39
 // pkgcode: 39
 struct TBWGConTurnPlay {
     struct TBWGConHeader header;

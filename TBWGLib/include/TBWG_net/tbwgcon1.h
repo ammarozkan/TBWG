@@ -1,3 +1,20 @@
+#ifdef TBWG_DEBUG
+#include <stdio.h>
+#define DEBUG_PRINT(func,txt) printf("DEBUG:%s %s\n",func,txt)
+#define DEBUG_PRINTINT(func,txt,int) printf("DEBUG:%s %s ([%i])\n",func,txt,int)
+#define DEBUG_PRINTUINT(func,txt,uint) printf("DEBUG:%s %s ([%u])\n",func,txt,uint)
+#else
+#define DEBUG_PRINT(x,y)
+#define DEBUG_PRINTINT(func,txt,int)
+#define DEBUG_PRINTUINT(func,txt,uint)
+#endif /*TBWG_DEBUG*/
+
+
+extern void* globalrecvptr;
+#define GLB_RECV globalrecvptr
+#define GLB_RECV_HEAD ((struct TBWGConHeader*)GLB_RECV)
+
+
 #include <stdint.h>
 
 #include <TBWG_net/tbwgcon1_essentials.h>

@@ -50,6 +50,15 @@ int main()
 		int r = tbwgcon1ReceivePackage(res.socket, GLB_RECV, 0);
 		if (r == -2) break;
 		printf("NEW PACKAGE! %i (%s:%u:%u)\n",r,GLB_RECV->tbwgname,GLB_RECV->version[0],GLB_RECV->pkgcode);
+		if(GLB_RECV->pkgcode == TBWGCON1_EVENTEROPTIONSINFORMATIONHEADER) {
+			r = tbwgcon1ReceivePackage(res.socket, GLB_RECV, 0); // reading the options
+			if(GLB_RECV->pkgcode != TBWGCON1_EVENTEROPTIONSINFORMATION) printf("SOMETHINGS NOT GOING TOO GOOD TOO LIVING TOO BEING TOO GREAT!\n");
+
+			struct EventerRequiredInformations reqs = {getiVector(0,0), getiVector(0,0), getfVector(1.0f, 0.0f), getiVector(0,0), getiVector(1,1)};
+			struct TBWGConTurnPlay ctp = {.eventer_th = 0, .requiredInformations = reqs, .specs = TURNPLAY_END_TURN};
+			tbwgcon1SendPackage(res.socket, &ctp, TBWGCON1_TURNPLAY, sizeof(ctp));
+			printf("OK with OPTINER!\n");
+		}
 	}
 	return 0;
 }

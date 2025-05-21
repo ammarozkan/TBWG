@@ -85,7 +85,7 @@ int main(int argc, char*argv[])
 		// network interface initialization here
 		struct ControllerInterface* intf = tbwgcon1GetNetworkedControllerInterface(res.socket,res.name);
 		//struct ControllerInterface* intf = getstdioControllerInterface();
-		intf->chooseEventer = defaultControllerChooseEventer;
+		//intf->chooseEventer = defaultControllerChooseEventer;
 		struct Character* chr = (struct Character*)(res.midinf.systematicPtr);
 		chChangeControllerInterface(chr, intf);
 	}
