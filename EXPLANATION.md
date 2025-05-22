@@ -1204,6 +1204,7 @@ decrypt(enc2) == sample2  <------------  encrypt(sample2) => enc2
 		char[4] tbwgname;
 		uint8_t version[3];
 		uint8_t pkgcode;
+        uint32_t size; // complete pkgsize including header
 	};
 
 	// basic std packages
