@@ -3,7 +3,8 @@
 #include <sys/socket.h> // read, write
 #include <netinet/in.h> // sockaddr_in
 #include <arpa/inet.h> // inet_addr
-#include <unistd.h>
+#include <unistd.h> // sleep
+#include <errno.h> // for errno in recv
 
 void* globalrecvptr;
 
@@ -11,7 +12,7 @@ struct TBWGConHeader header;
 
 void tbwgcon1InitGlobalRecvPtr()
 {
-	globalrecvptr = malloc(2048);
+	globalrecvptr = malloc(TBWGCON1_GLOBALRECVPTR_SIZE);
 }
 
 int tbwgcon1SetHeader(struct TBWGConHeader h)
@@ -105,16 +106,29 @@ int tbwgcon1GetProperClientSocket(char* ip_c, uint16_t port)
 
 	return client_fd;
 }
-#include <errno.h>
+
 int tbwgcon1ReceivePackage(int socket_fd, void* memptr, uint8_t pkgcode)
 {
 	// this function should see the pkgcode not set bro damn // wait it actually makes sense my fault
 	// saooo sage to forgot. saaauusage. got it? sousage coder. my b
-
-	int readen = recv(socket_fd,memptr,4096,0);
+	DEBUG_PRINTUINT("receivePackage call","expecting!",pkgcode);
+	int readen;
+	struct TBWGConHeader head;
+	readen = recv(socket_fd,&head,sizeof(struct TBWGConHeader),0);
 	if (readen == 0) return -1;
 	if (readen == -1 && errno == 9) return -2;
+	// reading the header first
 
+	void* readennewpkg = memptr+sizeof(head); // skipping head and reading the package to the pointer
+	readen = recv(socket_fd,readennewpkg,head.size-sizeof(struct TBWGConHeader),0); // reading the package fully
+	
+	DEBUG_RECEIVEDEBUG("receivePackage call",head.size,readen+sizeof(head),pkgcode,head.pkgcode);
+	if (readen == 0) return -1;
+	if (readen == -1 && errno == 9) return -2;
+	
+	tbwgmemcpy(memptr, &head, sizeof(head)); // copying the head
+
+	// everything is good guess featuring b
 	struct TBWGConHeader* h = (struct TBWGConHeader*)memptr;
 
 	if (h->pkgcode == pkgcode) return 1;
@@ -122,12 +136,16 @@ int tbwgcon1ReceivePackage(int socket_fd, void* memptr, uint8_t pkgcode)
 	return 0;
 }
 
-int tbwgcon1SendPackage(int socket_fd, void* memptr, uint8_t pkgcode, size_t size)
+int tbwgcon1SendPackage(int socket_fd, void* memptr, uint8_t pkgcode, uint32_t size)
 {
+	//sleep(1);
 	struct TBWGConHeader* h = (struct TBWGConHeader*)memptr;
 	*h = header;
 	h->pkgcode = pkgcode;
-	return send(socket_fd, memptr, size, 0) == size;
+	h->size = size;
+	int sent = send(socket_fd, memptr, size, 0);
+	DEBUG_SENDDEBUG("sendPackage call",size,sent,pkgcode,h->pkgcode);
+	return sent > 0 && (uint32_t)sent == size;
 }
 
 uint32_t tbwgcon1GetObservingInformationSize(struct TBWGConObservingInformationHeader h)
@@ -242,8 +260,9 @@ chapter2:
 		cinfer.characterCount += 1; if (cinfer.characterCount == TBWGCON1_MAX_AVAILABLE_CHARACTER_COUNT) break;
 	}
 
+	//sleep(7);
 	DEBUG_PRINT("tbwgcon1Accept","generation completed. sending the character informator.");
-	tbwgcon1SendPackage(cl_fd, (void*)&cinfer, TBWGCON1_CHARACTERINFORMATOR, sizeof(cinfer));
+	if(tbwgcon1SendPackage(cl_fd, (void*)&cinfer, TBWGCON1_CHARACTERINFORMATOR, sizeof(cinfer)) == false) goto chapter2;
 	DEBUG_PRINT("tbwgcon1Accept","character informator sent!");
 
 	r = tbwgcon1ReceivePackage(cl_fd, GLB_RECV, TBWGCON1_CHARACTERSELECTION);
@@ -292,8 +311,6 @@ chapter3:
 
 #define TBWGCON1_BROKEUPCLIENTWITHERROR(str,errcode) { close(cl_fd); DEBUG_PRINT("tbwgcon1Connect", str); return tbwgcon1GetClError(errcode); }
 
-#include <unistd.h>
-
 struct TBWGConClientResult tbwgcon1Connect(char* ip_c, uint16_t port, char* name, tbwgcon1CharacterSelector charSelector)
 {
 	int cl_fd = 0; struct TBWGConCharacterInformation info; int r;
@@ -311,6 +328,7 @@ chapter1:
 	tbwgcon1SendPackage(cl_fd, (void*)&ent, TBWGCON1_ENTERINGPACKAGE, sizeof(ent));
 
 	r = tbwgcon1ReceivePackage(cl_fd, GLB_RECV, TBWGCON1_ENTERINGRESPONSE);
+	DEBUG_PRINTUINT("tbwgcon1Connect","readen should be!",sizeof(struct TBWGConEnteringResponse));
 	if (r < 0) TBWGCON1_BROKEUPCLIENTWITHERROR("Nothing came up from receiving.",-1)
 	else if(r == 0) TBWGCON1_BROKEUPCLIENTWITHERROR("unexpected package receivement.",-2);
 	DEBUG_PRINT("tbwgcon1Connect","Entering Response OK!");
@@ -327,10 +345,9 @@ chapter1:
 chapter2:
 	DEBUG_PRINT("tbwgcon1Connect","chapter 2!");
 
-	// need to wait here a bit but its not waiting. dah. ?
-	sleep(1);
 	r = tbwgcon1ReceivePackage(cl_fd, GLB_RECV, TBWGCON1_CHARACTERINFORMATOR);
-	DEBUG_PRINT("tbwgcon1Connect","Character Informator Readed!"); // without this print here, its not working.
+	DEBUG_PRINTUINT("tbwgcon1Connect","readen should be!",sizeof(struct TBWGConCharacterInformator));
+	DEBUG_PRINT("tbwgcon1Connect","Character Informator Readed!");
 	if (r < 0) TBWGCON1_BROKEUPCLIENTWITHERROR("Nothing came up from receiving.",-5)
 	else if(r == 0) TBWGCON1_BROKEUPCLIENTWITHERROR("unexpected package receivement.",-6);
 	DEBUG_PRINT("tbwgcon1Connect","Character Informator OK!");

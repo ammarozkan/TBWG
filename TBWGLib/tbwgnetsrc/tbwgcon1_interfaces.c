@@ -75,7 +75,7 @@ void tbwgcon1ControllerObserve(struct ControllerInterface* intfc, struct Observi
         entityInfos[i] = inf.entityInfos[i];
     }
 
-    tbwgcon1SendPackage(interface->cl_sck, realpkg, TBWGCON1_OBSERVINGINFORMATION, sizeof(realpkg));
+    tbwgcon1SendPackage(interface->cl_sck, realpkg, TBWGCON1_OBSERVINGINFORMATION, pkgsize);
     free(realpkg);
 }
 
@@ -113,7 +113,7 @@ struct TurnPlay tbwgcon1ControllerChooseEventer(struct ControllerInterface* intf
     struct TurnPlay turnPlay;
 
     struct tbwgcon1ControllerInterface* interface = (struct tbwgcon1ControllerInterface*)intfc;
-    printf("%s receives a ChooseEventer request!\n");
+    printf("%s receives a ChooseEventer request!\n",interface->name);
 
 
     struct TBWGConEventerOptionsInformationHeader head;

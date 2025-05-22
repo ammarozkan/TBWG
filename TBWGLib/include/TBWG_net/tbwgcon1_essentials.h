@@ -71,6 +71,7 @@ struct TBWGConHeader {
 	char tbwgname[4];
 	uint8_t version[3];
 	uint8_t pkgcode;
+    uint32_t size; // pkgsize
 };
 
 
