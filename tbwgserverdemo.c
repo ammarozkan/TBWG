@@ -39,7 +39,7 @@ void ENTERTOCONT()
     }
 }
 
-#define PLAYER_COUNT 1
+#define PLAYER_COUNT 2
 int main(int argc, char*argv[])
 {
 	// TBWG

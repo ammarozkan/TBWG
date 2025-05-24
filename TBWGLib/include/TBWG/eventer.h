@@ -77,6 +77,17 @@ struct TurnPlay {
 	unsigned int specs;
 };
 
+int defaultEventerCanExecuted(void* eventer, struct Character*, struct Tool* tool);
+
+void defaultEventerNotChoosed(void* eventer, struct World*, struct Character*);
+
+int defaultEventerCanExecutedNow(void* eventer, struct World* world, struct Character* user, struct EventerRequiredInformations reqinf, struct Tool* tool);
+
+int defaultGetEnergy(struct Eventer*, struct Character*, struct World*);
+
+int defaultSetEventerReady(struct Eventer*, struct Character*, struct World*);
+
+
 struct Eventer* getDefaultPunchEventer();
 struct Eventer* getDefaultWalkEventer();
 

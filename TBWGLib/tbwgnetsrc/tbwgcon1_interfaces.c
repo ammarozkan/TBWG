@@ -43,6 +43,7 @@ void tbwgcon1ControllerObserve(struct ControllerInterface* intfc, struct Observi
 
     void* obsSame = &(realpkg->selfid);
     tbwgmemcpy(obsSame, &inf,sizeof(struct TBWGConObservingInformation));
+    printf("ROT:%f,%f\n",realpkg->direction.x, realpkg->direction.y);
 
     FASTEFFECTLOOP(i) {
         unsigned int j = 0 ;
@@ -85,13 +86,10 @@ void tbwgcon1ReceiveWorldEvent(struct ControllerInterface* intfc, struct WorldEv
     struct tbwgcon1ControllerInterface* interface = (struct tbwgcon1ControllerInterface*)intfc;
     printf("%s receives a world event!\n",interface->name);
     
-    return;
-    
     struct TBWGConWorldEventInformation pkg;
     pkg.selfid = inf.selfid;
     tbwgmemcpy(pkg.eventName,inf.eventName,tbwgstrlen(inf.eventName)+1);
     pkg.position = inf.position;
-    printf("WORLDEVENTSENDING\n");
     tbwgcon1SendPackage(interface->cl_sck,&pkg,TBWGCON1_WORLDEVENTINFORMATION, sizeof(pkg));
 }
 

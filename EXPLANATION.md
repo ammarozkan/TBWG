@@ -885,9 +885,11 @@ see it.
 
 ```
 struct WorldEvent {
+	id_number relative;
 	char* name;
 	float visionHardness;
 	float disappearingSpeed;
+	uint32_t eventStreamingType; // how can I see the event?
 	iVector position;
 };
 

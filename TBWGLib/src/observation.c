@@ -27,6 +27,7 @@ struct ObservingInformation Observe(struct Character* as, struct World* world)
 	obsrv.se = as->se;
 
 	obsrv.position = as->b.position;
+	obsrv.direction = as->b.direction;
 
 	obsrv.state = as->state;
 
@@ -98,7 +99,10 @@ seeingSuccesfull:
 struct WorldEventInformation ObserveWorldEventInformation(struct Character* as, struct WorldEvent* evnt)
 {
 	struct WorldEventInformation info = {as->b.ID, "", evnt->position};
-	if(!isInVisionArea(as->b.direction, as->b.eye.angle, as->b.position, evnt->position)) return info;
+	int vision = isInVisionArea(as->b.direction, as->b.eye.angle, as->b.position, evnt->position);
+	int canbedetected = (vision && evnt->eventStreamingType & WORLDEVENT_VISION) || (evnt->eventStreamingType & WORLDEVENT_SOUND);
+	
+	if(!canbedetected) return info;
 	if(!as->seeWorldEvent(as, evnt)) return info;
 	info.eventName = evnt->name;
 	return info;

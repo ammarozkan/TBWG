@@ -86,7 +86,10 @@ int defaultGetEnergy(struct Eventer*, struct Character*, struct World*)
 	return 0;
 }
 
-
+int defaultSetEventerReady(struct Eventer*, struct Character*, struct World*)
+{
+	return 1;
+}
 
 
 
@@ -104,14 +107,11 @@ void executerDefaultPunchEventer(void* eventer, struct World* world, struct Char
 	if (c_target == NULL) return;
 	printf("attack is going to be succesfull!\n");
 
-	struct WorldEvent punchMove = {user->b.ID,"DEFAULT_PUNCH_MOVE", 1.0f, 0.5f, user->b.position};
+	struct WorldEvent punchMove = getDefaultWorldEvent(user->b.ID, "DEFAULT_PUNCH_MOVE", 1.0f, 0.5f, user->b.position, WORLDEVENT_VISION);
 	tbwgStreamWorldEvent(user->b.dimension, punchMove);
+	struct WorldEvent punchSound = getDefaultWorldEvent(user->b.ID, "SND_PUNCH", 1.0f, 0.5f, reqinf.position, WORLDEVENT_SOUND);
+	tbwgStreamWorldEvent(user->b.dimension, punchSound);
 	if(c_target->bodyHit(c_target, (void*)user, atkInfo)) printf("LETSGOOOOO\n");
-}
-
-int defaultSetEventerReady(struct Eventer*, struct Character*, struct World*)
-{
-	return 1;
 }
 
 struct Eventer*
@@ -147,7 +147,7 @@ getDefaultPunchEventer()
 
 void defaultWalkEventerExecuter(void* eventer, struct World* world, struct Character* user, struct EventerRequiredInformations reqinf, struct Tool* tool)
 {
-	struct WorldEvent walkMove = {user->b.ID,"DEFAULT_WALK", 0.0f, 0.5f, user->b.position};
+	struct WorldEvent walkMove = getDefaultWorldEvent(user->b.ID, "DEFAULT_WALK", 0.0f, 0.5f, user->b.position, WORLDEVENT_VISION);
 	tbwgStreamWorldEvent(user->b.dimension, walkMove);
 
 	tbwgPutBeing((struct Being*)user, reqinf.position);
