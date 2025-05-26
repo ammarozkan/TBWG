@@ -27,5 +27,5 @@ size_t tbwgstrlen(char* str)
 
 void getName(Name memPlace, char* n)
 {
-	tbwgmemcpy(memPlace, n, tbwgstrlen(n+1));
+	tbwgmemcpy(memPlace, n, tbwgstrlen(n/*+1*/)+1);
 }

@@ -489,8 +489,8 @@ This definition needed for explanation now on.
 
 ```C
 struct Stats {
-	int STR, DEX, CNS, WIS, SCS;
-	float visionAngle; // in radians (maximum 2.8f for normal people (approximately) )
+	int STR, DEX, CNS, WIS, SCS, SPD;
+	int VISRES;
 };
 ```
 
@@ -519,6 +519,7 @@ struct Effect {
 	uint32_t code;
 	uint8_t effectorType;
 	id_number effectorId; // player-
+	void* effector;
 
 	int time;
 
@@ -526,9 +527,6 @@ struct Effect {
 
 	struct Stats givenStats;
 
-	digits32 invokeTimeType;
-
-	struct Character* character;
 	void (*executer)(void* effectptr, struct World*, struct Character* entity, void* relativeInformation);
 };
 ```

@@ -9,69 +9,36 @@
 
 #include <TBWG_net/tbwgcon1.h>
 
+#include "tools.h"
+
 #include "basicmovements.h"
 
-struct List getAvailableCharacterInfos()
-{
-	struct Dimension* dimension = tbwgGetFirstDimension();
+void init();
+struct Character* createRandomCharacter();
+void ENTERTOCONT();
 
-	struct List ptsizedCharInfos = createList();
-
-	ITERATE(dimension->characterList, charListElm_pure) {
-		struct CharacterListElement* charListElm = (struct CharacterListElement*)charListElm_pure;
-
-		if (!tbwgIsDefaultControllerInterface(charListElm->character->controllerInterface)) continue;
-
-
-		struct TBWGConCharacterInformation inf = {.code = charListElm->character->b.code};
-		struct TBWGConPtsizedCharacterInformationListElement elm = {.charinf.systematicPtr = charListElm->character, .charinf.inf = inf};
-		addElement(&ptsizedCharInfos, &elm, sizeof(elm));
-		printf("Empty character found on first dimension! Code:%u\n",elm.charinf.inf.code);
-	}
-	return ptsizedCharInfos;
-}
-
-void ENTERTOCONT()
-{
-    printf("Please press ENTER to continue\n");
-
-    char myChar = 0;
-    while (myChar != '\n' && myChar  != '\r') { 
-        myChar = getchar(); 
-    }
-}
-
-#define PLAYER_COUNT 2
+#define MAX_PLAYER_COUNT 16
 int main(int argc, char*argv[])
 {
-	// TBWG
-
-	printf("Initializing TBWG\n");
-	tbwgInit();
-	tbwgReorder();
-
-	printf("Adding characters.\n");
-	struct Character* character1 = createDefaultTheGreatCharacter(tbwgGetFirstDimension(), getiVector(1,0));
-	character1->b.code = 32;
-	tbwgAddCharacter(character1);
-	struct Character* character2 = createDefaultTheGreatCharacter(tbwgGetFirstDimension(), getiVector(-1,0));
-	character2->b.code = 22;
-	tbwgAddCharacter(character2);
-
-	// TBWG NET
-	printf("TBWGCON header initializing.\n");
-	struct TBWGConHeader header = {.tbwgname = {'t','b','w','g'}, .version = {0,0,0}};
-	tbwgcon1SetHeader(header);
-
-	printf("globalrecvptr\n");
-	tbwgcon1InitGlobalRecvPtr();
+	init();
 
 	printf("Server is starting.\n");
-	int server_socket = tbwgcon1GetProperServerSocket("127.0.0.1", 5045);
+	char* ip_addr = malloc(64);
+	uint16_t port;
+	printf("ip_addr:");scanf("%s",ip_addr);
+	printf("port:");scanf("%u",&port);
+	int server_socket = tbwgcon1GetProperServerSocket(ip_addr, port);
+	free(ip_addr);
 
-	for (unsigned int i = 0 ; i < PLAYER_COUNT ; i += 1) {
+	// Pre-Game
+
+	unsigned int characterCount = 0;
+	printf("CharacterCount:"); scanf("%u",&characterCount);
+	for (unsigned int i = 0 ; i < characterCount ; i += 1) tbwgAddCharacter(createRandomCharacter());
+
+	for (unsigned int i = 0 ; i < MAX_PLAYER_COUNT ; i += 1) {
 		printf("Creating character infos list.\n");
-		struct List charinfoList = getAvailableCharacterInfos();
+		struct List charinfoList = getAvailableCharacterInfos(tbwgGetFirstDimension());
 		printf("Awaiting for connection\n");
 		struct TBWGConServerResult res = tbwgcon1Accept(server_socket, charinfoList, NULL);
 		printf("Decolonizing charinfoList\n");
@@ -84,24 +51,71 @@ int main(int argc, char*argv[])
 		}
 
 		printf("GREAT CONNECTION! Hello %s.\n",res.name);
-		// network interface initialization here
+		// network interface initialization
 		struct ControllerInterface* intf = tbwgcon1GetNetworkedControllerInterface(res.socket,res.name);
-		//struct ControllerInterface* intf = getstdioControllerInterface();
-		//intf->chooseEventer = defaultControllerChooseEventer;
 		struct Character* chr = (struct Character*)(res.midinf.systematicPtr);
 		chChangeControllerInterface(chr, intf);
+
+waitingforcommandonserver:
+		unsigned int cmd = 0;
+		printf("0:Wait for New Player\n");
+		printf("1:Start the Game\n");
+		printf("cmd:"); scanf("%u",&cmd);
+		if (cmd == 0) continue;
+		else if (cmd == 1) break;
+		else goto waitingforcommandonserver;
 	}
 
 	// GAME
 	printf("GAME!\n");
 
-
 	for(unsigned int i = 0 ; i < 16 ; i += 1) {
 		printf("%uth turn\n",i);
 		tbwgTurn();
-		ENTERTOCONT();
+		//ENTERTOCONT();
 	}
 	printf("Server is closing.\n");
 	tbwgcon1Close(server_socket);
 	return 0;
+}
+
+void init()
+{
+	// TBWG
+
+	printf("Initializing TBWG\n");
+	tbwgInit();
+	tbwgReorder();
+
+	// TBWG NET
+	printf("TBWGCON header initializing.\n");
+	struct TBWGConHeader header = {.tbwgname = {'t','b','w','g'}, .version = {0,0,0}};
+	tbwgcon1SetHeader(header);
+
+	printf("globalrecvptr\n");
+	tbwgcon1InitGlobalRecvPtr();
+}
+
+void ENTERTOCONT()
+{
+    printf("Please press ENTER to continue\n");
+
+    char myChar = 0;
+    while (myChar != '\n' && myChar  != '\r') { 
+        myChar = getchar(); 
+    }
+}
+
+struct Character* createRandomCharacter()
+{
+	static unsigned int i = 0;
+	iVector pos = getiVector(0,0);
+	if (i == 0) pos = getiVector(1,0);
+	else if (i == 1) pos = getiVector(0,1);
+	else if (i == 2) pos = getiVector(-1,0);
+	else if (i == 3) pos = getiVector(0,-1);
+	else if (i == 4) pos = getiVector(1,1);
+	else if (i == 5) pos = getiVector(-1,-1);
+	i+=1;
+	return createDefaultTheGreatCharacter(tbwgGetFirstDimension(), pos);
 }

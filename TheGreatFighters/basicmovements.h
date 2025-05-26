@@ -42,5 +42,6 @@ struct Character* createDefaultTheGreatCharacter(struct Dimension* dimension, iV
 	c->eventers[0] = getDefaultPunchEventer();
 	c->eventers[1] = getDefaultWalkEventer();
     c->eventers[2] = getDefaultLookEventer();
+	c->b.code = 32;
     return c;
 }

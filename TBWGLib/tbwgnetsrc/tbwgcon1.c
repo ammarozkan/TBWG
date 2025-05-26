@@ -408,3 +408,4 @@ struct TBWGConEventerInformation tbwgconConvertToEventerInformation(struct Event
 	tbwgmemcpy(r.name, e.name, 32);
 	return r;
 }
+
