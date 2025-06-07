@@ -18,72 +18,56 @@ items or objects in the game are doing autoturns. Flying for example. Throwing s
 You can program actions to make somethings. Maybe fascinating things. For example, creating a area 
 that teleports someones to somewhere. (idk)
 
+# Compiling the TBWGLib
+
+Basic compile is will be done by while on TBWGLib directory
+
+```bash
+make tbwgessentialslib lib
+```
+
+after, unnecessary things could be cleaned up
+
+```bash
+make clean
+```
+
 # HOW AM I GONNA PLAY IT
 
-Oh dear. That. That is cool. If you're gonna create the server, then you should follow
-some making process.
+just modify the tbwgclientpython how you like it then while in the directory run
 
-## the TBWGLib
-
-In the TBWGLib folder, run
-
-```
-make tbwgessentialslib lib
+```bash
+python .
 ```
 
-if you want to debug the lib
+and client will be opened and will try to join the server
 
-```
-make tbwgessentialslib debug
-```
+# How to serve a server
 
-(idk why would you want it though)
+tbwgnet for server is only supported by linux. on a linux device, you can natively run a server.
 
-## the DEMO server and client
+## SERVER DEMO
 
-```
-make outs serverdemo
-```
+firstly compile the tbwglib.
 
-if you want to do the debug one
+after, on the main directory
 
-```
-make outs debugserverdemo
+```bash
+make serverdemo
 ```
 
-then you can run the demos with
+then you should have a server on the /outs directory
 
+## TheGreatFighters
+
+TheGreatFighters is a complete server program/game to easily add characters, objects and effects
+to "the game". So its basically a game made with TBWG.
+
+### How to compile TheGreatFighters
+
+AFTER compiling the TBWGlib go to the /TheGreatFighters directory
+and run 
+
+```bash
+make tgf
 ```
-./outs/tbwgserverdemo.out
-```
-
-```
-./outs/tbwgclientdemo.out
-```
-
-## IIIIII WANT TO PROGRAM THE SERVER!!!
-
-Gosh. Dont do that. If you really want to find out, read the [EXPLANATION](EXPLANATION.md). Then investigate the
-[Test Main](TBWGLib/testmain.c) then the [Connetion Test](TBWGLib/tbwgcontest.c) then you could theoratically
-write the server on your own (with the help of lib of course). Its kinda easy after you learnt it. You can add
-your own character or effects with it.
-
-## BRO I JUST WANNA PLAY
-
-GOSH. STOP IT. OKAY. Really want to just play? Then find a server that runs somewhere. Idk from a friend maybe.
-Or directly run this:
-
-```
-cd TBWGLib
-make tbwgessentialslib lib
-cd ..
-make outs serverdemo
-./outs/tbwgserverdemo.out
-```
-
-then you have server that is working. Then just connect with your client. Dah.
-
-## Bro... I dont have linux.
-
-Damn. Then you can't pla- NAH! IM GONNA CREATE A CLIENT THAT WORKS ON WINDOWS! OR YOU CAN TOOO!!!!
-IMMA DO IT WITH PYTHON SOMEHOW! UNTIL THEN CYA! IF YOU DID IT, USE IT! PUBLISH IT GODDAMNIT!

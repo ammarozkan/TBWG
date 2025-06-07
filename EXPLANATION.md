@@ -132,7 +132,7 @@ Queue:
 
 Characters has stats that Strength(STR),
 Dexterity(DEX), Constitution(CNS), Wisdom(WIS),
-Spell Constitution(SCS)
+Spell Constitution(SCS), Speed(SPD), Vision Resolution (VISRES)
 
 A damage can be taken from Head, Body, Arms, Legs.
 Armors and body parts can resist to damage. In example
@@ -654,7 +654,9 @@ with the interface or using costs by the desire of this eventer. In example, let
 magic that required some hand signs first to get that ready. Lets say hand signs wont require any spell energy.
 Then in the first execution, this eventer shouldn't require any spell energy. Then in the second execution,
 this eventer should require some spell energy and some Magic Eventer Use cost. This kind of thing can be done
-with that function.
+with that function. And setReady function also returns that if that eventer is usable or not. For example
+if eventer is used and cannot be used again for a while, this will return 0. And will not be passed to
+eventer selection by the system. If returns 1, it will be passed to the eventer selector.
 
 When a eventer has EVENTER_ENERGYUSE_BASE in energyType, then the baseEnergy values will be
 the constant energy using values.
@@ -789,6 +791,7 @@ struct AreaListElement {
 
 struct Dimension {
 	id_number ID;
+    uint32_t dimensionCode;
 	struct List characterList;
 	struct List entityList;
 	struct List Areas;
