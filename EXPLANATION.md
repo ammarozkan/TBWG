@@ -1152,6 +1152,14 @@ tbwgStreamWorldEvent created to be used in effects, eventers, areas etc. Streams
 to hint some information about the movement.
 
 
+## Useful other definitions and functions
+
+### randomness.h
+
+a cool header that includes cool functions about randomization! 
+
+look to that header for more information!
+
 
 ## Communication (Server, Client), TBWGCON 1
 
