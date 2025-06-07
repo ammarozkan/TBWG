@@ -3,6 +3,13 @@
 #include <TBWG/stats.h>
 #include <TBWG/attacks.h>
 
+void defaultEffectExecuter(void* effectptr, struct World* w, struct Character* entity, void* relativeInformation)
+{
+	return;
+}
+
+
+
 #include <stdio.h>
 
 
@@ -44,6 +51,7 @@ struct Effect* getTestingHitEffect(void* effector)
 	f->effect.effector = effector;
 
 	f->effect.time = 3;
+	f->effect.willberemoved = 0;
 
 	f->effect.effectSpecs = 0;
 

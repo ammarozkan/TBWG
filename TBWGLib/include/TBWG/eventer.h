@@ -12,6 +12,7 @@ struct Eventer;
 #define EVENTER_TYPE_CLASSIC (1<<0)
 #define EVENTER_TYPE_FASTMAGIC (1<<1)
 #define EVENTER_TYPE_FASTCOMBAT (1<<2)
+#define EVENTER_TYPE_RESTING (1<<3)
 
 
 #define EVENTER_REQUIRED_INFORMATION_POSITION (1<<0)
@@ -28,6 +29,7 @@ struct EventerUses {
 int useEventerRequirements(struct EventerUses*, struct EventerUses requirements);
 
 void addEventerUses(struct EventerUses* a, struct EventerUses b);
+void updateEventerUses(struct EventerUses* a, struct EventerUses b);
 int checkRequiredEventers(struct EventerUses, struct EventerUses req);
 
 struct EventerRequiredInformations {

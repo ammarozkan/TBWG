@@ -27,6 +27,7 @@ struct BeingListElement {
 
 struct Dimension {
 	id_number ID;
+	uint32_t dimensionCode;
 	struct List characterList;
 	struct List entityList;
 	struct List areaList;

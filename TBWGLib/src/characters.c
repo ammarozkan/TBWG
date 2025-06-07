@@ -1,6 +1,7 @@
 #include <TBWG/characters.h>
 #include <TBWG/eventer.h>
 #include <TBWG/tbwgmanager.h>
+#include <TBWG/randomness.h> // tbwgNumber
 #include <stdlib.h> // malloc
 
 struct Stats defaultStats = {0, 0, 0, 0, 0, 1, 0};
@@ -11,19 +12,29 @@ struct Stats defaultStats = {0, 0, 0, 0, 0, 1, 0};
 
 int characterDefaultHit(void* hitting, struct Character* hitter, struct AttackInfo atk)
 {
-	printf("HIT is:%i\n",atk.damage);
 	if (*(TBWGType*)hitting != TBWG_TYPE_CHARACTER) return 0;
 
 	struct Character* hittingCharacter = hitting;
 
 	chTriggerEffect(hittingCharacter, tbwgGetWorld(), EFFECT_TRIGGER_TYPE_HIT, &atk);
 
-	if((hitter->stats.DEX + atk.additiveStats.DEX > hittingCharacter->stats.DEX) || (atk.specs & ATTACK_NONDODGEABLE)) {
+	int hitterDEX = hitter->stats.DEX + atk.additiveStats.DEX;
+	if((tbwgRandomPercentageIncrease(hitterDEX, 0, 60) > hittingCharacter->stats.DEX) || (atk.specs & ATTACK_NONDODGEABLE)) {
 		hittingCharacter->hp.value -= atk.damage;
 		return 1;
 	}
 
 	return 0;
+}
+
+int characterDefaultEnergyRegener(struct Character* c, int amount)
+{
+	return addToiValue(&(c->e), amount);
+}
+
+int characterDefaultHealthRegener(struct Character* c, int amount)
+{
+	return addToiValue(&(c->hp), amount);
 }
 
 struct Character* createDefaultCharacter(struct Dimension* dimension, iVector position)
@@ -85,6 +96,8 @@ struct Character* createDefaultCharacter(struct Dimension* dimension, iVector po
 	queueAddTurn(&(character->b.baseQueue), (struct QueueElementHeader*)defaultCharTurn);
 
 	character->headHit = character->bodyHit = character->armHit = character->legHit = characterDefaultHit;
+	character->energyRegener = characterDefaultEnergyRegener;
+	character->healthRegener = characterDefaultHealthRegener;
 
 	character->controllerInterface = getDefaultControllerInterface();
 
@@ -122,10 +135,35 @@ void chAddEffect(struct Effect* effect, unsigned int effectTriggerType, struct C
 
 void chTriggerEffect(struct Character* chr, struct World* world, unsigned int effectTriggerType, void* relativeInformation)
 {
+	void* theGreaterBull = NULL;
 	ITERATE(chr->b.effects[effectTriggerType], effectElm_pure) {
+		if(theGreaterBull!=NULL) {
+			free(theGreaterBull);
+			theGreaterBull = NULL;
+		}
+
+		struct Effect* effect = ((struct EffectListElement*)effectElm_pure)->effect;
+		
+		effect->executer((void*)effect, world, chr, relativeInformation);
+		
+		if(effect->time != -1) {
+			effect->time -= 1;
+			if (effect->time == 0) effect->willberemoved = 1;
+		}
+
+		if (effect->willberemoved == 1) {
+			theGreaterBull = popElement(&(chr->b.effects[effectTriggerType]), effectElm_pure);
+		}
+	}
+}
+
+void chUpdateStats(struct Character* ch)
+{
+	ch->stats = ch->baseStats;
+	for (unsigned int i = 0 ; i < EFFECT_TRIGGER_TYPE_COUNT ; i += 1) ITERATE(ch->b.effects[i], effectElm_pure) {
 		struct Effect* effect = ((struct EffectListElement*)effectElm_pure)->effect;
 
-		effect->executer((void*)effect, world, chr, relativeInformation);
+		ch->stats = tbwgSumStats(ch->stats, effect->givenStats);
 	}
 }
 

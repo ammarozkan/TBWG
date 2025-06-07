@@ -8,6 +8,7 @@
 #include <TBWG/worldevents.h>
 #include <TBWG/effects.h>
 
+
 struct CharacterInformation {
 	id_number ID;
 	unsigned int characterCode;
@@ -19,8 +20,8 @@ struct CharacterInformation {
 struct EntityInformation {
     id_number ID;
     unsigned int entityCode;
-    int x,y;
-    float dirx,diry;
+    iVector position;
+    fVector direction;
 };
 
 
@@ -65,6 +66,5 @@ struct WorldEventInformation {
 };
 
 struct WorldEventInformation ObserveWorldEventInformation(struct Character* as, struct WorldEvent*);
-
 
 #endif /*TBWG_OBSERVATION_H*/

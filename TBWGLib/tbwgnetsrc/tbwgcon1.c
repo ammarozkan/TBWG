@@ -154,11 +154,11 @@ uint32_t tbwgcon1GetObservingInformationSize(struct TBWGConObservingInformationH
 															   //ignoring ptrs that in the struct
 
 	for (unsigned int i = 0 ; i < EFFECT_TRIGGER_TYPE_COUNT ; i += 1) {
-		size += h.effectCounts[i] * sizeof(struct TBWGConEffectInformation);
+		size += h.effectCounts[i] * sizeof(struct TBWGConObservingEffectInformation);
 	}
-	size += h.eventerCount * sizeof(struct TBWGConEventerInformation);
-	size += h.characterInformationCount * sizeof(struct TBWGConCharacterInformation);
-	size += h.entityInformationCount * sizeof(struct EntityInformation);
+	size += h.eventerCount * sizeof(struct TBWGConObservingEventerInformation);
+	size += h.characterInformationCount * sizeof(struct TBWGConObservingCharacterInformation);
+	size += h.entityInformationCount * sizeof(struct TBWGConObservingEntityInformation);
 
 	return size;
 }
@@ -404,7 +404,13 @@ struct TBWGConEventerInformation tbwgconConvertToEventerInformation(struct Event
 	r.spellEnergy = e.baseSpellEnergy;
 	r.eventer_type = e.eventer_type;
 	r.required_informations = e.required_informations;
-	r.costs = e.costs;
+	{
+        r.costs.classic = e.costs.classic;
+        r.costs.fastcombat = e.costs.fastcombat;
+        r.costs.movement = e.costs.movement;
+        r.costs.fastmagic = e.costs.fastmagic;
+        r.costs.thoughtmagic = e.costs.thoughtmagic;
+    }
 	tbwgmemcpy(r.name, e.name, 32);
 	return r;
 }

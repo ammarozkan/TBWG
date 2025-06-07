@@ -6,4 +6,6 @@ struct Stats {
 	int VISRES;
 };
 
+struct Stats tbwgSumStats(struct Stats a, struct Stats b);
+
 #endif /*TBWG_STATS_H*/

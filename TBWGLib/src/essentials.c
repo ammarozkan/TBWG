@@ -29,3 +29,13 @@ void getName(Name memPlace, char* n)
 {
 	tbwgmemcpy(memPlace, n, tbwgstrlen(n/*+1*/)+1);
 }
+
+int addToiValue(iValue* v, int val)
+{
+	v->value += val;
+	if (v->value > v->max) {
+		int r = v->max - v->value;
+		v->value -= r;
+		return r;
+	} return 0;
+}

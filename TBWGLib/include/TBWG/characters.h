@@ -27,6 +27,9 @@ struct Physiology {
 typedef int (*SeeCharacter)(struct Character* observer, struct Character* target);
 typedef int (*SeeWorldEvent)(struct Character* observer, struct WorldEvent* target);
 
+typedef int (*EnergyRegener)(struct Character*, int amount);
+typedef int (*HealthRegener)(struct Character*, int amount);
+
 struct Character {
 	struct Being b;
 
@@ -47,11 +50,18 @@ struct Character {
 
 	HitterFunction headHit, bodyHit, armHit, legHit;
 
+	EnergyRegener energyRegener;
+	HealthRegener healthRegener;
+
 	struct ControllerInterface* controllerInterface;
 
 	SeeCharacter seeCharacter;
 	SeeWorldEvent seeWorldEvent;
 };
+
+int characterDefaultHit(void* hitting, struct Character* hitter, struct AttackInfo atk);
+int characterDefaultEnergyRegener(struct Character* c, int amount);
+int characterDefaultHealthRegener(struct Character* c, int amount);
 
 struct Character* createDefaultCharacter(struct Dimension* dimension, iVector position);
 void destroyCharacter(struct Character*);
@@ -64,6 +74,7 @@ void chChangeControllerInterface(struct Character*, struct ControllerInterface* 
 
 void chAddEffect(struct Effect* effect, unsigned int effectTriggerType, struct Character*);
 void chTriggerEffect(struct Character* ch, struct World* world, unsigned int effectTriggerType, void* relativeInformation);
+void chUpdateStats(struct Character* ch);
 
 TBWGType* tbwgFindBeingByPosition(struct Dimension* dim, int x, int y);
 

@@ -52,6 +52,12 @@ fVector connectfVectors(fVector from, fVector to)
 	return result;
 }
 
+iVector addiVectors(iVector a, iVector b)
+{
+	return getiVector(a.x+b.x, a.y+b.y);
+}
+
+
 int isInVisionArea(fVector direction, float seeingAngle, iVector position, iVector opp_position)
 {
 	fVector target_direction = normiVector(connectiVectors(position, opp_position));

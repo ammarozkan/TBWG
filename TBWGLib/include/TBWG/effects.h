@@ -25,6 +25,8 @@ struct Character;
 #define EFFECT_TRIGGER_TYPE_BEFORE_STATGIVING 0x03
 #define EFFECT_TRIGGER_TYPE_AFTER_STATGIVING 0x04
 
+void defaultEffectExecuter(void* effectptr, struct World*, struct Character* entity, void* relativeInformation);
+
 struct Effect {
 	id_number ID;
 	uint32_t code;
@@ -33,6 +35,7 @@ struct Effect {
 	void* effector;
 
 	int time;
+	int willberemoved; // if thats 1, executer loop will remove this effect
 
 	digits32 effectSpecs;
 

@@ -136,24 +136,49 @@ void tbwgCharacterTurn(struct QueueCharacterTurn* turn)
 {
 	struct ControllerInterface* interface = turn->character->controllerInterface;
 	turn->whenInvoked(turn);
-	addEventerUses(&(turn->character->eventerSpendings), turn->gainingUses);
+	//addEventerUses(&(turn->character->eventerSpendings), turn->gainingUses);
+	updateEventerUses(&(turn->character->eventerSpendings), turn->gainingUses);
+
+	if (turn->character->state & STATE_DEAD) return;
 
 	struct TurnPlay choose;
 	while( 1 ) {
-		tbwgMakeObserveAllCharacters();
 		struct Character* character = turn->character;
+		chUpdateStats(character);
 
-		choose = interface->chooseEventer(interface, character->b.ID, turn->allowedEventerTypes, character->eventerCount, turn->character->eventers,
+		tbwgMakeObserveAllCharacters();
+
+		struct Eventer** eventers = malloc(sizeof(struct Eventer*)*character->eventerCount);
+		unsigned int allowedeventers = 0;
+
+		for(unsigned int i = 0 ; i < character->eventerCount ; i += 1) {
+			if(character->eventers[i]->setReady((void*)eventers, character, tbwgGetWorld())) {
+				eventers[allowedeventers] = character->eventers[i];
+				allowedeventers += 1;
+			}
+		}
+
+		choose = interface->chooseEventer(interface, character->b.ID, turn->allowedEventerTypes, allowedeventers, eventers,
 			character->eventerSpendings);
+
 		if (choose.specs & TURNPLAY_END_TURN) return;
 
-		struct Eventer* eventer = character->eventers[choose.eventer_th];
+		struct Eventer* eventer = eventers[choose.eventer_th];
+		free(eventers);
+
+		if (!eventer->canExecutedNow((void*)eventer, &(data->world), turn->character, choose.requiredInformations, NULL)) {
+			continue; // cannot be executed, cancel of eventer using before spending
+		}
 
 		if (eventer->baseEnergy > character->e.value || eventer->baseSpellEnergy > character->se.value) {
 			continue; // failed use
 		}
 
 		if (!useEventerRequirements(&(character->eventerSpendings), eventer->costs)) continue;
+		
+		// energy spendings
+		character->e.value -= eventer->baseEnergy;
+		character->se.value -= eventer->baseSpellEnergy;
 		
 
 		eventer->executer((void*)eventer, &(data->world), turn->character, choose.requiredInformations, NULL);

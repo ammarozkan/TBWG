@@ -1,5 +1,8 @@
 //	tbwgcon1_essentials.h is the file that contains structs that defined in TBWGCON1
 
+#ifndef TBWGCON1_ESSENTIALS_H
+#define TBWGCON1_ESSENTIALS_H
+
 #include <TBWG/essentials.h>
 #include <TBWG/maths.h>
 #include <TBWG/stats.h>
@@ -20,12 +23,12 @@
 #define TBWGCON1_STD_NAME_SIZE 32
 #define TBWGCON1_STD_EVENTNAME_SIZE TBWGCON1_STD_NAME_SIZE
 
+#pragma pack(push, 1)
 
 struct TBWGConCharacterInformation {
     uint32_t code;
     iValue hp, e, se;
 };
-
 
 struct TBWGConPtsizedCharacterInformation {
     void* systematicPtr; // a pointer to help the local tbwgmanager find the character. will be returned back to the system
@@ -47,25 +50,6 @@ struct TBWGConClientResult {
     int socket;
     struct TBWGConCharacterInformation inf;
 };
-
-
-struct TBWGConEffectInformation {
-    id_number ID;
-    uint32_t code;
-};
-
-
-
-struct TBWGConUsersEventerInformation {
-    unsigned int eventerCode;
-    id_number ID;
-    uint8_t energyValueType;
-    uint32_t energy, spellEnergy;
-    digits32 eventer_type, required_informations;
-    char name[32];
-    struct EventerUses costs;
-};
-
 
 struct TBWGConHeader {
 	char tbwgname[4];
@@ -150,8 +134,43 @@ struct TBWGConObservingInformationHeader {
     uint32_t entityInformationCount;
 };
 
-
 #define TBWGCON1_OBSERVINGINFORMATION 34
+
+struct TBWGConObservingEffectInformation {
+    id_number ID;
+    uint32_t code;
+};
+
+struct TBWGConObservingCharacterInformation {
+    id_number ID;
+	uint32_t characterCode;
+	iVector position;
+    fVector direction;
+	iValue hp;
+};
+
+struct TBWGConEventerUses {
+    int32_t classic, fastcombat, movement, 
+			fastmagic, thoughtmagic;
+};
+
+struct TBWGConObservingEventerInformation {
+    uint32_t eventerCode;
+    id_number ID;
+    uint8_t energyValueType;
+    uint32_t energy, spellEnergy;
+    digits32 eventer_type, required_informations; // 25
+    char name[32]; // 57
+    struct TBWGConEventerUses costs; // 24+32+1+20 = 44+32+1 = 76+1 = 77
+};
+
+struct TBWGConObservingEntityInformation {
+    id_number ID;
+    uint32_t entityCode;
+    iVector position;
+    fVector direction;
+};
+
 // pkgcode: 34
 struct TBWGConObservingInformation {
     struct TBWGConHeader header;
@@ -162,10 +181,10 @@ struct TBWGConObservingInformation {
     iVector position; fVector direction;
     digits32 state;
 
-    //struct TBWGConEffectInformation* effects[EFFECT_TRIGGER_TYPE_COUNT]; // UBERSTRUCTESH
-    //struct TBWGConUsersEventerInformation* eventers; // UBERSTRUCTESH!
-    //struct CharacterInformation* charInfos; // UBERSTRUCTESH!
-    //struct EntityInformation* entityInfos; // UBERSTRUCTESH!
+    //struct TBWGConObservingEffectInformation* effects[EFFECT_TRIGGER_TYPE_COUNT]; // UBERSTRUCTESH
+    //struct TBWGConObservingEventerInformation* eventers; // UBERSTRUCTESH!
+    //struct TBWGConObservingCharacterInformation* charInfos; // UBERSTRUCTESH!
+    //struct TBWGConObservingEntityInformation* entityInfos; // UBERSTRUCTESH!
 };
 
 #define TBWGCON1_WORLDEVENTINFORMATION 35
@@ -186,7 +205,7 @@ struct TBWGConEventerOptionsInformationHeader {
     
     id_number chooserId;
     digits32 allowedEventerTypes;
-    struct EventerUses restUses;
+    struct TBWGConEventerUses restUses;
     uint32_t eventerCount;
 };
 
@@ -197,7 +216,7 @@ struct TBWGConEventerInformation {
     uint32_t energy, spellEnergy;
     digits32 eventer_type, required_informations;
     char name[32];
-    struct EventerUses costs;
+    struct TBWGConEventerUses costs;
 };
 
 struct TBWGConEventerInformation tbwgconConvertToEventerInformation(struct Eventer);
@@ -210,10 +229,24 @@ struct TBWGConEventerOptionsInformation {
 };
 
 #define TBWGCON1_TURNPLAY 39
+
+struct TBWGConEventerRequiredInformations {
+    iVector position;
+	iVector position2;
+	fVector direction;
+	iVector A,B;
+};
+
 // pkgcode: 39
 struct TBWGConTurnPlay {
     struct TBWGConHeader header;
     unsigned int eventer_th;
-    struct EventerRequiredInformations requiredInformations;
+    struct TBWGConEventerRequiredInformations requiredInformations;
     unsigned int specs;
 };
+
+
+#pragma pack(pop)
+
+
+#endif /*TBWGCON1_ESSENTIALS_H*/

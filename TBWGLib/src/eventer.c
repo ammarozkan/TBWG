@@ -47,6 +47,16 @@ void addEventerUses(struct EventerUses* a, struct EventerUses b)
 	}
 }
 
+void updateEventerUses(struct EventerUses* a, struct EventerUses b)
+{
+	int* target = (int*)a;
+	int* value = (int*)&b;
+
+	for(unsigned int i = 0 ; i < sizeof(struct EventerUses)/sizeof(int); i += 1) {
+		target[i] = value[i];
+	}
+}
+
 int checkRequiredEventers(struct EventerUses a, struct EventerUses req)
 {
 	int requiredFC = max(0, req.fastcombat - a.fastcombat);

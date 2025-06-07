@@ -19,6 +19,7 @@ struct iLimitedValue {
 	int value, max;
 };
 
+
 #define TBWG_ID_UNKNOWN 0x00
 #define TBWG_ID_NEW 0x01
 
@@ -35,6 +36,7 @@ void getName(Name memPlace, char*);
 id_number getID();
 void tbwgmemcpy(void* dest, void* source, long unsigned int size);
 size_t tbwgstrlen(char* str);
+int addToiValue(iValue* v, int val);
 #define tbwgmalloc malloc
 
 #endif

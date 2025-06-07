@@ -20,38 +20,38 @@ void tbwgcon1ControllerObserve(struct ControllerInterface* intfc, struct Observi
 
 
     unsigned int pkgsize = 0;
+    unsigned int effectsCount = 0;
     FASTEFFECTLOOP(i) {
-        pkgsize += sizeof(struct TBWGConEffectInformation)*head.effectCounts[i];
+        pkgsize += sizeof(struct TBWGConObservingEffectInformation)*head.effectCounts[i];
+        effectsCount += head.effectCounts[i];
     }
-    pkgsize += sizeof(struct TBWGConUsersEventerInformation)*head.eventerCount;
-    pkgsize += sizeof(struct CharacterInformation)*head.characterInformationCount;
-    pkgsize += sizeof(struct EntityInformation)*head.entityInformationCount;
+    pkgsize += sizeof(struct TBWGConObservingEventerInformation)*head.eventerCount;
+    pkgsize += sizeof(struct TBWGConObservingCharacterInformation)*head.characterInformationCount;
+    pkgsize += sizeof(struct TBWGConObservingEntityInformation)*head.entityInformationCount;
     pkgsize += sizeof(struct TBWGConObservingInformation);
 
     struct TBWGConObservingInformation* realpkg = tbwgmalloc(pkgsize);
     void* megaptrofpkg = (void*) realpkg;
 
     void* startofuberstructesh = megaptrofpkg+sizeof(struct TBWGConObservingInformation);
-    struct TBWGConEffectInformation* effects[EFFECT_TRIGGER_TYPE_COUNT]; // UBERSTRUCTESH
-    effects[0] = startofuberstructesh;
-    for(unsigned int i = 1 ; i < EFFECT_TRIGGER_TYPE_COUNT ; i += 1) {
-        effects[i] = effects[i-1]+sizeof(struct TBWGConEffectInformation)*head.effectCounts[i-1];
-    }
-    struct TBWGConUsersEventerInformation* eventers = (void*)(effects[EFFECT_TRIGGER_TYPE_COUNT-1]+head.effectCounts[EFFECT_TRIGGER_TYPE_COUNT-1]); // UBERSTRUCTESH!
-    struct CharacterInformation* charInfos = (void*)(eventers+head.eventerCount); // UBERSTRUCTESH!
-    struct EntityInformation* entityInfos = (void*)(charInfos+head.characterInformationCount); // UBERSTRUCTESH!
+    struct TBWGConObservingEffectInformation* effects = startofuberstructesh; // UBERSTRUCTESH
+    struct TBWGConObservingEventerInformation* eventers = (void*)(effects+effectsCount); // UBERSTRUCTESH!
+    struct TBWGConObservingCharacterInformation* charInfos = (void*)(eventers+head.eventerCount); // UBERSTRUCTESH!
+    struct TBWGConObservingEntityInformation* entityInfos = (void*)(charInfos+head.characterInformationCount); // UBERSTRUCTESH!
 
     void* obsSame = &(realpkg->selfid);
     tbwgmemcpy(obsSame, &inf,sizeof(struct TBWGConObservingInformation));
     printf("ROT:%f,%f\n",realpkg->direction.x, realpkg->direction.y);
 
+
+    unsigned int j = 0;
+
     FASTEFFECTLOOP(i) {
-        unsigned int j = 0 ;
         ITERATE(inf.effects[i], effectElm_pure) {
             struct Effect* effect = ((struct EffectListElement*)effectElm_pure)->effect;
 
-            effects[i][j].ID = effect->ID;
-            effects[i][j].code = effect->code;
+            effects[j].ID = effect->ID;
+            effects[j].code = effect->code;
             j+=1;
         }
     }
@@ -65,15 +65,28 @@ void tbwgcon1ControllerObserve(struct ControllerInterface* intfc, struct Observi
         eventers[i].eventer_type = inf.eventers[i]->eventer_type;
         eventers[i].required_informations = inf.eventers[i]->required_informations;
         tbwgmemcpy(eventers[i].name, inf.eventers[i]->name, 32);
-        eventers[i].costs = inf.eventers[i]->costs;
+        {
+            eventers[i].costs.classic = inf.eventers[i]->costs.classic;
+            eventers[i].costs.fastcombat = inf.eventers[i]->costs.fastcombat;
+            eventers[i].costs.movement = inf.eventers[i]->costs.movement;
+            eventers[i].costs.fastmagic = inf.eventers[i]->costs.fastmagic;
+            eventers[i].costs.thoughtmagic = inf.eventers[i]->costs.thoughtmagic;
+        }
     }
 
     for(unsigned int i = 0 ; i < head.characterInformationCount ; i += 1) {
-        charInfos[i] = inf.charInfos[i];
+        charInfos[i].ID = inf.charInfos[i].ID;
+        charInfos[i].characterCode = inf.charInfos[i].characterCode;
+        charInfos[i].position = inf.charInfos[i].position;
+        charInfos[i].direction = inf.charInfos[i].direction;
+        charInfos[i].hp = inf.charInfos[i].hp;
     }
 
     for(unsigned int i = 0 ; i < head.entityInformationCount ; i += 1) {
-        entityInfos[i] = inf.entityInfos[i];
+        entityInfos[i].ID = inf.entityInfos[i].ID;
+        entityInfos[i].entityCode = inf.entityInfos[i].entityCode;
+        entityInfos[i].position = inf.entityInfos[i].position;
+        entityInfos[i].direction = inf.entityInfos[i].direction;
     }
 
     tbwgcon1SendPackage(interface->cl_sck, realpkg, TBWGCON1_OBSERVINGINFORMATION, pkgsize);
@@ -117,7 +130,13 @@ struct TurnPlay tbwgcon1ControllerChooseEventer(struct ControllerInterface* intf
     struct TBWGConEventerOptionsInformationHeader head;
     head.chooserId = chooserId;
     head.allowedEventerTypes = allowedEventerTypes;
-    head.restUses = restUses;
+    {
+        head.restUses.classic = restUses.classic;
+        head.restUses.fastcombat = restUses.fastcombat;
+        head.restUses.movement = restUses.movement;
+        head.restUses.fastmagic = restUses.fastmagic;
+        head.restUses.thoughtmagic = restUses.thoughtmagic;
+    }
     head.eventerCount = eventerCount;
     tbwgcon1SendPackage(interface->cl_sck, &head, TBWGCON1_EVENTEROPTIONSINFORMATIONHEADER, sizeof(head));
 
@@ -147,8 +166,18 @@ struct TurnPlay tbwgcon1ControllerChooseEventer(struct ControllerInterface* intf
     struct TBWGConTurnPlay* tp_pkg = (struct TBWGConTurnPlay*)GLB_RECV;
 
     turnPlay.eventer_th = tp_pkg->eventer_th;
-    turnPlay.requiredInformations = tp_pkg->requiredInformations;
+    {
+        turnPlay.requiredInformations.position = tp_pkg->requiredInformations.position;
+        turnPlay.requiredInformations.position2 = tp_pkg->requiredInformations.position2;
+        turnPlay.requiredInformations.direction = tp_pkg->requiredInformations.direction;
+        turnPlay.requiredInformations.A = tp_pkg->requiredInformations.A;
+        turnPlay.requiredInformations.B = tp_pkg->requiredInformations.B;
+    }
     turnPlay.specs = tp_pkg->specs;
+
+    DEBUG_PRINTUINT("tbwgcon1ControllerChooseEventer","EVENTER_TH",tp_pkg->eventer_th);
+    DEBUG_PRINTUINT("tbwgcon1ControllerChooseEventer","SPECS",tp_pkg->specs);
+    DEBUG_PRINTUINT("tbwgcon1ControllerChooseEventer","REQPOSx",tp_pkg->requiredInformations.position.x);
 
     return turnPlay;
 }

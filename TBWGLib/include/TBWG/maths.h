@@ -30,6 +30,8 @@ fVector normiVector(iVector);
 iVector connectiVectors(iVector from, iVector to);
 fVector connectfVectors(fVector from, fVector to);
 
+iVector addiVectors(iVector a, iVector b);
+
 float getiVectorDistance(iVector a, iVector b);
 
 float getMaxLookLengthByAngle(float seeingAngle); // radians

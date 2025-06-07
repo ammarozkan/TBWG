@@ -13,6 +13,7 @@ createDefaultWorld()
 
 	struct Dimension* dimension = malloc(sizeof(struct Dimension));
 	dimension->ID = getID();
+	dimension->dimensionCode = 0x0;
 	dimension->characterList = createList();
 	dimension->entityList = createList();
 
