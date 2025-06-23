@@ -34,6 +34,8 @@ struct Eye {
     float angle;
     float level;
     float speed;
+    float hearingLevel;
+    float hearingSpeed;
 };
 
 struct ObservingInformation {
@@ -66,5 +68,7 @@ struct WorldEventInformation {
 };
 
 struct WorldEventInformation ObserveWorldEventInformation(struct Character* as, struct WorldEvent*);
+
+int canSeeCharacter(struct Character*, struct Character* target);
 
 #endif /*TBWG_OBSERVATION_H*/

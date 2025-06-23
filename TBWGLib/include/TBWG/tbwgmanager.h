@@ -34,7 +34,7 @@ struct Dimension* tbwgFindDimensionByPos(unsigned int pos);
 struct Dimension* tbwgFindDimensionByID(id_number ID);
 
 // changers
-void tbwgMoveBeing(struct Being*, iVector positionChange);
-void tbwgPutBeing(struct Being*, iVector position);
+int tbwgMoveBeing(struct Being*, iVector positionChange);
+int tbwgPutBeing(struct Being*, iVector position); // returns 1 if moved succesfully
 
 

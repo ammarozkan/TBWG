@@ -20,6 +20,7 @@ struct Physiology {
 
 #define STATE_DEAD (1<<1)
 #define STATE_FAINTED (1<<2)
+#define STATE_ONGROUND (1<<3)
 
 #define CHARACTER_DEFAULT 0x00
 

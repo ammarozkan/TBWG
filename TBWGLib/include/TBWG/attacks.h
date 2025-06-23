@@ -8,6 +8,7 @@
 #define ATTACK_AREA_ATTACK (1<<1)
 
 #define DAMAGE_BLUDGEONING 0x01
+#define DAMAGE_WRESTLE 0x02
 
 struct AttackInfo {
 	struct Stats additiveStats;

@@ -67,15 +67,6 @@ struct Dimension* tbwgGetFirstDimension()
 	return ((struct DimensionListElement*)(data->world.dimensionList.firstelement))->dimension;
 }
 
-TBWGType* tbwgFindBeingByPosition(struct Dimension* dim, int x, int y)
-{
-
-	struct List characterList = dim->characterList;
-	struct Character* chr = dimensionGetCharacterByPosition(dim, x, y);
-	// ACTUALLY THESE INFORMATIONS ARE READY IN DIMENSION FUNCTIONS, NO NEED THEM HERE.
-	return NULL;
-}
-
 void tbwgTriggerEffects(unsigned int effectType, void* relativeInformation)
 {
 	ITERATE_ALL_CHARACTERS_IN_WORLD((data->world), charlistelm, dimension) {
@@ -134,16 +125,25 @@ void tbwgMakeObserveAllCharacters()
 
 void tbwgCharacterTurn(struct QueueCharacterTurn* turn)
 {
-	struct ControllerInterface* interface = turn->character->controllerInterface;
+	struct Character* character = turn->character;
+	struct ControllerInterface* interface = character->controllerInterface;
 	turn->whenInvoked(turn);
 	//addEventerUses(&(turn->character->eventerSpendings), turn->gainingUses);
-	updateEventerUses(&(turn->character->eventerSpendings), turn->gainingUses);
+	updateEventerUses(&(character->eventerSpendings), turn->gainingUses);
 
 	if (turn->character->state & STATE_DEAD) return;
+	if (character->hp.value < 0) {
+		character->state = character->state | STATE_FAINTED | STATE_ONGROUND;
+	}
+	else if (character->hp.value > 0) character->state = character->state & (~STATE_FAINTED);
 
 	struct TurnPlay choose;
+
+	for(unsigned int i = 0 ; i < character->eventerCount ; i += 1)
+		character->eventers[i]->isChoosed = 0;
+
 	while( 1 ) {
-		struct Character* character = turn->character;
+		
 		chUpdateStats(character);
 
 		tbwgMakeObserveAllCharacters();
@@ -152,7 +152,7 @@ void tbwgCharacterTurn(struct QueueCharacterTurn* turn)
 		unsigned int allowedeventers = 0;
 
 		for(unsigned int i = 0 ; i < character->eventerCount ; i += 1) {
-			if(character->eventers[i]->setReady((void*)eventers, character, tbwgGetWorld())) {
+			if(character->eventers[i]->setReady((void*)(character->eventers[i]), character, tbwgGetWorld())) {
 				eventers[allowedeventers] = character->eventers[i];
 				allowedeventers += 1;
 			}
@@ -179,9 +179,15 @@ void tbwgCharacterTurn(struct QueueCharacterTurn* turn)
 		// energy spendings
 		character->e.value -= eventer->baseEnergy;
 		character->se.value -= eventer->baseSpellEnergy;
-		
 
+		eventer->isChoosed += 1;
 		eventer->executer((void*)eventer, &(data->world), turn->character, choose.requiredInformations, NULL);
+	}
+
+	
+	for(unsigned int i = 0 ; i < character->eventerCount ; i += 1) {
+		if(character->eventers[i]->isChoosed == 0) 
+			character->eventers[i]->notChoosed((void*)(character->eventers[i]), tbwgGetWorld(), character);
 	}
 }
 
@@ -225,13 +231,20 @@ void tbwgStreamWorldEvent(struct Dimension* dim, struct WorldEvent event)
 
 
 
-void tbwgMoveBeing(struct Being* b, iVector pc)
+int tbwgMoveBeing(struct Being* b, iVector pc)
 {
-	tbwgPutBeing(b, getiVector(b->position.x + pc.x, b->position.y + pc.y));
+	return tbwgPutBeing(b, getiVector(b->position.x + pc.x, b->position.y + pc.y));
 }
 
-void tbwgPutBeing(struct Being* b, iVector position)
+int tbwgPutBeing(struct Being* b, iVector position)
 {
+
+	struct Being* rpl = dimensionGetBeingByPosition(b->dimension, position);
+	if(rpl != NULL) {
+		if (rpl->collisionFunction(b, rpl) == 0) return 0;
+	}
+
+
 	struct List pre_areas = dimensionGetAreasOfPosition(b->dimension, b->position);
 	struct List aft_areas = dimensionGetAreasOfPosition(b->dimension, position);
 
@@ -256,6 +269,9 @@ void tbwgPutBeing(struct Being* b, iVector position)
 
 	decolonizeList(&new_areas);
 	decolonizeList(&old_areas);
+	
 
 	b->position = position;
+
+	return 1;
 }

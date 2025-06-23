@@ -11,7 +11,7 @@
 struct WorldEvent {
 	id_number relative;
 	char* name;
-	float visionHardness;
+	float detailLevel;
 	float disappearingSpeed;
 	uint32_t eventStreamingType; // how can I see the event?
 	iVector position;
@@ -19,7 +19,7 @@ struct WorldEvent {
 
 struct WorldEvent getDefaultWorldEvent(id_number relative,
 	char* name, 
-	float visionHardness, 
+	float detailLevel, 
 	float disappearingSpeed, 
 	iVector position,
 	uint32_t eventStreamingType);

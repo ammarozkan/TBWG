@@ -8,7 +8,7 @@
 
 struct Being;
 
-typedef void (*CollisionFunction) (struct Being*, struct Being*);
+typedef int (*CollisionFunction) (struct Being*, struct Being* walker); // returns if can walked inside
 typedef int (*CanSeen)(struct Being* observer, struct Being* target);
 
 struct Being {
@@ -34,6 +34,10 @@ struct Being {
 	CollisionFunction collisionFunction;
 };
 
+struct Effect* beingGetEffectByCode(struct Being* b, uint32_t effectCode);
+
+int beingDefaultOneWayCollision(struct Being* t, struct Being* walker);
+int beingDefaultTwoWayCollision(struct Being* t, struct Being* walker);
 
 int defaultCanSeen(struct Being* observer, struct Being* target);
 

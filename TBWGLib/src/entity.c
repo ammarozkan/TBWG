@@ -18,6 +18,8 @@ struct Entity* createDefaultEntity(struct Dimension* dimension, iVector position
 	entity->b.visionHardness = 0;
 	entity->b.baseQueue = createQueue();
 
+	entity->b.collisionFunction = beingDefaultOneWayCollision;
+
 	struct QueueEntityTurn* defaultEntityTurn = NEW(QueueEntityTurn);
 	(*defaultEntityTurn) = getBasicEntityTurn(entity);
 	queueAddTurn(&(entity->b.baseQueue), (struct QueueElementHeader*)defaultEntityTurn);

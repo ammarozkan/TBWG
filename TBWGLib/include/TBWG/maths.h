@@ -20,7 +20,7 @@ typedef struct iArea_ iArea;
 iVector getiVector(int x, int y);
 fVector getfVector(float x, float y);
 
-int isInVisionArea(fVector direction, float seeingAngle, iVector position, iVector opp_position); // radians
+int isInVisionArea(fVector direction, float seeingAngle, iVector position, iVector target_position); // radians
 
 float getiVectorLength(iVector);
 float getfVectorLength(fVector);

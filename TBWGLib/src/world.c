@@ -2,43 +2,65 @@
 #include <TBWG/essentials.h>
 #include <TBWG/lists.h>
 #include <TBWG/characters.h>
+#include <TBWG/entity.h>
 #include <stdlib.h> // malloc
 
 
+struct Dimension*
+createDimension(uint32_t dimensionCode)
+{
+	struct Dimension* dimension = malloc(sizeof(struct Dimension));
+	
+	dimension->ID = getID();
+	dimension->dimensionCode = dimensionCode;
+	dimension->characterList = createList();
+	dimension->entityList = createList();
+	return dimension;
+}
 
 struct World 
 createDefaultWorld()
 {
 	struct List dimensionList = createList();
 
-	struct Dimension* dimension = malloc(sizeof(struct Dimension));
-	dimension->ID = getID();
-	dimension->dimensionCode = 0x0;
-	dimension->characterList = createList();
-	dimension->entityList = createList();
-
-	struct DimensionListElement dimensionListElement = {.dimension = dimension};
-
-	addElement(&dimensionList, (void*)&dimensionListElement, sizeof(struct DimensionListElement));
-
-
-
 	struct World world = {.dimensionList = dimensionList, .characterCount = 0};
+	worldAddDimension(&world, createDimension(0x0));
 
 	return world;
 }
 
 struct Character*
-dimensionGetCharacterByPosition(struct Dimension* dimension, int x, int y)
+dimensionGetCharacterByPosition(struct Dimension* dimension, iVector position)
 {
 	ITERATE(dimension->characterList, charListElm_pure) {
 		struct CharacterListElement* charListElm = (struct CharacterListElement*)charListElm_pure;
 		struct Character* chr = charListElm->character;
 
-		if(chr->b.position.x == x && chr->b.position.y == y) return chr;
+		if(chr->b.position.x == position.x && chr->b.position.y == position.y) return chr;
 	}
 
 	return NULL;
+}
+
+
+struct Entity* dimensionGetEntityByPosition(struct Dimension* dimension, iVector position)
+{
+	ITERATE(dimension->entityList, entityListElm_pure) {
+		struct EntityListElement* entityListElm = (struct EntityListElement*)entityListElm_pure;
+		struct Entity* ent = entityListElm->entity;
+
+		if(ent->b.position.x == position.x && ent->b.position.y == position.y) return ent;
+	}
+
+	return NULL;
+}
+
+
+struct Being* dimensionGetBeingByPosition(struct Dimension* dimension, iVector position)
+{
+	struct Character* chr = dimensionGetCharacterByPosition(dimension, position);
+	if (chr != NULL) return (struct Being*)chr;
+	return (struct Being*)dimensionGetEntityByPosition(dimension, position);
 }
 
 int 
@@ -108,4 +130,23 @@ worldAddCharacter(struct World* world, struct Character* character)
 
 	world->characterCount += 1;
 	return 1;
+}
+
+int
+worldAddDimension(struct World* world, struct Dimension* dimension)
+{
+	struct DimensionListElement dimensionListElement = {.dimension = dimension};
+	addElement(&(world->dimensionList), (void*)&dimensionListElement, sizeof(struct DimensionListElement));
+	return 1;
+}
+
+
+struct Dimension* 
+worldGetDimensionByCode(struct World* w, uint32_t dimensionCode)
+{
+	ITERATE(w->dimensionList, dimension) {
+		struct Dimension* dim = ((struct DimensionListElement*)dimension)->dimension;
+		if (dim->dimensionCode == dimensionCode) return dim;
+	}
+	return NULL;
 }

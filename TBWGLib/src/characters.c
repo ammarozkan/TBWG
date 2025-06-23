@@ -8,8 +8,6 @@ struct Stats defaultStats = {0, 0, 0, 0, 0, 1, 0};
 
 //typedef int (*HitterFunction)(void* hitting, struct Character* hitter, struct AttackInfo);
 
-#include <stdio.h>
-
 int characterDefaultHit(void* hitting, struct Character* hitter, struct AttackInfo atk)
 {
 	if (*(TBWGType*)hitting != TBWG_TYPE_CHARACTER) return 0;
@@ -19,7 +17,10 @@ int characterDefaultHit(void* hitting, struct Character* hitter, struct AttackIn
 	chTriggerEffect(hittingCharacter, tbwgGetWorld(), EFFECT_TRIGGER_TYPE_HIT, &atk);
 
 	int hitterDEX = hitter->stats.DEX + atk.additiveStats.DEX;
-	if((tbwgRandomPercentageIncrease(hitterDEX, 0, 60) > hittingCharacter->stats.DEX) || (atk.specs & ATTACK_NONDODGEABLE)) {
+
+	int seecontrol = canSeeCharacter(hitting, hitter) || tbwgGetRandomed_2(60, 10);
+
+	if((tbwgRandomPercentageIncrease(hitterDEX, 0, 60) > hittingCharacter->stats.DEX) || (atk.specs & ATTACK_NONDODGEABLE) || !seecontrol) {
 		hittingCharacter->hp.value -= atk.damage;
 		return 1;
 	}
@@ -42,8 +43,6 @@ struct Character* createDefaultCharacter(struct Dimension* dimension, iVector po
 	struct Character* character = malloc(sizeof(struct Character));
 
 	character->b.tbwgType = TBWG_TYPE_CHARACTER;
-
-	printf("TBWGTYPE:%u == %u\n",*(TBWGType*)character, TBWG_TYPE_CHARACTER);
 	
 	character->b.code = CHARACTER_DEFAULT;
 	character->b.ID = getID();
@@ -53,12 +52,14 @@ struct Character* createDefaultCharacter(struct Dimension* dimension, iVector po
 
 	character->b.dimension = dimension;
 
+	character->b.collisionFunction = beingDefaultOneWayCollision;
+
 	character->baseStats = defaultStats;
 	character->stats = defaultStats;
 
 	character->b.visionHardness = 0;
 
-	struct Eye eye = {1.8f, 2.0f, 1.0f};
+	struct Eye eye = {1.8f, 1.0f, 0.1f, 1.0f, 0.3f};
 	character->b.baseEye = eye;
 	character->b.eye = eye;
 
@@ -118,9 +119,17 @@ int defaultSeeCharacter(struct Character* observer, struct Character* target)
 
 int defaultSeeWorldEvent(struct Character* observer, struct WorldEvent* target)
 {
-	int visionHardnessCheck = observer->b.eye.level >= getVisionHardnessFinal(target->visionHardness, getiVectorDistance(observer->b.position, target->position));
-	int speedCheck = observer->b.eye.speed >= target->disappearingSpeed;
-	return visionHardnessCheck && speedCheck;
+	if (target->eventStreamingType == WORLDEVENT_VISION) {
+		int visionHardnessCheck = observer->b.eye.level >= getVisionHardnessFinal(target->detailLevel, getiVectorDistance(observer->b.position, target->position));
+		int speedCheck = observer->b.eye.speed <= target->disappearingSpeed;
+		return visionHardnessCheck && speedCheck;
+	} else if(target->eventStreamingType == WORLDEVENT_SOUND) {
+		int hearingCheck = observer->b.eye.hearingLevel >= target->detailLevel;
+		int speedCheck = observer->b.eye.hearingSpeed <= target->disappearingSpeed;
+		return hearingCheck && speedCheck;
+	}
+	
+	return 0;
 }
 
 void destroyCharacter(struct Character* chr)
@@ -148,7 +157,7 @@ void chTriggerEffect(struct Character* chr, struct World* world, unsigned int ef
 		
 		if(effect->time != -1) {
 			effect->time -= 1;
-			if (effect->time == 0) effect->willberemoved = 1;
+			if (effect->time <= 0) effect->willberemoved = 1;
 		}
 
 		if (effect->willberemoved == 1) {

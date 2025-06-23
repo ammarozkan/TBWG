@@ -13,6 +13,7 @@ struct Eventer;
 #define EVENTER_TYPE_FASTMAGIC (1<<1)
 #define EVENTER_TYPE_FASTCOMBAT (1<<2)
 #define EVENTER_TYPE_RESTING (1<<3)
+#define EVENTER_TYPE_BEYONDTIME (1<<4)
 
 
 #define EVENTER_REQUIRED_INFORMATION_POSITION (1<<0)
@@ -67,6 +68,7 @@ struct Eventer {
 
 	// when not choosed
 
+	int isChoosed;
 	void (*notChoosed)(void* eventer, struct World*, struct Character*);
 };
 
@@ -88,7 +90,9 @@ int defaultEventerCanExecutedNow(void* eventer, struct World* world, struct Char
 int defaultGetEnergy(struct Eventer*, struct Character*, struct World*);
 
 int defaultSetEventerReady(struct Eventer*, struct Character*, struct World*);
-
+int defaultSetEventerReady_chrOnFoot(struct Eventer*, struct Character* c, struct World*);
+int defaultSetEventerReady_chrAwake(struct Eventer*, struct Character* c, struct World*);
+int defaultSetEventerReady_chrNotDead(struct Eventer*, struct Character* c, struct World*);
 
 struct Eventer* getDefaultPunchEventer();
 struct Eventer* getDefaultWalkEventer();

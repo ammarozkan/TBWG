@@ -96,9 +96,24 @@ int defaultGetEnergy(struct Eventer*, struct Character*, struct World*)
 	return 0;
 }
 
-int defaultSetEventerReady(struct Eventer*, struct Character*, struct World*)
+int defaultSetEventerReady(struct Eventer*, struct Character* c, struct World*)
 {
-	return 1;
+	return (c->state & (STATE_DEAD | STATE_FAINTED | STATE_ONGROUND)) == 0;
+}
+
+int defaultSetEventerReady_chrOnFoot(struct Eventer*, struct Character* c, struct World*)
+{
+	return (c->state & (STATE_DEAD | STATE_FAINTED | STATE_ONGROUND)) == 0;
+}
+
+int defaultSetEventerReady_chrAwake(struct Eventer*, struct Character* c, struct World*)
+{
+	return (c->state & (STATE_DEAD | STATE_FAINTED)) == 0;
+}
+
+int defaultSetEventerReady_chrNotDead(struct Eventer*, struct Character* c, struct World*)
+{
+	return (c->state & STATE_DEAD) == 0;
 }
 
 
@@ -113,7 +128,7 @@ void executerDefaultPunchEventer(void* eventer, struct World* world, struct Char
 
 	struct AttackInfo atkInfo = {.additiveStats = additiveStats, .specs = ATTACK_NONDODGEABLE, .damageType = DAMAGE_BLUDGEONING, .damage = 1};
 
-	struct Character* c_target = dimensionGetCharacterByPosition(user->b.dimension, reqinf.position.x, reqinf.position.y);
+	struct Character* c_target = dimensionGetCharacterByPosition(user->b.dimension, reqinf.position);
 	if (c_target == NULL) return;
 	printf("attack is going to be succesfull!\n");
 
