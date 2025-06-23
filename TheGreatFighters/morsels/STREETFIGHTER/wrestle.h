@@ -7,7 +7,7 @@ void tgfWrestleExecuter(void* eventer, struct World* world, struct Character* us
 	struct AttackInfo atkInfo = {.additiveStats = additiveStats, .specs = 0, .damageType = DAMAGE_WRESTLE, .damage = 0};
     
     struct TGFGrabbing* grabbing = (struct TGFGrabbing*)beingGetEffectByCode(&(user->b), TGF_TONSOFEFFECTS_GRABBING);
-	struct Character* c_target = grabbing->grabbed;
+	struct Character* c_target = (struct Character*)(grabbing->grabbed);
     
 	int isgrabbing = tgfGrabbing_isgrabbing(grabbing);
     if (!isgrabbing) return;
