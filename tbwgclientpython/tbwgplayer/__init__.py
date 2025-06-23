@@ -38,6 +38,7 @@ def getEventerPanelDefault(uitool, eventers, onclickfunc, assets):
     for nbutton in nbuttons:
         nbutton.updateimage( assets.getEventer(eventers[i].name) )
         i+=1
+    nbuttons.append( uitool.getButton(assets.get("CancelButton"), -1, "upright", onclickfunc, transform = (-30,+30)) )
     return Panel (nbuttons)
 
 def getCharacterSelectionPanelDefault(uitool, characters, onclickfunc, assets):

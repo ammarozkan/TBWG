@@ -1,7 +1,7 @@
 import tbwgplayer as Player
 import tbwgcon1
 
-def program(assets = Player.Assets(), tbwgconenable = True, ip="127.0.0.1", port=5005, name="John"):
+def program(assets = Player.Assets(), tbwgconenable = True, ip="127.0.0.1", port=5005, address="google.com", widenet=False, name="John"):
 
     Player.init()
     player = Player.TBWGPyGamePlayer(1280, 720, assets=assets)
@@ -59,7 +59,10 @@ def program(assets = Player.Assets(), tbwgconenable = True, ip="127.0.0.1", port
     def TBWGCON():
         import stdin_stdout_client as SSC
 
-        client = tbwgcon1.TBWGConClient(ip,port)
+        if widenet:
+            client = tbwgcon1.getClientByAdress(address)
+        else:
+            client = tbwgcon1.TBWGConClient(ip,port)
 
         client.setname(name)
         client.setcharacterselector(characterselector)

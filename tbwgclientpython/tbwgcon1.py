@@ -390,3 +390,11 @@ class TBWGConClient:
             turnplay = eventerselector(pkg,pkg2)
             self.send(turnplay)
         return True
+
+
+def getClientByAdress(addr):
+    print("ADRRRR:",addr)
+    addr,port = addr.split(":")
+    ip = THESOCKET.gethostbyname(addr)
+
+    return TBWGConClient(ip,int(port))

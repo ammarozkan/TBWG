@@ -106,6 +106,7 @@ class UITool:
         self.points["bottom"] = (self.width/2, self.height)
         self.points["bottom-buttonsize"] = (self.width/2, self.height-self.buttonsize)
         self.points["upright-buttonsize"] = (self.width - self.buttonsize, 0 + self.buttonsize)
+        self.points["upright"] = (self.width, 0)
         self.points["bottomleft"] = (0, self.height)
         self.points["middle"] = (self.width/2, self.height/2)
         self.defaultbuttonimage = defaultbuttonimage
