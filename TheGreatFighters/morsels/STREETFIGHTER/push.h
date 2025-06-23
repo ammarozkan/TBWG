@@ -10,27 +10,28 @@ void tgfPushExecuter(void* eventer, struct World* world, struct Character* user,
 
 	int r_dmg = tbwgGetRandomed_2(60,10);
 
-	int damage = 3*user->stats.STR;
+	int damage = user->stats.STR/2;
 	if (r_dmg == 0) damage += 0;
 	else if(r_dmg == 1) damage += 1*user->stats.STR;
 
 	struct AttackInfo atkInfo = {.additiveStats = additiveStats, .specs = 0, .damageType = DAMAGE_BLUDGEONING, .damage = damage};
 
-	struct Character* c_target = dimensionGetCharacterByPosition(user->b.dimension, reqinf.position.x, reqinf.position.y);
-
-    tbwgPutBeing((struct Being*)user, addiVectors(user->b.position,mvm));
+	struct Character* c_target = dimensionGetCharacterByPosition(user->b.dimension, reqinf.position);
 
     if (c_target == NULL) return;
 
-    chAddEffect(getTGFPuzzledEffect(user, 10), EFFECT_TRIGGER_TYPE_CLOCK, c_target);
+	if(! c_target->bodyHit(c_target, (void*)user, atkInfo)) return;
+	
     tbwgPutBeing((struct Being*)c_target, addiVectors(c_target->b.position,mvm));
-
-	tbwgStreamWorldEvent(user->b.dimension, getDefaultWorldEvent(user->b.ID, "ACT_PUSHED", 1.0f, 0.5f, c_target->b.position, WORLDEVENT_VISION));
-	tbwgStreamWorldEvent(user->b.dimension, getDefaultWorldEvent(user->b.ID, "MVM_PUSH", 1.0f, 0.5f, user->b.position, WORLDEVENT_VISION));
-	tbwgStreamWorldEvent(user->b.dimension, getDefaultWorldEvent(user->b.ID, "SND_PUSH", 1.0f, 0.5f, reqinf.position, WORLDEVENT_SOUND));
+    tbwgPutBeing((struct Being*)user, addiVectors(user->b.position,mvm));
+	chAddEffect(getTGFPuzzledEffect(user, 3), EFFECT_TRIGGER_TYPE_CLOCK, c_target);
+	
+	tbwgStreamWorldEvent(user->b.dimension, getDefaultWorldEvent(user->b.ID, "ACT_PUSHED", 0.1f, 0.5f, c_target->b.position, WORLDEVENT_VISION));
+	tbwgStreamWorldEvent(user->b.dimension, getDefaultWorldEvent(user->b.ID, "MVM_PUSH", 0.1f, 0.5f, user->b.position, WORLDEVENT_VISION));
+	tbwgStreamWorldEvent(user->b.dimension, getDefaultWorldEvent(user->b.ID, "SND_PUSHED", 1.0f, 0.5f, reqinf.position, WORLDEVENT_SOUND));
 	tbwgStreamWorldEvent(user->b.dimension, getDefaultWorldEvent(user->b.ID, "SND_WALK", 1.0f, 0.5f, user->b.position, WORLDEVENT_SOUND));
 	tbwgStreamWorldEvent(user->b.dimension, getDefaultWorldEvent(user->b.ID, "SND_WALK", 1.0f, 0.5f, c_target->b.position, WORLDEVENT_SOUND));
-	if(c_target->bodyHit(c_target, (void*)user, atkInfo)) ;
+	
 }
 
 struct Eventer* getTgfPush()

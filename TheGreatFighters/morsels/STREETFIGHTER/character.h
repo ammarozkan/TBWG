@@ -14,6 +14,8 @@ struct Character* tgfGetStreetFighter(struct Dimension* dimension, iVector posit
 
 	character->b.dimension = dimension;
 
+	character->b.collisionFunction = beingDefaultOneWayCollision;
+
 	character->baseStats = tgfDefaultStats;
     character->baseStats.STR += 2;
     character->baseStats.CNS += 4;
@@ -22,7 +24,7 @@ struct Character* tgfGetStreetFighter(struct Dimension* dimension, iVector posit
 
 	character->b.visionHardness = 0;
 
-	struct Eye eye = {1.8f, 2.0f, 1.0f};
+	struct Eye eye = {1.8f, 1.0f, 0.1f, 1.0f, 0.1f};
 	character->b.baseEye = eye;
 	character->b.eye = eye;
 
@@ -42,14 +44,21 @@ struct Character* tgfGetStreetFighter(struct Dimension* dimension, iVector posit
 	struct EventerUses newUses = {0,0,0,0,0};
 	character->eventerSpendings = newUses;
 	
-	character->eventerCount = 5;
-	character->eventers = malloc(5*sizeof(struct Eventer));
+	character->eventerCount = 12;
+	character->eventers = malloc(12*sizeof(struct Eventer));
 
 	character->eventers[0] = getTgfPunch();
 	character->eventers[1] = getTgfWalk();
 	character->eventers[2] = getTgfLook();
 	character->eventers[3] = getTgfRest();
 	character->eventers[4] = getTgfPush();
+	character->eventers[5] = getTgfGrab();
+	character->eventers[6] = getTgfGrabWalk();
+	character->eventers[7] = getTgfSilentWalk();
+	character->eventers[8] = getTgfTrickyPunch();
+	character->eventers[9] = getTgfGetUp();
+	character->eventers[10] = getTgfGetDown();
+	character->eventers[11] = getTgfWrestle();
 
 	for(unsigned int i = 0 ; i < EFFECT_TRIGGER_TYPE_COUNT ; i += 1) {
 		character->b.effects[i] = createList();

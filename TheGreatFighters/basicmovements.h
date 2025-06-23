@@ -59,9 +59,11 @@ int tgfCanWalk(void* eventer, struct World* world, struct Character* user, struc
 void tgfWalkExecuter(void* eventer, struct World* world, struct Character* user, struct EventerRequiredInformations reqinf, struct Tool* tool)
 {
 	struct Eventer* evn = (struct Eventer*) eventer;
-	tbwgStreamWorldEvent(user->b.dimension, getDefaultWorldEvent(user->b.ID, "SND_WALK", 1.0f, 0.5f, user->b.position, WORLDEVENT_SOUND));
-	tbwgStreamWorldEvent(user->b.dimension, getDefaultWorldEvent(user->b.ID, "SND_WALK", 1.0f, 0.5f, reqinf.position, WORLDEVENT_SOUND));
-	tbwgPutBeing((struct Being*)user, reqinf.position);
+	tbwgStreamWorldEvent(user->b.dimension, getDefaultWorldEvent(user->b.ID, "SND_WALK", 0.7f, 0.5f, user->b.position, WORLDEVENT_SOUND));
+	if(!tbwgPutBeing((struct Being*)user, reqinf.position)) return;
+	
+	tbwgStreamWorldEvent(user->b.dimension, getDefaultWorldEvent(user->b.ID, "SND_WALK", 0.7f, 0.5f, reqinf.position, WORLDEVENT_SOUND));
+	tbwgStreamWorldEvent(user->b.dimension, getDefaultWorldEvent(user->b.ID, "MVM_WALK", 0.7f, 0.5f, reqinf.position, WORLDEVENT_VISION));
 }
 
 struct Eventer* getTgfWalk()
@@ -100,7 +102,7 @@ void tgfPunchExecuter(void* eventer, struct World* world, struct Character* user
 
 	struct Stats additiveStats = {0};
 
-	if(getiVectorDistance(user->b.position,reqinf.position));
+	if(getiVectorDistance(user->b.position,reqinf.position) > 1.5f) return;
 
 	int r_dmg = tbwgGetRandomed_2(50,10);
 
@@ -110,14 +112,14 @@ void tgfPunchExecuter(void* eventer, struct World* world, struct Character* user
 
 	struct AttackInfo atkInfo = {.additiveStats = additiveStats, .specs = 0, .damageType = DAMAGE_BLUDGEONING, .damage = damage};
 
-	struct Character* c_target = dimensionGetCharacterByPosition(user->b.dimension, reqinf.position.x, reqinf.position.y);
+	struct Character* c_target = dimensionGetCharacterByPosition(user->b.dimension, reqinf.position);
 	if (c_target == NULL) return;
 
-	struct WorldEvent punchMove = getDefaultWorldEvent(user->b.ID, "MVM_PUNCH", 1.0f, 0.5f, user->b.position, WORLDEVENT_VISION);
-	tbwgStreamWorldEvent(user->b.dimension, punchMove);
-	struct WorldEvent punchSound = getDefaultWorldEvent(user->b.ID, "SND_PUNCH", 1.0f, 0.5f, reqinf.position, WORLDEVENT_SOUND);
-	tbwgStreamWorldEvent(user->b.dimension, punchSound);
-	if(c_target->bodyHit(c_target, (void*)user, atkInfo)) ;
+	tbwgStreamWorldEvent(user->b.dimension, getDefaultWorldEvent(user->b.ID, "MVM_PUNCH", 0.5f, 0.5f, user->b.position, WORLDEVENT_VISION));
+	tbwgStreamWorldEvent(user->b.dimension, getDefaultWorldEvent(user->b.ID, "SND_MVM_PUNCH", 3.0f, 0.3f, user->b.position, WORLDEVENT_SOUND));
+
+	if(!c_target->bodyHit(c_target, (void*)user, atkInfo)) return;
+	tbwgStreamWorldEvent(user->b.dimension, getDefaultWorldEvent(user->b.ID, "SND_PUNCH", 0.5f, 0.3f, reqinf.position, WORLDEVENT_SOUND));
 }
 
 struct Eventer* getTgfPunch()
@@ -152,11 +154,13 @@ struct Eventer* getTgfPunch()
 //
 //
 
+
 void tgfRestExecuter(void* eventer, struct World* world, struct Character* user, struct EventerRequiredInformations reqinf, struct Tool* tool)
 {
 	struct Eventer* vt = (struct Eventer*)eventer;
 
 	int rest_amount = user->stats.CNS/2;
+	if (user->state & STATE_ONGROUND) rest_amount += user->stats.CNS/3;
 	int ascending = user->energyRegener(user, rest_amount);
 	
 	
@@ -179,7 +183,7 @@ struct Eventer* getTgfRest()
 	struct EventerUses costs = {1,0,0,0,0};
 	evn->costs = costs;
 
-	evn->setReady = defaultSetEventerReady;
+	evn->setReady = defaultSetEventerReady_chrNotDead;
 
 	evn->executer = tgfRestExecuter;
 	evn->notChoosed = defaultEventerNotChoosed;
@@ -218,16 +222,18 @@ struct Character* createDefaultHuman(struct Dimension* dimension, iVector positi
 
 	character->b.dimension = dimension;
 
+	character->b.collisionFunction = beingDefaultOneWayCollision;
+
 	character->baseStats = tgfDefaultStats;
 	character->stats = tgfDefaultStats;
 
 	character->b.visionHardness = 0;
 
-	struct Eye eye = {1.8f, 2.0f, 1.0f};
+	struct Eye eye = {1.8f, 1.0f, 0.1f, 1.0f, 0.1f};
 	character->b.baseEye = eye;
 	character->b.eye = eye;
 
-	iValue hp = getHPByCONS(character->stats.CNS);
+	iValue hp = {100,100};
 	iValue e = {40,40};
 	iValue se = {0,0};
 
