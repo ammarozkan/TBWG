@@ -1,5 +1,7 @@
 import pygame
 
+def initsoundlib():
+    pygame.mixer.init()
 
 def init():
     pygame.init()
@@ -30,6 +32,22 @@ def normalize(vector):
     if (length == 0): return (0,0)
     return (v[0]/length, v[1]/length)
 
+def getEventerPanelDefault(uitool, eventers, onclickfunc, assets):
+    i = 0
+    nbuttons = uitool.getButtons(len(eventers), "bottom", onclickfunc, transform=(0,-92))
+    for nbutton in nbuttons:
+        nbutton.updateimage( assets.getEventer(eventers[i].name) )
+        i+=1
+    return Panel (nbuttons)
+
+def getCharacterSelectionPanelDefault(uitool, characters, onclickfunc, assets):
+    i = 0
+    nbuttons = uitool.getButtons(len(characters), "middle", onclickfunc)
+    for nbutton in nbuttons:
+        nbutton.updateimage(assets.getCharacter(characters[i][0]))
+        i+=1
+    return Panel(nbuttons)
+
 class TBWGPyGamePlayer:
     def __init__(self, ScreenWidth, ScreenHeight, gridsize = 50, assets = Assets()):
         self.currentrequest = REQ_NOTHING
@@ -59,10 +77,11 @@ class TBWGPyGamePlayer:
 
         self.uitool = UITool(ScreenWidth, ScreenHeight,assets.get("DefaultButton"))
 
-        self.eventerbuttons = []
-        self.characterchoicebuttons = []
         self.buttons = []
         self.buttons.append( self.uitool.getButton(assets.get("ClearWorldEvents"), 0, "bottomleft", self.clearWorldEvents, transform=(32,-32)) )
+
+        self.eventerpanel = Panel()
+        self.characterchoicepanel = Panel()
 
         self.worldevents = []
         
@@ -85,6 +104,11 @@ class TBWGPyGamePlayer:
     def changeBackground(self, image):
         self.background = image
         self.updateBackground()
+
+    def addWorldEvent(self, we):
+        if we[0][:4] == "SND_":
+            self.assets.getSound(we[0]).play()
+        self.worldevents.append(we)
     
     def clearWorldEvents(self, code):
         print("World events cleared.")
@@ -96,6 +120,11 @@ class TBWGPyGamePlayer:
     
     def request(self, reqtype, info = None):
         if self.currentrequest != REQ_NOTHING: return REQ_BUSY
+
+        if reqtype == REQ_EVENTER: self.assets.getSound("EventerRequest").play()
+        elif reqtype == REQ_CHARACTER_SELECTION: self.assets.getSound("CharacterSelection").play()
+        else: self.assets.getSound("OtherRequests").play()
+
         self.currentrequest = reqtype
         self.requestinfo = info
         while self.currentrequest != REQ_NOTHING: pass
@@ -106,13 +135,13 @@ class TBWGPyGamePlayer:
         self.currentrequest = REQ_NOTHING
         return
 
-    def getGridRect(self, x, y):
-        x,y = x*self.gridsize, y*self.gridsize
+    def getGridRect(self, x, z):
+        x,z = x*self.gridsize, z*self.gridsize
         
-        px, py, sx, sy = x+1,y+1,self.gridsize-2,self.gridsize-2
-        px, py = self.camera.grp(px,py)
-        sx, sy = self.camera.grl(sx,sy)
-        return (px,py,sx,sy)
+        px, pz, sx, sz = x+1,z+1,self.gridsize-2,self.gridsize-2
+        px, pz = self.camera.grp(px, 0, pz)
+        sx, sz = self.camera.grl(sx, 0, sz)
+        return (px,pz,sx,sz)
     
     def getGridPoint_(self, x, y, pointname):
         r = self.getGridRect(x,y)
@@ -158,6 +187,7 @@ class TBWGPyGamePlayer:
         gx, gy = int(x/self.gridsize),int(y/self.gridsize)
         if x < 0: gx -= 1
         if y < 0: gy -= 1
+        print(gx,gy)
         return gx, gy
     
     def click(self, event):
@@ -199,21 +229,22 @@ class TBWGPyGamePlayer:
     
     def eventeronclick(self, id):
         if self.currentrequest != REQ_EVENTER_MID: return
-        if id == -1: self.answerrequest(None)
+        if id == -1: 
+            self.assets.getSound("EndTurn").play()
+            self.answerrequest(None)
         self.answerrequest(id)
-        self.eventerbuttons = []
+        self.eventerpanel = Panel()
     
     def characterchoiceonclick(self, id):
         self.answerrequest(id)
-        self.characterchoicebuttons = []
+        self.characterchoicepanel = Panel()
     
     def UIClickHandler(self, event):
         event = event
+        
         if event == None: return event
-        for button in self.eventerbuttons:
-            event = button.eventcontrol(event)
-        for button in self.characterchoicebuttons:
-            event = button.eventcontrol(event)
+        event = self.eventerpanel.eventcontrol(event)
+        event = self.characterchoicepanel.eventcontrol(event)
         for button in self.buttons:
             event = button.eventcontrol(event)
         return event
@@ -230,6 +261,7 @@ class TBWGPyGamePlayer:
         self.screen.blit(self.background,pygame.Rect(0,0,self.screenWidth,self.screenHeight))
     
     def drawTestGrid(self, x, y):
+        rect = pygame.Rect(*(self.getGridRect(x,y)))
         self.drawColorGrid(x,y,(100,100,100))
         self.drawText(str(f"{x},{y}"),(rect.x, rect.y))
     
@@ -242,6 +274,17 @@ class TBWGPyGamePlayer:
         image = pygame.transform.scale(image, (sx, sy))
         rect = pygame.Rect(px,py,sx,sy)
         self.screen.blit(image,rect)
+    
+    
+    def drawEntityImg(self, img, x, z, length, width):
+        px, py, gsx, gsy = self.getGridRect(x,z)
+        sx, sy = self.camera.grl(width, length, 0)
+        px = px + gsx/2 - sx/2
+        py = py - sy + gsy/2
+
+        img = pygame.transform.scale(img, (sx, sy))
+        rect = pygame.Rect(px,py,sx,sy)
+        self.screen.blit(img,rect)
     
     def drawTextToGrid(self, text, grid, pos):
         text_surface = self.font.render(text,False,(255,50,50))
@@ -281,10 +324,8 @@ class TBWGPyGamePlayer:
             i += 1
     
     def drawUI(self):
-        for button in self.eventerbuttons:
-            button.draw(self.screen)
-        for button in self.characterchoicebuttons:
-            button.draw(self.screen)
+        self.eventerpanel.draw(self.screen)
+        self.characterchoicepanel.draw(self.screen)
         for button in self.buttons:
             button.draw(self.screen)
         if self.currentrequest == REQ_EVENTER_MID: 
@@ -298,7 +339,7 @@ class TBWGPyGamePlayer:
     def drawCharacter_(self, pos, code, hp, direction):
         x,y = pos
         img = self.assets.getCharacter(code)
-        self.drawImageGrid(img, x, y)
+        self.drawEntityImg(img, pos[0], pos[1], 40, 20)
 
         self.gridhpshower.updatepos(self.getGridPoint(x, y ,"bottomleft",transform = (0,-20)))
         self.gridhpshower.text = f"{hp.value}/{hp.max}"
@@ -332,6 +373,7 @@ class TBWGPyGamePlayer:
 
         for x in range(-5,5):
             for y in range(-5,5):
+                pass
                 self.drawColorGrid(x,y,(100,100,100))
         
         self.drawcharacters(self.characters)
@@ -354,21 +396,10 @@ class TBWGPyGamePlayer:
             self.cameracontrolloop(self.mousepos)
 
             if self.currentrequest == REQ_EVENTER:
-                i = 0
-                nbuttons = self.uitool.getButtons(len(self.requestinfo), "bottom-buttonsize", self.eventeronclick, transform=(0,-62))
-                for nbutton in nbuttons:
-                    nbutton.updateimage( self.assets.getEventer(self.requestinfo[i].name) )
-                    i+=1
-                self.eventerbuttons = nbuttons
-                self.eventerbuttons.append( self.uitool.getButton(self.assets.get("CancelButton"), -1, "upright-buttonsize", self.eventeronclick) )
+                self.eventerpanel = getEventerPanelDefault(self.uitool, self.requestinfo, self.eventeronclick, self.assets)
                 self.currentrequest = REQ_EVENTER_MID
             elif self.currentrequest == REQ_CHARACTER_SELECTION:
-                i = 0
-                nbuttons = self.uitool.getButtons(len(self.requestinfo), "middle", self.characterchoiceonclick)
-                for nbutton in nbuttons:
-                    nbutton.updateimage(self.assets.getCharacter(self.requestinfo[i][0]))
-                    i+=1
-                self.characterchoicebuttons = nbuttons
+                self.characterchoicepanel = getCharacterSelectionPanelDefault(self.uitool, self.requestinfo, self.characterchoiceonclick, self.assets)
 
                 self.currentrequest = REQ_CHARACTER_SELECTION_MID
             

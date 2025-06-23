@@ -80,6 +80,21 @@ class FillingBar:
     def draw(self, screen, pos):
         pass
 
+class Panel:
+    def __init__(self, elms = []):
+        self.elements = elms
+    def addElements(self, elms):
+        self.elements += elms
+    def eventcontrol(self, event):
+        event = event
+        for elm in self.elements:
+            event = elm.eventcontrol(event)
+        return event
+    def draw(self, screen):
+        for elm in self.elements:
+            elm.draw(screen)
+
+
 class UITool:
     def __init__(self, width, height, defaultbuttonimage, buttonsize=70):
         self.points = {}
