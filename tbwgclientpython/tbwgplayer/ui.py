@@ -130,7 +130,7 @@ class UITool:
     def setPoint(self, name, x, y):
         self.points[name] = (x,y)
     
-    def getIconedText(self, count, size, gap, defaultimage, pointname, transform=(0,0)):
+    def getIconedTexts(self, count, size, gap, defaultimage, pointname, transform=(0,0)):
         result = []
         part = size + gap
         pos = self.points[pointname]

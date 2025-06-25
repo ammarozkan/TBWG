@@ -86,7 +86,12 @@ class TBWGPyGamePlayer:
 
         self.worldevents = []
         
-        self.restuses = self.uitool.getIconedText(5, 32, 20, self.assets.get("DefaultRestUses"), "bottom", transform=(0,-32))
+        self.restuses = self.uitool.getIconedTexts(5, 40, 20, self.assets.get("DefaultRestUses"), "bottom", transform=(0,-40))
+        self.restuses[0].updateimage(self.assets.get("RestUses_classic"))
+        self.restuses[1].updateimage(self.assets.get("RestUses_fastcombat"))
+        self.restuses[2].updateimage(self.assets.get("RestUses_movement"))
+        self.restuses[3].updateimage(self.assets.get("RestUses_fastmagic"))
+        self.restuses[4].updateimage(self.assets.get("RestUses_thoughtmagic"))
 
         self.energy = (0,0)
         self.spellenergy = (0,0)

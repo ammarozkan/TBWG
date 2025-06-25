@@ -108,6 +108,11 @@ def getTGFAssets(path):
     assets.add("DefaultRestUses",f"{path}images/token.png")
     assets.add("ClearWorldEvents",f"{path}images/clear.png")
     assets.add("HealthIcon",f"{path}images/heart.png")
+    assets.add("RestUses_classic",f"{path}images/timeicon.jpg")
+    assets.add("RestUses_fastcombat",f"{path}images/punchingworkicon.png")
+    assets.add("RestUses_movement",f"{path}images/movementicon.png")
+    assets.add("RestUses_fastmagic",f"{path}images/magicicon.jpg")
+    assets.add("RestUses_thoughtmagic",f"{path}images/thoughticon.png")
     assets.addError(f"{path}images/bluescreen.webp")
 
     assets.addSound("error",f"{path}sounds/error.wav")
