@@ -85,6 +85,8 @@ class TBWGPyGamePlayer:
         self.characterchoicepanel = Panel()
 
         self.worldevents = []
+        self.worldevents_log = {}
+        self.worldeventboxsize = 45
         
         self.restuses = self.uitool.getIconedTexts(5, 40, 20, self.assets.get("DefaultRestUses"), "bottom", transform=(0,-40))
         self.restuses[0].updateimage(self.assets.get("RestUses_classic"))
@@ -114,11 +116,22 @@ class TBWGPyGamePlayer:
     def addWorldEvent(self, we):
         if we[0][:4] == "SND_":
             self.assets.getSound(we[0]).play()
-        self.worldevents.append(we)
+        key = str(we[1])
+        if key not in self.worldevents_log: self.worldevents_log[key] = 1
+        else: self.worldevents_log[key] += 1
+
+        size = self.worldeventboxsize
+
+        worldeventspr = self.assets.getWorldEvent(we[0])
+        worldeventspr = pygame.transform.scale(worldeventspr, (size,size))
+
+        self.worldevents.append((we[0], we[1], worldeventspr, self.worldevents_log[key]))
+        print("APPENDMENT:",self.worldevents)
     
     def clearWorldEvents(self, code):
-        print("World events cleared.")
         self.worldevents = []
+        self.worldevents_log = {}
+        print("World events cleared.")
     
     def setRestUses(self, uses):
         for i in range(0,len(uses)):
@@ -364,12 +377,15 @@ class TBWGPyGamePlayer:
     
     def drawWorldEvents(self):
         for we in self.worldevents:
-            text = we[0]
-            pos = we[1]
-            self.drawTextToGrid(text, pos, (0,10))
+            name, pos, spr, indice = we
+            rect = self.getGridRect(pos[0],pos[1])
+            sizex, sizey = self.camera.grl(self.worldeventboxsize, self.worldeventboxsize, 0)
+            rect = (rect[0]+self.worldeventboxsize*indice, rect[1], sizex, sizey)
+            self.screen.blit(we[2],rect)
 
     def drawcharacters(self,characters):
-        for c in characters:
+        if self.observer != None: characters.append(self.observer)
+        for c in sorted(characters, key = lambda chr : chr.position.y):
             x,y = c.position.x, c.position.y
             dx, dy = c.direction.x, c.direction.y
             self.drawCharacter_((x,y), c.characterCode, c.hp, (dx,dy))

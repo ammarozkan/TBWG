@@ -14,6 +14,8 @@ class Assets:
         self.images["eventer"+str(name)] = path
     def addEffect(self, code, path):
         self.images["effect"+str(code)] = path
+    def addWorldEvent(self, name, path):
+        self.images["worldevent"+str(name)] = path
     def addBackground(self, name, path):
         self.images["background"+str(name)] = path
     def addSound(self, name, path):
@@ -25,6 +27,8 @@ class Assets:
         return self.get("eventer"+str(name))
     def getEffect(self, code):
         return self.get("effect"+str(code))
+    def getWorldEvent(self, name):
+        return self.get("worldevent"+str(name))
     def getBackground(self, name):
         return self.get("background"+str(name))
     def get(self, name):

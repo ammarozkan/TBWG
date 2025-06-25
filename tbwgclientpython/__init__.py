@@ -85,6 +85,7 @@ def program(assets = Player.Assets(), tbwgconenable = True, ip="127.0.0.1", port
 
 
 def getTGFAssets(path):
+    worldevents = f"{path}images/worldevents/"
     assets = Player.Assets()
     assets.addBackground("default",f"{path}images/frutigeraerobckr.webp")
     assets.addCharacter(0, f"{path}images/human2.png")
@@ -113,6 +114,26 @@ def getTGFAssets(path):
     assets.add("RestUses_movement",f"{path}images/movementicon.png")
     assets.add("RestUses_fastmagic",f"{path}images/magicicon.jpg")
     assets.add("RestUses_thoughtmagic",f"{path}images/thoughticon.png")
+
+    assets.addWorldEvent("MVM_LOOK", f"{worldevents}rotatinghead.png")
+    assets.addWorldEvent("MVM_PUNCH", f"{worldevents}walkingsound.png")
+    assets.addWorldEvent("SND_PUNCH", f"{worldevents}punchsoundicon.png")
+    assets.addWorldEvent("SND_WALK", f"{worldevents}walkingsound.png")
+    assets.addWorldEvent("MVM_WALK", f"{worldevents}walkingsound.png")
+    assets.addWorldEvent("ACT_PUSHED", f"{worldevents}stumble.webp")
+    assets.addWorldEvent("MVM_PUSH", f"{worldevents}pushing.png")
+    assets.addWorldEvent("SND_PUSHED", f"{worldevents}stumble.webp")
+    assets.addWorldEvent("MVM_GRAB", f"{worldevents}grabbingman.webp")
+    assets.addWorldEvent("SND_MVM_GRAB", f"{worldevents}grabbingman.webp")
+    assets.addWorldEvent("MVM_GRAB_HAND", f"{worldevents}grabhand.png")
+    assets.addWorldEvent("MVM_GRABBED", f"{worldevents}beinggrabbed.png")
+    assets.addWorldEvent("SND_GRABBED", f"{worldevents}beinggrabbed.png")
+    assets.addWorldEvent("MVM_SILENT_WALK", f"{worldevents}stealthwalk.webp")
+    assets.addWorldEvent("MVM_TRICKY_PUNCH", f"{worldevents}trickypunch.jpeg")
+    assets.addWorldEvent("SND_MVM_TRICKY_PUNCH", f"{worldevents}punchmovement.png")
+    assets.addWorldEvent("SND_TRICKY_PUNCH", f"{worldevents}trickypunch.jpeg")
+    assets.addWorldEvent("SND_TRICKY_CRITIC", f"{worldevents}criticalpunch.jpg")
+
     assets.addError(f"{path}images/bluescreen.webp")
 
     assets.addSound("error",f"{path}sounds/error.wav")
