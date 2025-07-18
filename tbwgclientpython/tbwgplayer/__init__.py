@@ -32,25 +32,30 @@ def normalize(vector):
     if (length == 0): return (0,0)
     return (v[0]/length, v[1]/length)
 
-def getEventerPanelDefault(uitool, eventers, onclickfunc, assets):
+def getEventerPanelDefault(uitool, eventers, onclickfunc, viewerManager):
     i = 0
     nbuttons = uitool.getButtons(len(eventers), "bottom", onclickfunc, transform=(0,-92))
     for nbutton in nbuttons:
-        nbutton.updateimage( assets.getEventer(eventers[i].name) )
+        img, getHovering = viewerManager.GetEventerView(eventers[i].eventerCode)
+        nbutton.updateimage( img )
+        nbutton.hoveringCode = getHovering(eventers[i])
         i+=1
-    nbuttons.append( uitool.getButton(assets.get("CancelButton"), -1, "upright", onclickfunc, transform = (-30,+30)) )
+    img, getHovering = viewerManager.GetButtonView("CancelButton")
+    nbuttons.append( uitool.getButton(img, -1, "Cancel", "upright", onclickfunc, transform = (-30,+30)) )
     return Panel (nbuttons)
 
-def getCharacterSelectionPanelDefault(uitool, characters, onclickfunc, assets):
+def getCharacterSelectionPanelDefault(uitool, characters, onclickfunc, viewerManager):
     i = 0
     nbuttons = uitool.getButtons(len(characters), "middle", onclickfunc)
     for nbutton in nbuttons:
-        nbutton.updateimage(assets.getCharacter(characters[i][0]))
+        img, getHovering = viewerManager.GetCharacterView(characters[i][0])
+        nbutton.updateimage(img)
+        nbutton.hoveringCode = getHovering(characters[i])
         i+=1
     return Panel(nbuttons)
 
 class TBWGPyGamePlayer:
-    def __init__(self, ScreenWidth, ScreenHeight, gridsize = 50, assets = Assets()):
+    def __init__(self, ScreenWidth, ScreenHeight, viewerManager, gridsize = 50):
         self.currentrequest = REQ_NOTHING
         self.lastrequest_answer = None
         self.requestinfo = None
@@ -74,15 +79,20 @@ class TBWGPyGamePlayer:
 
         self.oneffects = []
 
-        self.assets = assets
+        assets = viewerManager.assets
+        self.assets = viewerManager.assets
+        self.viewerManager = viewerManager
 
-        self.uitool = UITool(ScreenWidth, ScreenHeight,assets.get("DefaultButton"))
+        self.uitool = UITool(ScreenWidth, ScreenHeight,assets.get("DefaultButton"), self.font)
 
         self.buttons = []
-        self.buttons.append( self.uitool.getButton(assets.get("ClearWorldEvents"), 0, "bottomleft", self.clearWorldEvents, transform=(32,-32)) )
+        self.buttons.append( self.uitool.getButton(assets.get("ClearWorldEvents"), 0, "clearworldevents", "bottomleft", self.clearWorldEvents, transform=(32,-32)) )
 
         self.eventerpanel = Panel()
         self.characterchoicepanel = Panel()
+        self.effectspanel = Panel()
+
+        self.hoveringText = ""
 
         self.worldevents = []
         self.worldevents_log = {}
@@ -90,20 +100,28 @@ class TBWGPyGamePlayer:
         
         self.restuses = self.uitool.getIconedTexts(5, 40, 20, self.assets.get("DefaultRestUses"), "bottom", transform=(0,-40))
         self.restuses[0].updateimage(self.assets.get("RestUses_classic"))
-        self.restuses[1].updateimage(self.assets.get("RestUses_fastcombat"))
-        self.restuses[2].updateimage(self.assets.get("RestUses_movement"))
-        self.restuses[3].updateimage(self.assets.get("RestUses_fastmagic"))
-        self.restuses[4].updateimage(self.assets.get("RestUses_thoughtmagic"))
+        self.restuses[0].hoveringCode = "Classic use. Everything."
+        self.restuses[1].updateimage(self.assets.get("RestUses_armMove"))
+        self.restuses[1].hoveringCode = "Arm movement."
+        self.restuses[2].updateimage(self.assets.get("RestUses_handMove"))
+        self.restuses[2].hoveringCode = "Hand movement."
+        self.restuses[3].updateimage(self.assets.get("RestUses_movement"))
+        self.restuses[3].hoveringCode = "Movement. Legs."
+        self.restuses[4].updateimage(self.assets.get("RestUses_thought"))
+        self.restuses[4].hoveringCode = "Thought. Executing via thinking."
+
 
         self.energy = (0,0)
         self.spellenergy = (0,0)
 
-        self.gridhpshower = IconedText(assets.get("HealthIcon"), "0", (0,0), (20,20))
-        self.effectshower = IconedText(assets.get("DefaultEffectIcon"), "0", (0,0), (50,50))
+        self.gridhpshower = IconedText(assets.get("HealthIcon"), "0", (0,0), (20,20), "hpshower", self.font)
+        self.effectshower = IconedText(assets.get("DefaultEffectIcon"), "0", (0,0), (50,50), "effectsshower", self.font)
 
         self.directionchoosestate = None
 
         self.background = self.assets.getBackground("default")
+
+        self.shifting = False
     
     def updateBackground(self):
         self.background = pygame.transform.scale(self.background, (self.screenWidth, self.screenHeight))
@@ -239,6 +257,9 @@ class TBWGPyGamePlayer:
             elif event.button == 1: self.click(event)
         if event.type == pygame.KEYDOWN:
             if event.unicode == 'r': self.camera.x, self.camera.y = 0, 0
+            if event.key == pygame.K_LSHIFT: self.shifting = True
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_LSHIFT: self.shifting = False
         if event.type == pygame.QUIT:
             self.run = False
     
@@ -272,6 +293,15 @@ class TBWGPyGamePlayer:
         if self.currentrequest == REQ_POSITION:
             print("Answering request ",(x,y))
             self.answerrequest((x,y))
+        
+    def gethovering(self, mousepos):
+        for panel in [self.eventerpanel, self.characterchoicepanel, self.effectspanel]:
+            h = panel.gethovering(mousepos)
+            if h != None: return h
+        for r in self.restuses:
+            h = r.gethovering(mousepos)
+            if h != None: return h
+        return None
     
 
     # DRAW
@@ -335,12 +365,15 @@ class TBWGPyGamePlayer:
     
     def drawEffects(self):
         i = 0
+        self.effectspanel.elements = []
+        r = []
         for ef in self.oneffects:
-            self.drawText(ef, (0,i*50))
-            self.effectshower.updatepos((30,i*50+30))
-            self.effectshower.updateimage(self.assets.getEffect(ef))
-            self.effectshower.draw(self.screen, self.font)
+            img,getHovering = self.viewerManager.GetEffectView(str(ef.code))
+            htext = getHovering(ef)
+            r.append( IconedText(img, "", (30,i*50+30), (50, 50), htext, self.font) )
             i += 1
+        self.effectspanel.addElements(r)
+        self.effectspanel.draw(self.screen)
     
     def drawUI(self):
         self.eventerpanel.draw(self.screen)
@@ -348,7 +381,7 @@ class TBWGPyGamePlayer:
         for button in self.buttons:
             button.draw(self.screen)
         if self.currentrequest == REQ_EVENTER_MID: 
-            for r in self.restuses: r.draw(self.screen, self.font)
+            for r in self.restuses: r.draw(self.screen)
         self.drawReq()
 
         self.drawBars()
@@ -362,7 +395,7 @@ class TBWGPyGamePlayer:
 
         self.gridhpshower.updatepos(self.getGridPoint(x, y ,"bottomleft",transform = (0,-20)))
         self.gridhpshower.text = f"{hp.value}/{hp.max}"
-        self.gridhpshower.draw(self.screen, self.font)
+        self.gridhpshower.draw(self.screen)
 
         gp = self.getGridPoint(x, y, "middle")
         ge = self.getGridPoint(x, y, "middle", transform = (direction[0]*20,direction[1]*20))
@@ -370,7 +403,7 @@ class TBWGPyGamePlayer:
         pygame.draw.line(self.screen, (255,255,255), gp, ge)
         
 
-    def drawCharacter(self, character):
+    def drawCharacter(self, c):
         x,y = c.position.x, c.position.y
         dx, dy = c.direction.x, c.direction.y
         self.drawCharacter_((x,y), c.characterCode, c.hp, (dx,dy))
@@ -383,12 +416,35 @@ class TBWGPyGamePlayer:
             rect = (rect[0]+self.worldeventboxsize*indice, rect[1], sizex, sizey)
             self.screen.blit(we[2],rect)
 
-    def drawcharacters(self,characters):
-        if self.observer != None: characters.append(self.observer)
-        for c in sorted(characters, key = lambda chr : chr.position.y):
+    def drawcharacters(self, characters):
+        #if self.observer != None: characters.append(self.observer) # adding the observer (managing character) to drawing list
+        #for c in sorted(characters, key = lambda chr : chr.position.y if type(chr) != tuple else chr[0].y):
+        if self.observer != None: 
+            c = self.observer
+            self.drawCharacter_((c[0].x, c[0].y), 123, c[1], (c[2].x, c[2].y))
+        for c in characters:
             x,y = c.position.x, c.position.y
             dx, dy = c.direction.x, c.direction.y
             self.drawCharacter_((x,y), c.characterCode, c.hp, (dx,dy))
+    
+    def drawHoveringText(self):
+        if not self.shifting: return
+        x,y = self.mousepos
+        text = self.hoveringText
+        maxLength = 30
+        lines = int(len(text)/maxLength)+1
+        boxrect = (x+3,y,30*15,lines*30)
+
+        xfix = 0
+        yfix = 0
+        if boxrect[0] + boxrect[2] > self.screenWidth:
+            xfix = self.screenWidth - boxrect[0] - boxrect[2]
+        if boxrect[1] + boxrect[3] > self.screenHeight:
+            yfix = self.screenHeight - boxrect[1] - boxrect[3]
+        
+        if len(text) != 0: pygame.draw.rect(self.screen, (0,0,0), (boxrect[0]+xfix, boxrect[1]+yfix, boxrect[2], boxrect[3]))
+        for i in range(0,lines):
+            self.drawText(text[i*maxLength:(i+1)*maxLength],(x+xfix,y+i*30+yfix))
 
     def draw(self):
         self.drawBackground()
@@ -399,13 +455,18 @@ class TBWGPyGamePlayer:
                 self.drawColorGrid(x,y,(100,100,100))
         
         self.drawcharacters(self.characters)
-        if self.observer != None: self.drawCharacter_((self.observer[0].x, self.observer[0].y), 123, self.observer[1], (self.observer[2].x, self.observer[2].y))
         self.drawWorldEvents()
 
         self.drawUI()
 
         if self.currentrequest == REQ_DIRECTION and self.directionchoosestate != None:
             pygame.draw.line(self.screen, (255,255,255), self.directionchoosestate, self.mousepos)
+        self.drawHoveringText()
+    
+    def updateHoveringInformation(self):
+        hovering = self.gethovering(self.mousepos)
+        if hovering == None: self.hoveringText = "";return
+        self.hoveringText = hovering
     
 
 
@@ -418,14 +479,15 @@ class TBWGPyGamePlayer:
             self.cameracontrolloop(self.mousepos)
 
             if self.currentrequest == REQ_EVENTER:
-                self.eventerpanel = getEventerPanelDefault(self.uitool, self.requestinfo, self.eventeronclick, self.assets)
+                self.eventerpanel = getEventerPanelDefault(self.uitool, self.requestinfo, self.eventeronclick, self.viewerManager)
                 self.currentrequest = REQ_EVENTER_MID
             elif self.currentrequest == REQ_CHARACTER_SELECTION:
-                self.characterchoicepanel = getCharacterSelectionPanelDefault(self.uitool, self.requestinfo, self.characterchoiceonclick, self.assets)
+                self.characterchoicepanel = getCharacterSelectionPanelDefault(self.uitool, self.requestinfo, self.characterchoiceonclick, self.viewerManager)
 
                 self.currentrequest = REQ_CHARACTER_SELECTION_MID
             
 
             self.screen.fill((0, 0, 0))
             self.draw()
+            self.updateHoveringInformation()
             pygame.display.flip()

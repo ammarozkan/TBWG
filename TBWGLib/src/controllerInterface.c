@@ -8,7 +8,6 @@ struct EventerInformation* getEventerInformationsFromEventers(size_t eventerCoun
 	struct EventerInformation* r = malloc(sizeof(struct EventerInformation)*eventerCount);
 	for(size_t i = 0 ; i < eventerCount ; i+=1) {
 		r[i].eventerCode = eventers[i].eventerCode;
-		getName(r[i].name, eventers[i].name);
 		r[i].energyValueType = eventers[i].energyValueType;
 		r[i].minEnergy = eventers[i].baseEnergy;
 	}
@@ -18,16 +17,19 @@ struct EventerInformation* getEventerInformationsFromEventers(size_t eventerCoun
 
 
 
-void defaultControllerObserve(struct ControllerInterface*, struct ObservingInformation obsInfo)
+void 
+defaultControllerObserve(struct ControllerInterface* interface, struct ObservingInformation obsInfo)
 {
 }
 
-void defaultControllerWorldEventObserve(struct ControllerInterface*, struct WorldEventInformation obsInfo)
+void 
+defaultControllerWorldEventObserve(struct ControllerInterface* interface, struct WorldEventInformation obsInfo)
 {
 }
 
 
-struct TurnPlay defaultControllerChooseEventer(struct ControllerInterface*, id_number chooserId, digits32 allowedEventerTypes, 
+struct TurnPlay 
+defaultControllerChooseEventer(struct ControllerInterface* interface, id_number chooserId, digits32 allowedEventerTypes, 
     size_t eventerCount, struct Eventer** eventers, struct EventerUses restUses)
 {
 	struct EventerRequiredInformations reqs = {getiVector(0,0), getiVector(0,0), getfVector(1.0f, 0.0f), getiVector(0,0), getiVector(1,1)};
@@ -38,7 +40,8 @@ struct TurnPlay defaultControllerChooseEventer(struct ControllerInterface*, id_n
 
 
 
-struct ControllerInterface* getDefaultControllerInterface()
+struct ControllerInterface* 
+getDefaultControllerInterface()
 {
 	struct ControllerInterface* interface = malloc(sizeof(struct ControllerInterface));
 	interface->observer = defaultControllerObserve;
@@ -48,7 +51,8 @@ struct ControllerInterface* getDefaultControllerInterface()
 	return interface;
 }
 
-int tbwgIsDefaultControllerInterface(struct ControllerInterface* interface)
+int 
+tbwgIsDefaultControllerInterface(struct ControllerInterface* interface)
 {
 	int obs = interface->observer == defaultControllerObserve;
 	int chosevntr = interface->chooseEventer == defaultControllerChooseEventer;
@@ -82,7 +86,8 @@ void stdioControllerWorlEventObserve(struct ControllerInterface* interface, stru
 
 
 
-struct TurnPlay stdioControllerChooseEventer(struct ControllerInterface*, id_number chooserId, digits32 allowedEventerTypes, 
+struct TurnPlay 
+stdioControllerChooseEventer(struct ControllerInterface* interface, id_number chooserId, digits32 allowedEventerTypes, 
     size_t eventerCount, struct Eventer** eventers, struct EventerUses restUses)
 {
 	struct TurnPlay result;
@@ -99,7 +104,7 @@ struct TurnPlay stdioControllerChooseEventer(struct ControllerInterface*, id_num
 
 	printf("e:End turn\n");
 	for(unsigned int i = 0 ; i < eventerCount ; i += 1) {
-		printf("%u:Eventer %u [%s]",i,eventers[i]->eventerCode, eventers[i]->name);
+		printf("%u:Eventer %u",i,eventers[i]->eventerCode);
 		if (eventers[i]->eventer_type & allowedEventerTypes == 0) printf(" (not allowed)");
 		printf(" with id %u\t",eventers[i]->ID);
 

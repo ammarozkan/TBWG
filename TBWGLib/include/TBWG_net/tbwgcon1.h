@@ -1,19 +1,3 @@
-#ifdef TBWG_DEBUG
-#include <stdio.h>
-#define DEBUG_PRINT(func,txt) printf("DEBUG:%s %s\n",func,txt)
-#define DEBUG_PRINTINT(func,txt,int) printf("DEBUG:%s %s ([%i])\n",func,txt,int)
-#define DEBUG_PRINTUINT(func,txt,uint) printf("DEBUG:%s %s ([%u])\n",func,txt,uint)
-#define DEBUG_RECEIVEDEBUG(func,targetsize,recvsize,targetpkgcode,pkgcode) printf("DEBUG:%s (%u)%u sized (%u)%u code pkg reaceived\n", func, targetsize, recvsize, targetpkgcode, pkgcode)
-#define DEBUG_SENDDEBUG(func,targetsize,recvsize,targetpkgcode,pkgcode) printf("DEBUG:%s (%u)%u sized (%u)%u code pkg sent\n", func, targetsize, recvsize, targetpkgcode, pkgcode)
-#else
-#define DEBUG_PRINT(x,y)
-#define DEBUG_PRINTINT(func,txt,int)
-#define DEBUG_PRINTUINT(func,txt,uint)
-#define DEBUG_RECEIVEDEBUG(func,targetsize,recvsize,targetpkgcode,pkgcode)
-#define DEBUG_SENDDEBUG(func,targetsize,recvsize,targetpkgcode,pkgcode)
-#endif /*TBWG_DEBUG*/
-
-
 #define TBWGCON1_GLOBALRECVPTR_SIZE 4096
 extern void* globalrecvptr;
 #define GLB_RECV globalrecvptr
@@ -24,6 +8,22 @@ extern void* globalrecvptr;
 
 #include <TBWG_net/tbwgcon1_essentials.h>
 
+#ifdef _WIN32
+#include <winsock2.h>
+typedef SOCKET TbwgConSocket;
+#define ISSOCKETOK(socket) (socket != INVALID_SOCKET)
+#define TBWGCON1_BROKEUPSERVERWITHERROR(str,errcode) {closesocket(cl_fd);DEBUG_PRINT("tbwgcon1Accept",str);return tbwgcon1GetSvError(errcode);}
+#define TBWGCON1_BROKEUPCLIENTWITHERROR(str,errcode) {closesocket(cl_fd); DEBUG_PRINT("tbwgcon1Connect", str); return tbwgcon1GetClError(errcode); }
+#else
+typedef int TbwgConSocket;
+#define ISSOCKETOK(socket) (socket > 0)
+#define TBWGCON1_BROKEUPSERVERWITHERROR(str,errcode) {close(cl_fd);DEBUG_PRINT("tbwgcon1Accept",str);return tbwgcon1GetSvError(errcode);}
+#define TBWGCON1_BROKEUPCLIENTWITHERROR(str,errcode) {close(cl_fd); DEBUG_PRINT("tbwgcon1Connect", str); return tbwgcon1GetClError(errcode); }
+#endif
+
+int tbwgcon1Init(); // important for winsock
+void tbwgcon1Dinit(); // important for winsock
+
 void tbwgcon1InitGlobalRecvPtr();
 
 int tbwgcon1SetHeader(struct TBWGConHeader);
@@ -31,8 +31,8 @@ int tbwgcon1SetDefaultHeader();
 
 struct TBWGConHeader tbwgcon1GetHeader(uint8_t pkgcode);
 
-int tbwgcon1GetProperServerSocket(char* ip_c, uint16_t port);
-int tbwgcon1GetProperClientSocket(char* ip_c, uint16_t port);
+TbwgConSocket tbwgcon1GetProperServerSocket(char* ip_c, uint16_t port);
+TbwgConSocket tbwgcon1GetProperClientSocket(char* ip_c, uint16_t port);
 
 int tbwgcon1HeaderCheck(struct TBWGConHeader);
 
@@ -46,14 +46,14 @@ typedef uint8_t (*tbwgcon1CharacterSelector)(struct TBWGConCharacterInformator);
 
 struct TBWGConServerResult tbwgcon1Accept(int sv_sock, struct List characterList, void* decidersptr);
 struct TBWGConClientResult tbwgcon1Connect(char* ip_c, uint16_t port, char* name, tbwgcon1CharacterSelector);
-int tbwgcon1Close(int sock);
+int tbwgcon1Close(TbwgConSocket sock);
 
 
 // CONTROLLER INTERFACE
 #include <TBWG/controllerInterface.h>
 
 struct tbwgcon1ControllerInterface {
-	struct ControllerInterface interface;
+	struct ControllerInterface controllerInterface;
 	int cl_sck;
 	char* name;
 };

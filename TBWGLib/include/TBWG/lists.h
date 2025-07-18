@@ -1,6 +1,7 @@
 #ifndef TBWG_LISTS_H
 #define TBWG_LISTS_H
 
+#include <stddef.h>
 
 struct ListElementHeader{
 	struct ListElementHeader* prior;
@@ -26,7 +27,7 @@ struct List createList();
 void freeListHeaders(struct List);
 void freeListsHeaders(struct List*, unsigned int listCount);
 
-void addElement(struct List* list, void* element, long unsigned int size);
+void addElement(struct List* list, void* element, size_t size);
 void destroyElement(struct List* list, void* element);
 void* popElement(struct List* list, void* element);
 void decolonizeList(struct List* list);

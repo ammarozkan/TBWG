@@ -1,17 +1,17 @@
 #include <TBWG/areas.h>
 #include <TBWG/being.h>
 
-void defaultWhenEntered(struct Area*, struct Being*)
+void defaultWhenEntered(struct Area* a, struct Being* b)
 {
 	return;
 }
 
-void defaultWhenExited(struct Area*, struct Being*)
+void defaultWhenExited(struct Area* a, struct Being* b)
 {
 	return;
 }
 
-void defaultWhileInside(struct Area*, struct Being*)
+void defaultWhileInside(struct Area* a, struct Being* b)
 {
 	return;
 }

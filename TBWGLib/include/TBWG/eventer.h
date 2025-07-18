@@ -10,8 +10,8 @@
 struct Eventer;
 
 #define EVENTER_TYPE_CLASSIC (1<<0)
-#define EVENTER_TYPE_FASTMAGIC (1<<1)
-#define EVENTER_TYPE_FASTCOMBAT (1<<2)
+#define EVENTER_TYPE_MAGIC (1<<1)
+#define EVENTER_TYPE_COMBAT (1<<2)
 #define EVENTER_TYPE_RESTING (1<<3)
 #define EVENTER_TYPE_BEYONDTIME (1<<4)
 
@@ -23,10 +23,11 @@ struct Eventer;
 #define EVENTER_DEFAULT 0x00
 
 struct EventerUses {
-	int classic, fastcombat, movement, 
-			fastmagic, thoughtmagic;
+	int classic, armMove, handMove, 
+			movement, thought;
 };
 
+struct EventerUses changer(struct EventerUses input); // converts classic to 1 armMove 1 handMove etc.
 int useEventerRequirements(struct EventerUses*, struct EventerUses requirements);
 
 void addEventerUses(struct EventerUses* a, struct EventerUses b);
@@ -50,9 +51,7 @@ typedef int (*tbwgtypeSetEventerReady)(struct Eventer*, struct Character*, struc
 struct Eventer {
 	unsigned int eventerCode;
 	id_number ID;
-
-	char name[32];
-
+	
 	uint8_t energyValueType;
 	int baseEnergy, baseSpellEnergy;
 	digits32 eventer_type, required_informations;
@@ -70,6 +69,8 @@ struct Eventer {
 
 	int isChoosed;
 	void (*notChoosed)(void* eventer, struct World*, struct Character*);
+
+	int details[8];
 };
 
 #define TURNPLAY_END_TURN 		(1<<1)
@@ -86,6 +87,8 @@ int defaultEventerCanExecuted(void* eventer, struct Character*, struct Tool* too
 void defaultEventerNotChoosed(void* eventer, struct World*, struct Character*);
 
 int defaultEventerCanExecutedNow(void* eventer, struct World* world, struct Character* user, struct EventerRequiredInformations reqinf, struct Tool* tool);
+
+void defaultEventerExecuter(void* eventer, struct World* world, struct Character* user, struct EventerRequiredInformations reqinf, struct Tool* tool);
 
 int defaultGetEnergy(struct Eventer*, struct Character*, struct World*);
 

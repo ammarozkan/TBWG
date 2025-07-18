@@ -76,17 +76,17 @@ class TBWGConCharacterInformation:
 
 TBWGConEventerInformation_size = 76
 class TBWGConEventerInformation:
-    def __init__(self, eventerCode, ID, energy, spellenergy, eventertype, requiredinformations, name, costs):
+    def __init__(self, eventerCode, ID, energy, spellenergy, eventertype, requiredinformations, costs, details):
         self.eventerCode = eventerCode
         self.ID = ID
         self.energy = energy
         self.spellenergy = spellenergy
         self.eventertype = eventertype
         self.requiredinformations = requiredinformations
-        self.name = name
         self.costs = costs
+        self.details = details
     def __str__(self):
-        return f"[| Eventer {self.eventerCode} as {self.name} | {self.energy}E {self.spellenergy}SE {self.costs} | {self.eventertype} typed | {self.requiredinformations} |]"
+        return f"[| Eventer {self.eventerCode} | {self.energy}E {self.spellenergy}SE {self.costs} | {self.eventertype} typed | {self.requiredinformations} |]"
 
 
 TBWGStats_size = 28
@@ -102,17 +102,18 @@ class TBWGStats:
     def __str__(self):
         return f"[| Stats | STR:{self.STR} |]"
 
-TBWGConObservingEffectInformation_size = 8
+TBWGConObservingEffectInformation_size = 8+32
 class TBWGConObservingEffectInformation:
-    def __init__(self, ID, code):
+    def __init__(self, ID, code, details):
         self.ID = ID
         self.code = code
+        self.details = details
     def __str__(self):
         return f"[| Effect {self.code} | ID:{self.ID} |]"
 
-TBWGUsersEventerInformation_size = 77
+TBWGUsersEventerInformation_size = 45
 class TBWGUsersEventerInformation:
-    def __init__(self, eventerCode, ID, energyValueType, energy, spellEnergy, eventer_type, required_informations, name, eventeruses):
+    def __init__(self, eventerCode, ID, energyValueType, energy, spellEnergy, eventer_type, required_informations, eventeruses):
         self.eventerCode = eventerCode
         self.ID = ID
         self.energyValueType = energyValueType
@@ -120,10 +121,9 @@ class TBWGUsersEventerInformation:
         self.spellEnergy = spellEnergy
         self.eventer_type = eventer_type
         self.required_informations = required_informations
-        self.name = name
         self.eventeruses = eventeruses
     def __str__(self):
-        return f"[| Eventer {self.eventerCode} | ID:{self.ID} | name:{self.name} |]"
+        return f"[| Eventer {self.eventerCode} | ID:{self.ID} | code:{self.eventerCode} |]"
 
 TBWGEventerUses_size = 20
 class TBWGEventerUses:

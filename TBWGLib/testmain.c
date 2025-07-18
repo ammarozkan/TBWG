@@ -79,9 +79,6 @@ int main(int argc, char*argv[])
 	tbwgAddCharacter(character2);
 	tbwgAddCharacter(character3);
 
-	struct Area debugArea = getDebugArea(getiVector(5,5), getiVector(12,12));
-	tbwgAddArea(tbwgGetFirstDimension(), &debugArea);
-
 	printf("Reordering again!\n");
 
 	tbwgReorder();

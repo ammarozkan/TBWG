@@ -62,6 +62,7 @@ struct Character* createDefaultCharacter(struct Dimension* dimension, iVector po
 	struct Eye eye = {1.8f, 1.0f, 0.1f, 1.0f, 0.3f};
 	character->b.baseEye = eye;
 	character->b.eye = eye;
+	character->seeingResources = createList();
 
 	iValue hp = {10,10};
 	iValue e = {5,5};
@@ -79,11 +80,8 @@ struct Character* createDefaultCharacter(struct Dimension* dimension, iVector po
 	struct EventerUses newUses = {0,0,0,0,0};
 	character->eventerSpendings = newUses;
 	
-	character->eventerCount = 2;
-	character->eventers = malloc(2*sizeof(struct Eventer));
-
-	character->eventers[0] = getDefaultPunchEventer();
-	character->eventers[1] = getDefaultWalkEventer();
+	character->eventerCount = 0;
+	character->eventers = malloc(0*sizeof(struct Eventer));
 
 	for(unsigned int i = 0 ; i < EFFECT_TRIGGER_TYPE_COUNT ; i += 1) {
 		character->b.effects[i] = createList();

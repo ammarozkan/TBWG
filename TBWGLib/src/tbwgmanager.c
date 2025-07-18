@@ -1,9 +1,14 @@
 #include <TBWG/tbwgmanager.h>
 #include <TBWG/characters.h>
+#include <TBWG/entity.h>
 #include <TBWG/eventer.h>
 #include <TBWG/effects.h>
 #include <TBWG/areas.h>
 #include <stdlib.h> // malloc
+
+#ifdef TBWG_DEBUG
+#include <stdio.h>
+#endif
 
 struct tbwgdata* data;
 
@@ -87,11 +92,16 @@ void tbwgTriggerAreaWhileInside(struct Dimension* dim, struct Area* area)
 
 void tbwgTriggerAreaWhileInsides()
 {
+	DEBUG_PRINT("tbwgTriggerAreaWhileInsides","Starting to iterate dimensions.");
 	ITERATE(data->world.dimensionList, dimension) {
 		struct Dimension* dim = ((struct DimensionListElement*)dimension)->dimension;
 		struct List areaList = dim->areaList;
+		DEBUG_PRINT("tbwgTriggerAreaWhileInsides","Starting to iterate areas.");
 		ITERATE(areaList, area_elm) {
+			DEBUG_PRINT("tbwgTriggerAreaWhileInsides","Getting area from element.");
+			DEBUG_PRINTUINT("tbwgTriggerAreaWhileInsides", "area_elm", area_elm);
 			struct Area* area = ((struct AreaListElement*)area_elm)->area;
+			DEBUG_PRINT("tbwgTriggerAreaWhileInsides","Calling trigger area while inside.");
 			tbwgTriggerAreaWhileInside(dim, area);
 		}
 	}
@@ -99,9 +109,11 @@ void tbwgTriggerAreaWhileInsides()
 
 void tbwgReorder()
 {
+	DEBUG_PRINT("tbwgReorder","Triggerring clock effects.");
 	tbwgTriggerEffects(EFFECT_TRIGGER_TYPE_CLOCK, NULL);
+	DEBUG_PRINT("tbwgReorder","Triggering area while insides.");
 	tbwgTriggerAreaWhileInsides();
-
+	DEBUG_PRINT("tbwgReorder","Starting to iterate dimension list.");
 	ITERATE(data->world.dimensionList, dimension) {
 		struct List characterList = ((struct DimensionListElement*)dimension)->dimension->characterList;
 		ITERATE(characterList,charListElm_pure) {
@@ -114,9 +126,13 @@ void tbwgReorder()
 
 void tbwgMakeObserveAllCharacters()
 {
+	DEBUG_PRINT("tbwgCharacterTurn","Eventer control ->");
 	ITERATE_ALL_CHARACTERS_IN_WORLD((data->world), charlistelm, dimension) {
+		DEBUG_PRINT("tbwgMakeObserveAllCharacters","Iterating character ->");
 		struct Character* chr = ((struct CharacterListElement*)charlistelm)->character;
+		DEBUG_PRINT("tbwgMakeObserveAllCharacters","Observe information fetch ->");
 		struct ObservingInformation obsInfo = Observe(chr, &(data->world));
+		DEBUG_PRINT("tbwgMakeObserveAllCharacters","Character observe ->");
 		chr->controllerInterface->observer(chr->controllerInterface, obsInfo);
 	}
 }
@@ -125,14 +141,21 @@ void tbwgMakeObserveAllCharacters()
 
 void tbwgCharacterTurn(struct QueueCharacterTurn* turn)
 {
+	DEBUG_PRINT("tbwgCharacterTurn","Character turn!");
 	struct Character* character = turn->character;
 	struct ControllerInterface* interface = character->controllerInterface;
+	DEBUG_PRINT("tbwgCharacterTurn","Invoked will be called!");
 	turn->whenInvoked(turn);
+	DEBUG_PRINT("tbwgCharacterTurn","Invoked called!");
 	//addEventerUses(&(turn->character->eventerSpendings), turn->gainingUses);
 	updateEventerUses(&(character->eventerSpendings), turn->gainingUses);
+	DEBUG_PRINT("tbwgCharacterTurn","Eventer uses updated.");
 
-	if (turn->character->state & STATE_DEAD) return;
+	DEBUG_PRINT("tbwgCharacterTurn","Dead state control ->");
+	//if (turn->character->state & STATE_DEAD) return;
+	DEBUG_PRINT("tbwgCharacterTurn","Hp value control ->");
 	if (character->hp.value < 0) {
+		DEBUG_PRINT("tbwgCharacterTurn","State setting ->");
 		character->state = character->state | STATE_FAINTED | STATE_ONGROUND;
 	}
 	else if (character->hp.value > 0) character->state = character->state & (~STATE_FAINTED);
@@ -142,27 +165,35 @@ void tbwgCharacterTurn(struct QueueCharacterTurn* turn)
 	for(unsigned int i = 0 ; i < character->eventerCount ; i += 1)
 		character->eventers[i]->isChoosed = 0;
 
+	DEBUG_PRINT("tbwgCharacterTurn","Eventer while! ->");
+
 	while( 1 ) {
 		
 		chUpdateStats(character);
 
+		DEBUG_PRINT("tbwgCharacterTurn","Make observe ->");
 		tbwgMakeObserveAllCharacters();
 
+		DEBUG_PRINT("tbwgCharacterTurn","Eventer ready allocation ->");
 		struct Eventer** eventers = malloc(sizeof(struct Eventer*)*character->eventerCount);
 		unsigned int allowedeventers = 0;
 
+		DEBUG_PRINT("tbwgCharacterTurn","Eventer control ->");
 		for(unsigned int i = 0 ; i < character->eventerCount ; i += 1) {
 			if(character->eventers[i]->setReady((void*)(character->eventers[i]), character, tbwgGetWorld())) {
 				eventers[allowedeventers] = character->eventers[i];
 				allowedeventers += 1;
 			}
 		}
+		DEBUG_PRINT("tbwgCharacterTurn","Choose eventer ->");
 
 		choose = interface->chooseEventer(interface, character->b.ID, turn->allowedEventerTypes, allowedeventers, eventers,
 			character->eventerSpendings);
 
+		DEBUG_PRINT("tbwgCharacterTurn","End turn? ->");
 		if (choose.specs & TURNPLAY_END_TURN) return;
 
+		DEBUG_PRINT("tbwgCharacterTurn","Choosed eventer fetch ->");
 		struct Eventer* eventer = eventers[choose.eventer_th];
 		free(eventers);
 
@@ -191,8 +222,15 @@ void tbwgCharacterTurn(struct QueueCharacterTurn* turn)
 	}
 }
 
+void tbwgEntityTurn(struct QueueEntityTurn* turn)
+{
+	struct Entity* entity = turn->entity;
+	entity->eventer(entity);
+}
+
 void tbwgTurn()
 {
+	DEBUG_PRINT("tbwgTurn","queue empty check.");
 	if (queueIsEmpty(&(data->queue))) {
 		struct QueueReorderTurn turn; turn.header.type = QUEUE_REORDER;
 
@@ -200,10 +238,14 @@ void tbwgTurn()
 		return;
 	}
 
+	DEBUG_PRINT("tbwgTurn","retrieving queue element.");
 	struct QueueElementHeader* queueElement = queuePop(&(data->queue));
 
+	DEBUG_PRINT("tbwgTurn","queue check check check check");
 	if(queueElement->type == QUEUE_CHARACTER) tbwgCharacterTurn((struct QueueCharacterTurn*)queueElement);
 	else if(queueElement->type == QUEUE_REORDER) tbwgReorder();
+	else if(queueElement->type == QUEUE_ENTITY) tbwgEntityTurn((struct QueueEntityTurn*)queueElement);
+	DEBUG_PRINT("tbwgTurn","check end");
 
 	free(queueElement);
 }
@@ -211,6 +253,11 @@ void tbwgTurn()
 int tbwgAddCharacter(struct Character* character)
 {
 	return worldAddCharacter(&(data->world), character);
+}
+
+int tbwgAddEntity(struct Entity* entity)
+{
+	return worldAddEntity(&(data->world), entity);
 }
 
 int tbwgAddArea(struct Dimension* dim, struct Area* area)

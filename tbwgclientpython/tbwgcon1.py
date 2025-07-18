@@ -56,6 +56,9 @@ def getThingFromBytes(data, name):
         e = getThingFromBytes(data[cps:cps+TBWGiValue_size], "iValue") ; cps += TBWGiValue_size
         se = getThingFromBytes(data[cps:cps+TBWGiValue_size], "iValue") ; cps += TBWGiValue_size
         return TBWGConCharacterInformation(code, hp, e, se)
+    elif name == "Details":
+        details = struct.unpack("iiiiiiii",data)
+        return details
     elif name == "iValue":
         b = struct.unpack("ii",data)
         return TBWGiValue(b[0],b[1])
@@ -72,17 +75,18 @@ def getThingFromBytes(data, name):
         values = [int.from_bytes(data[i*4:(i+1)*4], "little") for i in range(0,7)]
         return TBWGStats(*values)
     elif name == "ObservingEffectInformation":
-        ID, code = struct.unpack("II", data)
-        return TBWGConObservingEffectInformation(ID, code)
+        ID, code = struct.unpack("II", data[0:8])
+        details = getThingFromBytes(data[8:], "Details")
+        return TBWGConObservingEffectInformation(ID, code, details)
     elif name == "UsersEventerInformation":
         eventerCode, ID = struct.unpack("II", data[:8])
         energyValueType = data[8]
         energy, spellEnergy, eventer_type, required_informations = struct.unpack("IIII",data[9:25])
-        name = getThingFromBytes(data[25:57], "string")
+        #name = getThingFromBytes(data[25:57], "string")
         #eventerCode, ID, energyValueType, energy, spellEnergy, eventer_type, required_informations = b[:7]
-        eventeruses = getThingFromBytes(data[57:77],"EventerUses")
-        print(data[77:])
-        return TBWGUsersEventerInformation(eventerCode, ID, energyValueType, energy, spellEnergy, eventer_type, required_informations, name, eventeruses)
+        eventeruses = getThingFromBytes(data[25:45],"EventerUses")
+        print(data[45:])
+        return TBWGUsersEventerInformation(eventerCode, ID, energyValueType, energy, spellEnergy, eventer_type, required_informations, eventeruses)
     elif name == "CharacterInformation":
         b = list(struct.unpack("IIiiffii",data))
         ID, characterCode = b[0], b[1]
@@ -103,12 +107,13 @@ def getThingFromBytes(data, name):
         ID = getThingFromBytes(b[4:8],"uint32_t")
         energy = getThingFromBytes(b[8:12],"uint32_t")
         spellenergy = getThingFromBytes(b[12:16],"uint32_t")
+        print("JOEBIDEN",len(b[16:20]))
         eventertype = getThingFromBytes(b[16:20],"digits")
         requiredinformations = getThingFromBytes(b[20:24],"digits")
-        name = getThingFromBytes(b[24:56],"string")
-        costs = getThingFromBytes(b[56:76],"EventerUses")
+        costs = getThingFromBytes(b[24:44],"EventerUses")
+        details = getThingFromBytes(b[44:76],"Details")
 
-        return TBWGConEventerInformation(eventerCode, ID, energy, spellenergy, eventertype, requiredinformations, name, costs)
+        return TBWGConEventerInformation(eventerCode, ID, energy, spellenergy, eventertype, requiredinformations, costs, details)
     else:
         raise Exception(f"YOOOOOOO WTH IS {name}!!")
 
@@ -230,6 +235,8 @@ def getRestPkgFromSocket(socket, pkgcode, size, extraheader = None):
             tsize = TBWGConEventerInformation_size
             eventerinformationbytes = data[lastp:lastp+tsize]
             print("EVENTIERIOG:",len(eventerinformationbytes))
+            if len(eventerinformationbytes) != TBWGConEventerInformation_size:
+                raise Exception(f"Eventer information with not-okay size {len(eventerinformationbytes)}")
 
             eventerinformation = getThingFromBytes(eventerinformationbytes,"EventerInformation")
             eventerinfos.append(eventerinformation)

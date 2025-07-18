@@ -12,6 +12,12 @@ createQueue()
 }
 
 void
+destroyQueue(struct Queue* queue)
+{
+	decolonizeList((struct List*)&(queue->queueElements));
+}
+
+void
 queueAddTurn(struct Queue* queue, struct QueueElementHeader* turn)
 {
 	unsigned long int turnSize = 0;
@@ -50,7 +56,7 @@ void mergeBaseQueue(struct Queue* targetQueue, struct Queue* baseQueue)
 
 
 
-void defaultCharacterTurnInvoke(struct QueueCharacterTurn*)
+void defaultCharacterTurnInvoke(struct QueueCharacterTurn* t)
 {
 	return;
 }
@@ -63,11 +69,9 @@ struct QueueCharacterTurn getBasicCharacterTurn()
 	r.header.listHeader.next = NULL;
 	r.header.type = QUEUE_CHARACTER;
 	r.allowedEventerTypes = 0b1111111111;
-	r.gainingUses.classic = 1;
-	r.gainingUses.fastmagic = 0;
-	r.gainingUses.fastcombat = 0;
-	r.gainingUses.thoughtmagic = 0;
-	r.gainingUses.movement = 1;
+
+	struct EventerUses evnu = {1,0,0,0,0};
+	r.gainingUses = evnu;
 	r.character = NULL;
 	r.whenInvoked = defaultCharacterTurnInvoke;
 	r.requirements = 0 | CHARACTER_REQ_ALIVE;
@@ -82,5 +86,12 @@ struct QueueEntityTurn getBasicEntityTurn(struct Entity* entity)
 	r.header.listHeader.next = NULL;
 	r.header.type = QUEUE_ENTITY;
 	r.entity = entity;
+	r.whenInvoked = defaultEntityTurnInvoke;
 	return r;
 }
+
+void defaultEntityTurnInvoke(struct QueueEntityTurn* t)
+{
+	return;
+}
+

@@ -98,7 +98,7 @@ int servertest()
 	tbwgcon1InitGlobalRecvPtr();
 
 	testprint("Initializing the inertia tensor.");
-	int sck = tbwgcon1GetProperServerSocket("127.0.0.1", 5045);
+	TbwgConSocket sck = tbwgcon1GetProperServerSocket("127.0.0.1", 5045);
 
 	if(failure("Server socket generation failed with %i", sck, 0)) return -1;
 

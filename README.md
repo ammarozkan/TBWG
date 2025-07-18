@@ -1,10 +1,9 @@
 # TBWG
 
-wanna break from the ads? skip to the [BRO I JUST WANT TO PLAY](README.md#BRO I JUST WANT TO PLAY) segment.
+wanna break from the ads? skip to the I JUST WANT TO PLAY segment.
 
 TBWG is a Turn Based War Game. I want to give players almostly full freedom to do what they want.
-So I'm using a Dungeons and Dragons style of game. You can even modify the game to add
-actions you want.
+Game can be modified easily.
 
 ## Logic
 
@@ -13,24 +12,64 @@ named "Reorder Turn", every character's base turn is added to the game. So they 
 Base turns could contain more than one turn, special type of turns, or even autoturns (idk). For example
 items or objects in the game are doing autoturns. Flying for example. Throwing something.
 
+Every character turn has an "eventer use" amount. Thats kind of a speed value. In a turn, a character
+can do a "classic" move. 1 classic move equals to 1 arm movement, 1 hand movement, 1 movement movement
+(or legs), 1 thought movement. A punch would use 1 arm and 1 hand for example. If a walk uses 1 movement,
+character can do a walking punch in a turn or round.
+
 ## Actions
 
 You can program actions to make somethings. Maybe fascinating things. For example, creating a area 
 that teleports someones to somewhere. (idk)
 
-# Compiling the TBWGLib
 
-Basic compile is will be done by while on TBWGLib directory
+
+# Compiling a Server
+
+A basic server of TBWG uses the TBWGLib. I'd use compiling TBWGLib seperately and using that
+compilement for server compilation via linking to use the symbols.
+
+## Compiling the TBWGLib
+
+On linux, GCC and MAKE required. and also linux socket.h ... and also GNU C lib..
+
+On windows, just MinGW.
+
+### Linux
+
+In the TBWGLib directory, running
 
 ```bash
 make tbwgessentialslib lib
 ```
 
-after, unnecessary things could be cleaned up
+will compile the lib onto a directory named "libs". If debug or some interesting stuff
+is wanted to compile too, see the Makefile.
+
+then, unnecessary things could be cleaned up
 
 ```bash
 make clean
 ```
+
+### Windows
+
+In the TBWGLib directory, theres a .bat file to run. Double clicking or executing
+it from terminal will compile the lib into a directory named "libs".
+
+Compiled libs:
+
+- libtbwg.a
+- libtbwgdebug.a
+- libtbwgessentials.a
+- libtbwgnet.a
+- libtbwgnetdebug.a
+
+it will cost approximately 285 KB of storage.
+
+## Compiling the Server Scheme
+
+
 
 # HOW AM I GONNA PLAY IT
 

@@ -5,15 +5,15 @@
 
 void tbwgcon1ControllerObserve(struct ControllerInterface* intfc, struct ObservingInformation inf)
 {
-    struct tbwgcon1ControllerInterface* interface = (struct tbwgcon1ControllerInterface*)intfc;
-    printf("%s receives a controller observe!\n",interface->name);
+    struct tbwgcon1ControllerInterface* controllerInterface = (struct tbwgcon1ControllerInterface*)intfc;
+    printf("%s receives a controller observe!\n",controllerInterface->name);
 
     struct TBWGConObservingInformationHeader head;
     head.eventerCount = inf.eventerCount;
     head.characterInformationCount = inf.characterCount;
     head.entityInformationCount = 0; //inf.entityCount normally but entities are notdtettt
     for(unsigned int i = 0 ; i < EFFECT_TRIGGER_TYPE_COUNT ; i += 1) head.effectCounts[i] = getElementCountOfList(inf.effects[i]);
-    tbwgcon1SendPackage(interface->cl_sck, &head, TBWGCON1_OBSERVINGINFORMATIONHEADER, sizeof(head));
+    tbwgcon1SendPackage(controllerInterface->cl_sck, &head, TBWGCON1_OBSERVINGINFORMATIONHEADER, sizeof(head));
     
     
     // lets get ready the datas dawg
@@ -52,6 +52,9 @@ void tbwgcon1ControllerObserve(struct ControllerInterface* intfc, struct Observi
 
             effects[j].ID = effect->ID;
             effects[j].code = effect->code;
+            for(unsigned int megaCounter = 0 ; megaCounter < 8 ; megaCounter += 1) {
+                effects[j].details.details[megaCounter] = effect->details[megaCounter];
+            }
             j+=1;
         }
     }
@@ -64,13 +67,8 @@ void tbwgcon1ControllerObserve(struct ControllerInterface* intfc, struct Observi
         eventers[i].spellEnergy = inf.eventers[i]->baseSpellEnergy;
         eventers[i].eventer_type = inf.eventers[i]->eventer_type;
         eventers[i].required_informations = inf.eventers[i]->required_informations;
-        tbwgmemcpy(eventers[i].name, inf.eventers[i]->name, 32);
         {
-            eventers[i].costs.classic = inf.eventers[i]->costs.classic;
-            eventers[i].costs.fastcombat = inf.eventers[i]->costs.fastcombat;
-            eventers[i].costs.movement = inf.eventers[i]->costs.movement;
-            eventers[i].costs.fastmagic = inf.eventers[i]->costs.fastmagic;
-            eventers[i].costs.thoughtmagic = inf.eventers[i]->costs.thoughtmagic;
+            tbwgmemcpy(&(eventers[i].costs), &(inf.eventers[i]->costs), sizeof(struct EventerUses));
         }
     }
 
@@ -89,21 +87,21 @@ void tbwgcon1ControllerObserve(struct ControllerInterface* intfc, struct Observi
         entityInfos[i].direction = inf.entityInfos[i].direction;
     }
 
-    tbwgcon1SendPackage(interface->cl_sck, realpkg, TBWGCON1_OBSERVINGINFORMATION, pkgsize);
+    tbwgcon1SendPackage(controllerInterface->cl_sck, realpkg, TBWGCON1_OBSERVINGINFORMATION, pkgsize);
     free(realpkg);
 }
 
 void tbwgcon1ReceiveWorldEvent(struct ControllerInterface* intfc, struct WorldEventInformation inf)
 {
     
-    struct tbwgcon1ControllerInterface* interface = (struct tbwgcon1ControllerInterface*)intfc;
-    printf("%s receives a world event!\n",interface->name);
+    struct tbwgcon1ControllerInterface* controllerInterface = (struct tbwgcon1ControllerInterface*)intfc;
+    printf("%s receives a world event!\n",controllerInterface->name);
     
     struct TBWGConWorldEventInformation pkg;
     pkg.selfid = inf.selfid;
     tbwgmemcpy(pkg.eventName,inf.eventName,tbwgstrlen(inf.eventName)+1);
     pkg.position = inf.position;
-    tbwgcon1SendPackage(interface->cl_sck,&pkg,TBWGCON1_WORLDEVENTINFORMATION, sizeof(pkg));
+    tbwgcon1SendPackage(controllerInterface->cl_sck,&pkg,TBWGCON1_WORLDEVENTINFORMATION, sizeof(pkg));
 }
 
 
@@ -123,22 +121,18 @@ struct TurnPlay tbwgcon1ControllerChooseEventer(struct ControllerInterface* intf
 {
     struct TurnPlay turnPlay;
 
-    struct tbwgcon1ControllerInterface* interface = (struct tbwgcon1ControllerInterface*)intfc;
-    printf("%s receives a ChooseEventer request!\n",interface->name);
+    struct tbwgcon1ControllerInterface* controllerInterface = (struct tbwgcon1ControllerInterface*)intfc;
+    printf("%s receives a ChooseEventer request!\n",controllerInterface->name);
 
 
     struct TBWGConEventerOptionsInformationHeader head;
     head.chooserId = chooserId;
     head.allowedEventerTypes = allowedEventerTypes;
     {
-        head.restUses.classic = restUses.classic;
-        head.restUses.fastcombat = restUses.fastcombat;
-        head.restUses.movement = restUses.movement;
-        head.restUses.fastmagic = restUses.fastmagic;
-        head.restUses.thoughtmagic = restUses.thoughtmagic;
+        tbwgmemcpy(&(head.restUses), &(restUses), sizeof(struct EventerUses));
     }
     head.eventerCount = eventerCount;
-    tbwgcon1SendPackage(interface->cl_sck, &head, TBWGCON1_EVENTEROPTIONSINFORMATIONHEADER, sizeof(head));
+    tbwgcon1SendPackage(controllerInterface->cl_sck, &head, TBWGCON1_EVENTEROPTIONSINFORMATIONHEADER, sizeof(head));
 
     unsigned int eventerOptionInformationPtrSize = sizeof(struct TBWGConEventerOptionsInformation);
     eventerOptionInformationPtrSize += sizeof(struct TBWGConEventerInformation)*eventerCount;
@@ -148,11 +142,11 @@ struct TurnPlay tbwgcon1ControllerChooseEventer(struct ControllerInterface* intf
     for(unsigned int i = 0 ; i < eventerCount ; i += 1) {
         informations[i] = tbwgconConvertToEventerInformation(*(eventers[i]));
     }
-    tbwgcon1SendPackage(interface->cl_sck, eventerOptionInformationPtr, TBWGCON1_EVENTEROPTIONSINFORMATION, eventerOptionInformationPtrSize);
+    tbwgcon1SendPackage(controllerInterface->cl_sck, eventerOptionInformationPtr, TBWGCON1_EVENTEROPTIONSINFORMATION, eventerOptionInformationPtrSize);
     free(eventerOptionInformationPtr);
 
 
-    int recvment = tbwgcon1ReceivePackage(interface->cl_sck, GLB_RECV, TBWGCON1_TURNPLAY);
+    int recvment = tbwgcon1ReceivePackage(controllerInterface->cl_sck, GLB_RECV, TBWGCON1_TURNPLAY);
     int r;
     if (r < 0) {
         DEBUG_PRINT("tbwgcon1ControllerChooseEventer","Theres no package to read for TBWGCON1_TURNPLAY package.");
@@ -187,9 +181,9 @@ struct ControllerInterface* tbwgcon1GetNetworkedControllerInterface(int socket,c
 {
     struct tbwgcon1ControllerInterface* result;
     result = tbwgmalloc(sizeof(*result));
-    result->interface.observer = tbwgcon1ControllerObserve;
-    result->interface.receiveWorldEvent = tbwgcon1ReceiveWorldEvent;
-    result->interface.chooseEventer = tbwgcon1ControllerChooseEventer;
+    result->controllerInterface.observer = tbwgcon1ControllerObserve;
+    result->controllerInterface.receiveWorldEvent = tbwgcon1ReceiveWorldEvent;
+    result->controllerInterface.chooseEventer = tbwgcon1ControllerChooseEventer;
     result->cl_sck = socket;
     result->name = name;
     return (struct ControllerInterface*)result;

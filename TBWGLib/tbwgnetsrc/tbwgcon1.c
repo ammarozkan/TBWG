@@ -1,14 +1,43 @@
 #include <TBWG_net/tbwgcon1.h>
 #include <TBWG/essentials.h>
+
+#ifdef _WIN32
+#define _WIN32_WINNT 0x0501
+#include <windows.h>
+#include <windows.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
 #include <sys/socket.h> // read, write
 #include <netinet/in.h> // sockaddr_in
 #include <arpa/inet.h> // inet_addr
 #include <unistd.h> // sleep
+#endif
+
 #include <errno.h> // for errno in recv
 
 void* globalrecvptr;
 
 struct TBWGConHeader header;
+
+
+int tbwgcon1Init()
+{
+	int result = 1;
+#ifdef _WIN32
+	WSADATA wsa;
+	result = (WSAStartup(MAKEWORD(2, 2), &wsa) == 0);
+#endif
+	return result;
+}
+
+void tbwgcon1Dinit()
+{
+#ifdef _WIN32
+	WSACleanup();
+#endif
+} // important for winsock
+
 
 void tbwgcon1InitGlobalRecvPtr()
 {
@@ -47,59 +76,98 @@ int tbwgcon1HeaderCheck(struct TBWGConHeader h)
 	return 0;
 }
 
-int tbwgcon1GetProperServerSocket(char* ip_c, uint16_t port)
+TbwgConSocket tbwgcon1GetProperServerSocket(char* ip_c, uint16_t port)
 {
-	int server_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if(server_fd <= 0)
-	{
+	#ifdef _WIN32
+	struct addrinfo *result = NULL;
+    struct addrinfo hints;
+	
+	ZeroMemory(&hints, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+    hints.ai_flags = AI_PASSIVE;
+
+	const char* defaultPort = "5005";
+    int iResult = getaddrinfo(NULL, defaultPort, &hints, &result);
+    if ( iResult != 0 ) {
+        return -1001;
+    }
+	TbwgConSocket server_fd = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+	if (!ISSOCKETOK(server_fd)) {
+		return -1002;
+	}
+	#else
+	TbwgConSocket server_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	#endif
+	if(!ISSOCKETOK(server_fd)) {
 		return -1;
 	}
 
-	int okey = 1;
+	int okay = 1;
+	#ifdef _WIN32
 	if(setsockopt(server_fd,
-		SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT,
-		&okey,
-		sizeof(okey)) < 0)
+		SOL_SOCKET, SO_REUSEADDR,
+		(char*)&okay,
+		sizeof(okay)) < 0)
 	{
 		return -2;
 	}
+	#else
+	if(setsockopt(server_fd,
+		SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT,
+		&okay,
+		sizeof(okay)) < 0)
+	{
+		return -2;
+	}
+	#endif
 
 	struct sockaddr_in addr;
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
 	addr.sin_addr.s_addr = inet_addr(ip_c);
-	socklen_t size = (socklen_t)sizeof(addr);
-	if(bind(server_fd,(struct sockaddr*)&addr,size) < 0)
+	if(bind(server_fd,(struct sockaddr*)&addr,sizeof(addr)) < 0)
 	{
 		return -3;
 	}
+
 	listen(server_fd, 4);
 	return server_fd;
 }
 
-int tbwgcon1GetProperClientSocket(char* ip_c, uint16_t port)
+TbwgConSocket tbwgcon1GetProperClientSocket(char* ip_c, uint16_t port)
 {
-	int client_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if(client_fd <= 0)
+	TbwgConSocket client_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if(ISSOCKETOK(client_fd))
 	{
 		return -1;
 	}
 
-	int okey = 1;
+	int okay = 1;
+	#ifdef _WIN32
 	if(setsockopt(client_fd,
-		SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT,
-		&okey,
-		sizeof(okey)) < 0)
+		SOL_SOCKET, SO_REUSEADDR,
+		(char*)&okay,
+		sizeof(okay)) < 0)
 	{
 		return -2;
 	}
+	#else
+	if(setsockopt(client_fd,
+		SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT,
+		&okay,
+		sizeof(okay)) < 0)
+	{
+		return -2;
+	}
+	#endif
 
 	struct sockaddr_in addr;
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
 	addr.sin_addr.s_addr = inet_addr(ip_c); // idk look to that inf.
-	socklen_t size = (socklen_t)sizeof(addr);
-	if(connect(client_fd,(struct sockaddr*)&addr,size) < 0)
+	if(connect(client_fd,(struct sockaddr*)&addr,sizeof(addr)) < 0)
 	{
 		return -3;
 	}
@@ -114,13 +182,13 @@ int tbwgcon1ReceivePackage(int socket_fd, void* memptr, uint8_t pkgcode)
 	DEBUG_PRINTUINT("receivePackage call","expecting!",pkgcode);
 	int readen;
 	struct TBWGConHeader head;
-	readen = recv(socket_fd,&head,sizeof(struct TBWGConHeader),0);
+	readen = recv(socket_fd,(char*)&head,sizeof(struct TBWGConHeader),0);
 	if (readen == 0) return -1;
 	if (readen == -1 && errno == 9) return -2;
 	// reading the header first
 
 	void* readennewpkg = memptr+sizeof(head); // skipping head and reading the package to the pointer
-	readen = recv(socket_fd,readennewpkg,head.size-sizeof(struct TBWGConHeader),0); // reading the package fully
+	readen = recv(socket_fd,(char*)readennewpkg,head.size-sizeof(struct TBWGConHeader),0); // reading the package fully
 	
 	DEBUG_RECEIVEDEBUG("receivePackage call",head.size,readen+sizeof(head),pkgcode,head.pkgcode);
 	if (readen == 0) return -1;
@@ -143,7 +211,7 @@ int tbwgcon1SendPackage(int socket_fd, void* memptr, uint8_t pkgcode, uint32_t s
 	*h = header;
 	h->pkgcode = pkgcode;
 	h->size = size;
-	int sent = send(socket_fd, memptr, size, 0);
+	int sent = send(socket_fd, (char*)memptr, size, 0);
 	DEBUG_SENDDEBUG("sendPackage call",size,sent,pkgcode,h->pkgcode);
 	return sent > 0 && (uint32_t)sent == size;
 }
@@ -206,10 +274,11 @@ struct TBWGConClientResult tbwgcon1GetClError(int errcode)
 	return r;
 }
 
-#define TBWGCON1_BROKEUPSERVERWITHERROR(str,errcode) {close(cl_fd);DEBUG_PRINT("tbwgcon1Accept",str);return tbwgcon1GetSvError(errcode);}
-
 struct TBWGConServerResult tbwgcon1Accept(int sv_fd, struct List characterList, void* decidersptr)
 {
+	unsigned int charsl_counter = 0;
+
+
 	DEBUG_PRINT("tbwgcon1Accept","begin");
 	struct TBWGConPtsizedCharacterInformation midinfo = {.systematicPtr = NULL}; char name[32]; int cl_fd = 0; int r;
 	DEBUG_PRINT("tbwgcon1Accept","accepting");
@@ -262,7 +331,7 @@ chapter2:
 
 	//sleep(7);
 	DEBUG_PRINT("tbwgcon1Accept","generation completed. sending the character informator.");
-	if(tbwgcon1SendPackage(cl_fd, (void*)&cinfer, TBWGCON1_CHARACTERINFORMATOR, sizeof(cinfer)) == false) goto chapter2;
+	if(tbwgcon1SendPackage(cl_fd, (void*)&cinfer, TBWGCON1_CHARACTERINFORMATOR, sizeof(cinfer)) == 0) goto chapter2;
 	DEBUG_PRINT("tbwgcon1Accept","character informator sent!");
 
 	r = tbwgcon1ReceivePackage(cl_fd, GLB_RECV, TBWGCON1_CHARACTERSELECTION);
@@ -291,16 +360,16 @@ chapter2:
 	if (charsl_err.nextchapter == 2) goto chapter2;
 	else if(charsl_err.nextchapter == 3) goto chapter3;
 
-chapter3:
+
 
 
 	// GETTING THE SYSTEMATIC POINTER OF THE CHOOSEN CHARACTER SOMEHOW
-	unsigned int ccc = 0;
+chapter3:
 	ITERATE(characterList, charlistElm_pure) {
 		struct TBWGConCharacterInformation charinf = ((struct TBWGConPtsizedCharacterInformationListElement*)charlistElm_pure)->charinf.inf;
 
-		if (ccc == charsl.selection) midinfo = ((struct TBWGConPtsizedCharacterInformationListElement*)charlistElm_pure)->charinf;
-		ccc += 1; if (ccc == TBWGCON1_MAX_AVAILABLE_CHARACTER_COUNT) break;
+		if (charsl_counter == charsl.selection) midinfo = ((struct TBWGConPtsizedCharacterInformationListElement*)charlistElm_pure)->charinf;
+		charsl_counter += 1; if (charsl_counter == TBWGCON1_MAX_AVAILABLE_CHARACTER_COUNT) break;
 	}
 
 	DEBUG_PRINT("tbwgcon1Accept","chapter 3 and end.");
@@ -308,8 +377,6 @@ chapter3:
 	tbwgmemcpy(serverres.name,ent.name,TBWGCON1_STD_NAME_SIZE);
 	return serverres;
 }
-
-#define TBWGCON1_BROKEUPCLIENTWITHERROR(str,errcode) { close(cl_fd); DEBUG_PRINT("tbwgcon1Connect", str); return tbwgcon1GetClError(errcode); }
 
 struct TBWGConClientResult tbwgcon1Connect(char* ip_c, uint16_t port, char* name, tbwgcon1CharacterSelector charSelector)
 {
@@ -386,9 +453,13 @@ chapter2:
 }
 
 
-int tbwgcon1Close(int sock)
+int tbwgcon1Close(TbwgConSocket sock)
 {
+#ifdef _WIN32
+	return closesocket(sock);
+#else
 	return close(sock);
+#endif
 }
 
 
@@ -405,13 +476,11 @@ struct TBWGConEventerInformation tbwgconConvertToEventerInformation(struct Event
 	r.eventer_type = e.eventer_type;
 	r.required_informations = e.required_informations;
 	{
-        r.costs.classic = e.costs.classic;
-        r.costs.fastcombat = e.costs.fastcombat;
-        r.costs.movement = e.costs.movement;
-        r.costs.fastmagic = e.costs.fastmagic;
-        r.costs.thoughtmagic = e.costs.thoughtmagic;
+		tbwgmemcpy(&(r.costs), &(e.costs), sizeof(struct EventerUses));
     }
-	tbwgmemcpy(r.name, e.name, 32);
+	for(unsigned int i = 0 ; i < 8 ; i += 1) {
+		r.details.details[i] = e.details[i];
+	}
 	return r;
 }
 

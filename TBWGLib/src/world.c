@@ -15,6 +15,7 @@ createDimension(uint32_t dimensionCode)
 	dimension->dimensionCode = dimensionCode;
 	dimension->characterList = createList();
 	dimension->entityList = createList();
+	dimension->areaList = createList();
 	return dimension;
 }
 
@@ -95,6 +96,22 @@ dimensionAddCharacter(struct Dimension* dim, struct Character* c)
 	return 1;
 }
 
+int
+dimensionAddEntity(struct Dimension* dim, struct Entity* e)
+{
+	struct List areas = dimensionGetAreasOfPosition(dim, e->b.position);
+	ITERATE(areas, area_elm) {
+		struct Area* area = ((struct AreaListElement*)area_elm)->area;
+		area->whenEntered(area, (struct Being*)e);
+	}
+	freeListHeaders(areas);
+
+	struct EntityListElement elm = {.entity = e};
+	addElement(&(dim->entityList), (void*)&elm, sizeof(elm));
+
+	return 1;
+}
+
 struct List dimensionGetAreasOfPosition(struct Dimension* dim, iVector pos)
 {
 	struct List result = createList();
@@ -129,6 +146,16 @@ worldAddCharacter(struct World* world, struct Character* character)
 	dimensionAddCharacter(dimension, character);
 
 	world->characterCount += 1;
+	return 1;
+}
+
+int
+worldAddEntity(struct World* world, struct Entity* entity)
+{
+	struct Dimension* dimension = entity->b.dimension;
+	if(dimension == NULL) return 0;
+
+	dimensionAddEntity(dimension, entity);
 	return 1;
 }
 

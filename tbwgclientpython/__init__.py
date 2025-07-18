@@ -1,10 +1,10 @@
 import tbwgplayer as Player
 import tbwgcon1
 
-def program(assets = Player.Assets(), tbwgconenable = True, ip="127.0.0.1", port=5005, address="google.com", widenet=False, name="John"):
+def program(viewerManager = None, tbwgconenable = True, ip="127.0.0.1", port=5005, address="google.com", widenet=False, name="John"):
 
     Player.init()
-    player = Player.TBWGPyGamePlayer(1280, 720, assets=assets)
+    player = Player.TBWGPyGamePlayer(1280, 720, viewerManager)
     player.characters = [tbwgcon1.TBWGCharacterInformation(6, 32, tbwgcon1.TBWGiVector(0,2), tbwgcon1.TBWGfVector(0.0,1.0), tbwgcon1.TBWGiValue(6,10))]
 
 
@@ -19,7 +19,7 @@ def program(assets = Player.Assets(), tbwgconenable = True, ip="127.0.0.1", port
 
         player.oneffects = []
         for ef in observation.effects:
-            player.oneffects.append(str(ef.code))
+            player.oneffects.append(ef)
 
     def worldevent(wevnt : tbwgcon1.TBWGWorldEventInformation):
         player.addWorldEvent((wevnt.eventname,(wevnt.position.x,wevnt.position.y)))
@@ -31,14 +31,15 @@ def program(assets = Player.Assets(), tbwgconenable = True, ip="127.0.0.1", port
             print(evn)
 
         eventer_th = player.request(Player.REQ_EVENTER, eventeroptinfos.eventers)
-        evn = eventeroptinfos.eventers[eventer_th]
-
+        
         reqinfs = tbwgcon1.TBWGEventerRequiredInformations()
-
+        
         specs = 0
         if eventer_th == None or eventer_th == -1:
             specs = tbwgcon1.TURNPLAY_END_TURN
             return tbwgcon1.TBWGConTurnPlay(0, reqinfs, specs)
+        
+        evn = eventeroptinfos.eventers[eventer_th]
 
         if evn.requiredinformations[tbwgcon1.REQ_POSITION]:
             x,y = player.request(Player.REQ_POSITION, eventeroptinfos.eventers)
@@ -110,10 +111,10 @@ def getTGFAssets(path):
     assets.add("ClearWorldEvents",f"{path}images/clear.png")
     assets.add("HealthIcon",f"{path}images/heart.png")
     assets.add("RestUses_classic",f"{path}images/timeicon.jpg")
-    assets.add("RestUses_fastcombat",f"{path}images/punchingworkicon.png")
-    assets.add("RestUses_movement",f"{path}images/movementicon.png")
-    assets.add("RestUses_fastmagic",f"{path}images/magicicon.jpg")
-    assets.add("RestUses_thoughtmagic",f"{path}images/thoughticon.png")
+    assets.add("RestUses_armMove",f"{path}images/movementicon.png")
+    assets.add("RestUses_handMove",f"{path}images/hand.png")
+    assets.add("RestUses_movement",f"{path}images/leg.png")
+    assets.add("RestUses_thought",f"{path}images/thoughticon.png")
 
     assets.addWorldEvent("MVM_LOOK", f"{worldevents}rotatinghead.png")
     assets.addWorldEvent("MVM_PUNCH", f"{worldevents}walkingsound.png")
@@ -134,6 +135,10 @@ def getTGFAssets(path):
     assets.addWorldEvent("SND_TRICKY_PUNCH", f"{worldevents}trickypunch.jpeg")
     assets.addWorldEvent("SND_TRICKY_CRITIC", f"{worldevents}criticalpunch.jpg")
 
+    # CHRST
+
+    
+
     assets.addError(f"{path}images/bluescreen.webp")
 
     assets.addSound("error",f"{path}sounds/error.wav")
@@ -143,5 +148,4 @@ def getTGFAssets(path):
     assets.addSound("EndTurn",f"{path}sounds/endturn.wav")
     assets.addSound("SND_WALK",f"{path}sounds/walk.wav")
     assets.addSound("SND_PUNCH",f"{path}sounds/punch.wav")
-    assets.loadAll()
     return assets

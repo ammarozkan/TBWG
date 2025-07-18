@@ -1,3 +1,18 @@
+#ifdef TBWG_DEBUG
+#include <stdio.h>
+#define DEBUG_PRINT(func,txt) printf("DEBUG:%s %s\n",func,txt)
+#define DEBUG_PRINTINT(func,txt,int) printf("DEBUG:%s %s ([%i])\n",func,txt,int)
+#define DEBUG_PRINTUINT(func,txt,uint) printf("DEBUG:%s %s ([%u])\n",func,txt,uint)
+#define DEBUG_RECEIVEDEBUG(func,targetsize,recvsize,targetpkgcode,pkgcode) printf("DEBUG:%s (%u)%u sized (%u)%u code pkg reaceived\n", func, targetsize, recvsize, targetpkgcode, pkgcode)
+#define DEBUG_SENDDEBUG(func,targetsize,recvsize,targetpkgcode,pkgcode) printf("DEBUG:%s (%u)%u sized (%u)%u code pkg sent\n", func, targetsize, recvsize, targetpkgcode, pkgcode)
+#else
+#define DEBUG_PRINT(x,y)
+#define DEBUG_PRINTINT(func,txt,int)
+#define DEBUG_PRINTUINT(func,txt,uint)
+#define DEBUG_RECEIVEDEBUG(func,targetsize,recvsize,targetpkgcode,pkgcode)
+#define DEBUG_SENDDEBUG(func,targetsize,recvsize,targetpkgcode,pkgcode)
+#endif /*TBWG_DEBUG*/
+
 #ifndef TBWG_ESSENTIALS_H
 #define TBWG_ESSENTIALS_H
 

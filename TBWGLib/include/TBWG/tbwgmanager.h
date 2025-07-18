@@ -25,6 +25,7 @@ void tbwgAreaWhileInsides();
 
 // setters
 int tbwgAddCharacter(struct Character* character);
+int tbwgAddEntity(struct Entity* entity);
 int tbwgAddArea(struct Dimension* dim, struct Area* area);
 
 // getters

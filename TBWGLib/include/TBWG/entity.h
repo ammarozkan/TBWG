@@ -10,17 +10,22 @@
 struct Entity;
 
 typedef void (*UseEntityFunction)(struct Entity*, struct Being* user);
+typedef void (*EntityEventer)(struct Entity*);
 
 struct Entity {
 	struct Being b;
 
 	HitterFunction hit;
 	UseEntityFunction use;
+	EntityEventer eventer;
 };
 
 
 struct Entity* createDefaultEntity(struct Dimension* dimension, iVector position);
 void destroyEntity(struct Entity*);
+
+struct Eye getDefaultEntityEye();
+void defaultEntityEventer(struct Entity*);
 
 
 #endif /*TBWG_ENTITY_H*/

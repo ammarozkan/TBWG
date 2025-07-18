@@ -58,6 +58,7 @@ struct List dimensionGetInAreaCharacters(struct Dimension* dim, iVector a, iVect
 struct Dimension* createDimension(uint32_t dimensionCode);
 struct World createDefaultWorld();
 int worldAddCharacter(struct World* world, struct Character* character);
+int worldAddEntity(struct World* world, struct Entity* entity);
 int worldAddDimension(struct World* world, struct Dimension* dimension);
 struct Dimension* worldGetDimensionByCode(struct World* w, uint32_t dimensionCode);
 

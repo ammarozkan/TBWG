@@ -124,8 +124,13 @@ struct TBWGConCharacterSelectionError {
 
 //// ////  Playing  //// ////
 
+struct TBWGConDetails {
+    int details[8];
+};
+
 // pkgcode: 33
 #define TBWGCON1_OBSERVINGINFORMATIONHEADER 33
+
 struct TBWGConObservingInformationHeader {
     struct TBWGConHeader header;
     uint32_t effectCounts[EFFECT_TRIGGER_TYPE_COUNT];
@@ -139,6 +144,7 @@ struct TBWGConObservingInformationHeader {
 struct TBWGConObservingEffectInformation {
     id_number ID;
     uint32_t code;
+    struct TBWGConDetails details;
 };
 
 struct TBWGConObservingCharacterInformation {
@@ -160,7 +166,7 @@ struct TBWGConObservingEventerInformation {
     uint8_t energyValueType;
     uint32_t energy, spellEnergy;
     digits32 eventer_type, required_informations; // 25
-    char name[32]; // 57
+    //char name[32]; // 57
     struct TBWGConEventerUses costs; // 24+32+1+20 = 44+32+1 = 76+1 = 77
 };
 
@@ -209,14 +215,14 @@ struct TBWGConEventerOptionsInformationHeader {
     uint32_t eventerCount;
 };
 
-// pkgcode: 37
+// pkgcode: 37+24
 struct TBWGConEventerInformation {
     unsigned int eventerCode;
     id_number ID;
     uint32_t energy, spellEnergy;
     digits32 eventer_type, required_informations;
-    char name[32];
     struct TBWGConEventerUses costs;
+    struct TBWGConDetails details;
 };
 
 struct TBWGConEventerInformation tbwgconConvertToEventerInformation(struct Eventer);

@@ -19,6 +19,7 @@ struct CharacterInformation getCharacterInformation(struct Character* chr)
 
 int canSeeCharacter(struct Character* as, struct Character* chr)
 {
+	DEBUG_PRINT("canSeeCharacter","call start");
 	int seeingResult = 0;
 
 	// hmm is it in the vision area?
@@ -31,10 +32,14 @@ int canSeeCharacter(struct Character* as, struct Character* chr)
 
 	if (seeingResult) return 1; // we're succesfull! don't need to further checks.
 
+	DEBUG_PRINT("canSeeCharacter","iterating resources");
 	ITERATE(as->seeingResources, resourceElement) {
+		DEBUG_PRINT("canSeeCharacter","iterating start");
 		// we're not succesfull. lets check with vision resource entities.
 
+		DEBUG_PRINT("canSeeCharacter","resource getting");
 		TBWGType* resourceType = (TBWGType*)((struct SeeingResourceElement*)resourceElement)->resource;
+		DEBUG_PRINT("canSeeCharacter","resource getting");
 		if(*resourceType == TBWG_TYPE_CHARACTER) {
 			struct Character* sr = (struct Character*)resourceType;
 
@@ -46,6 +51,8 @@ int canSeeCharacter(struct Character* as, struct Character* chr)
 
 			if(!isInVisionArea(sr->b.direction, sr->b.eye.angle, sr->b.position, chr->b.position)) continue;
 		}
+		DEBUG_PRINT("canSeeCharacter","iterating end");
+
 	}
 
 	return seeingResult;
@@ -53,6 +60,7 @@ int canSeeCharacter(struct Character* as, struct Character* chr)
 
 struct ObservingInformation Observe(struct Character* as, struct World* world)
 {
+	DEBUG_PRINT("Observe","Observe start ->");
 	struct ObservingInformation obsrv;
 	obsrv.selfid = as->b.ID;
 	obsrv.characterStats = as->stats;
@@ -73,19 +81,25 @@ struct ObservingInformation Observe(struct Character* as, struct World* world)
 
 	obsrv.characterCount = 0;
 
+	DEBUG_PRINT("Observe","Character infos allocation ->");
 	obsrv.charInfos = malloc(sizeof(struct CharacterInformation)*world->characterCount); // max possible character count
 
 
 	// checking all the characters if they could be seen
 
+	DEBUG_PRINT("Observe","Iterating all characters ->");
 	ITERATE_ALL_CHARACTERS_IN_WORLD((*world), charlistelm, dimension) {
+		DEBUG_PRINT("Observe","Iteration ->");
 		struct Character* chr = ((struct CharacterListElement*)charlistelm)->character;
 
+		DEBUG_PRINT("Observe","Can see? ->");
 		if(canSeeCharacter(as, chr)) {
+			DEBUG_PRINT("Observe","Can see! ->");			
 			obsrv.charInfos[obsrv.characterCount] = getCharacterInformation(chr);
-
+			DEBUG_PRINT("Observe","Character count += 1 ->");
 			obsrv.characterCount += 1;
 		}
+		DEBUG_PRINT("Observe","Iteration end ->");
 	}
 
 	// entities not detected here, do that

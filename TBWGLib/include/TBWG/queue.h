@@ -55,10 +55,13 @@ struct QueueEntityTurn {
     struct QueueElementHeader header;
 
     struct Entity* entity;
-    void (*executer)(struct World*, struct Entity* entity);
+    void (*whenInvoked)(struct QueueEntityTurn*);
 };
 
+void defaultEntityTurnInvoke(struct QueueEntityTurn*);
+
 struct Queue createQueue();
+void destroyQueue(struct Queue*);
 void queueAddTurn(struct Queue*, struct QueueElementHeader*);
 
 struct QueueElementHeader* queuePop(struct Queue* queue);

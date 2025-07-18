@@ -112,7 +112,7 @@ struct List subtractList(struct List a, struct List b) // result = a - b // nega
 		}
 		struct PtrElementHeader hd = {.ptr = a_elm->ptr};
 		addElement(&result, (void*)&hd, sizeof(hd));
-		conloop:
+conloop: continue;
 	}
 
 	return result;

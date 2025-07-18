@@ -21,7 +21,7 @@ struct TestingHitEffect {
 	int dodgeCount;
 };
 
-void testingHitEffectExecuter(void* effectptr, struct World*, struct Character* entity, void* relativeInformation)
+void testingHitEffectExecuter(void* effectptr, struct World* w, struct Character* entity, void* relativeInformation)
 {
 	struct TestingHitEffect* f = (struct TestingHitEffect*)effectptr;
 
@@ -60,5 +60,9 @@ struct Effect* getTestingHitEffect(void* effector)
 
 	f->effect.executer = testingHitEffectExecuter;
 	f->dodgeCount = 0;
+
+	for (unsigned int i = 0 ; i < 8 ; i += 1) {
+		f->effect.details[i] = 0;
+	}
 	return (struct Effect*)f;
 }
