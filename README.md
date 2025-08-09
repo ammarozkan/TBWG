@@ -1,6 +1,6 @@
 # TBWG
 
-wanna break from the ads? skip to the [I JUST WANT TO PLAY](google.com) segment.
+wanna break from the ads? skip to the [I JUST WANT TO PLAY](README.md#i-just-want-to-play) segment.
 
 TBWG is a Turn Based War Game. I want to give players almostly full freedom to do what they want.
 Game can be modified easily.
