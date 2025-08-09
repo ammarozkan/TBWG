@@ -5,12 +5,17 @@ wanna break from the ads? skip to the I JUST WANT TO PLAY segment.
 TBWG is a Turn Based War Game. I want to give players almostly full freedom to do what they want.
 Game can be modified easily.
 
+#### Quick Notes
+
+- Entities are not fully implemented, yet.
+
 ## Logic
 
 So theres characters. Characters have a base turn. When a special type of turn hits from the queue,
-named "Reorder Turn", every character's base turn is added to the game. So they can make some actions.
-Base turns could contain more than one turn, special type of turns, or even autoturns (idk). For example
-items or objects in the game are doing autoturns. Flying for example. Throwing something.
+named "Reorder Turn" or theres not turn to be execute, every character's base turn is added to the game. 
+So they can make some actions. Base turns could contain more than one turn, special type of turns, or 
+even autoturns (idk). For example items or objects in the game are doing autoturns. Flying for example. 
+Throwing something.
 
 Every character turn has an "eventer use" amount. Thats kind of a speed value. In a turn, a character
 can do a "classic" move. 1 classic move equals to 1 arm movement, 1 hand movement, 1 movement movement
@@ -71,19 +76,20 @@ it will cost approximately 285 KB of storage.
 
 
 
-# HOW AM I GONNA PLAY IT
+# I JUST WANT TO PLAY
 
-just modify the tbwgclientpython how you like it then while in the directory run
+just add the files that are outputten from a TBWGDF_Compiler for the client
+to the pythontbwgclient then run
 
 ```bash
-python .
+python . {serveraddresshere}
 ```
 
 and client will be opened and will try to join the server
 
 # How to serve a server
 
-tbwgnet for server is only supported by linux. on a linux device, you can natively run a server.
+tbwgnet for server is supported by windows and linux. on a compatible device, you can natively run a server.
 
 ## SERVER DEMO
 
@@ -95,18 +101,11 @@ after, on the main directory
 make serverdemo
 ```
 
-then you should have a server on the /outs directory
+then you should have a server on the /outs directory.
+
+I haven't written a method for quickly compiling it on windows.
 
 ## TheGreatFighters
 
-TheGreatFighters is a complete server program/game to easily add characters, objects and effects
-to "the game". So its basically a game made with TBWG.
-
-### How to compile TheGreatFighters
-
-AFTER compiling the TBWGlib go to the /TheGreatFighters directory
-and run 
-
-```bash
-make tgf
-```
+TheGreatFighters is a complete server program/game to test the strength of TBWG. It is on a different GitHub
+page.
