@@ -57,6 +57,8 @@ struct Eventer {
 	digits32 eventer_type, required_informations;
 	struct EventerUses costs;
 
+	uint32_t combo; // inits in zero increases by usage, breaks to zero when not used. combo is the xth usage.
+
 	tbwgtypeSetEventerReady setReady;
 
 	int (*canExecutedNow)(void* eventer, struct World*, struct Character*, 

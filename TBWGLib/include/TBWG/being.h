@@ -21,6 +21,8 @@ struct Being {
 	fVector direction;
 	struct Dimension* dimension;
 
+	struct Tool tool;
+
 	struct Eye baseEye;
 	struct Eye eye;
 

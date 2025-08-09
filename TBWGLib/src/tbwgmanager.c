@@ -72,6 +72,22 @@ struct Dimension* tbwgGetFirstDimension()
 	return ((struct DimensionListElement*)(data->world.dimensionList.firstelement))->dimension;
 }
 
+void tbwgRefreshEffects(unsigned int effectType, void* relativeInformation)
+{
+	ITERATE_ALL_CHARACTERS_IN_WORLD((data->world), charlistelm, dimension) {
+		struct Character* chr = ((struct CharacterListElement*)charlistelm)->character;
+		DEBUG_PRINT("tbwgRefreshEffects","Refreshing effect.");
+		chRefreshEffect(chr, &(data->world), effectType, relativeInformation);
+	}
+}
+
+void tbwgRefreshAllEffects(void* relativeInformation)
+{
+	for(unsigned int i = 0 ; i < EFFECT_TRIGGER_TYPE_COUNT ; i += 1) {
+		tbwgRefreshEffects(i, relativeInformation);
+	}
+}
+
 void tbwgTriggerEffects(unsigned int effectType, void* relativeInformation)
 {
 	ITERATE_ALL_CHARACTERS_IN_WORLD((data->world), charlistelm, dimension) {
@@ -212,13 +228,16 @@ void tbwgCharacterTurn(struct QueueCharacterTurn* turn)
 		character->se.value -= eventer->baseSpellEnergy;
 
 		eventer->isChoosed += 1;
+		eventer->combo += 1;
 		eventer->executer((void*)eventer, &(data->world), turn->character, choose.requiredInformations, NULL);
 	}
 
 	
 	for(unsigned int i = 0 ; i < character->eventerCount ; i += 1) {
-		if(character->eventers[i]->isChoosed == 0) 
+		if(character->eventers[i]->isChoosed == 0) {
 			character->eventers[i]->notChoosed((void*)(character->eventers[i]), tbwgGetWorld(), character);
+			character->eventers[i]->combo = 0;
+		}
 	}
 }
 
@@ -237,6 +256,9 @@ void tbwgTurn()
 		queueAddTurn(&(data->queue), (struct QueueElementHeader*)&turn);
 		return;
 	}
+
+	DEBUG_PRINT("tbwgTurn","refreshing all effects.");
+	tbwgRefreshAllEffects(NULL);
 
 	DEBUG_PRINT("tbwgTurn","retrieving queue element.");
 	struct QueueElementHeader* queueElement = queuePop(&(data->queue));

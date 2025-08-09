@@ -13,7 +13,7 @@ ar rcs libs/libtbwgessentials.a essentialslibo.o esslistslibo.o essmathslibo.o
 del *.o
 
 
-gcc src/* -I include -c
+gcc src/* src/system/* -I include -c
 move *.o objs/
 ar rcs libtbwg.a objs/*.o
 move *.a libs/

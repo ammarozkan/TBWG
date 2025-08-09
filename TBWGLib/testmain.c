@@ -6,6 +6,7 @@
 #include <TBWG/tbwgmanager.h>
 #include <TBWG/characters.h>
 #include <TBWG/maths.h>
+#include <TBWG/system/comboFunctions.h>
 
 struct CustomListElement {
 	struct ListElementHeader header;
@@ -30,8 +31,53 @@ void getTest(iVector tp)
 	printf("[RIGHT] "); getSpecTest(tp, getfVector(1.0f,0.0f) );
 }
 
+int example1(void*ptr,struct ComboPositionlessInstructors* instructors, int a)
+{
+	return -1;
+}
+
+int example2(void*ptr,struct ComboPositionlessInstructors* instructors, int a)
+{
+	int* overload = (int*)ptr;
+	if(*overload == 1) {
+		instructors->importanceLevel = 2;
+	}
+	return 1000;
+}
+
 int main(int argc, char*argv[])
 {
+	printf("Testing combo functions.\n");
+	struct ComboFunction cf_i = tbwgGetComboFunction((ComboFunctionExecuterSkeleton)tbwgComboFunctionExecuter_i);
+
+	int resCFI = ((tbwgComboFunctionExecuter_iType)(cf_i.executer))(&cf_i, 5);
+	if (resCFI != 5) return -90;
+	printf("result of cf_i is %i\n",resCFI);
+
+	int overload = 0;
+	printf("adding a function to combo function.\n");
+	id_number idOfNewlyAddedOne = tbwgComboFunctionAddSoloFunction(&cf_i, (SoloFunctionSkeleton)example1, NULL);
+	id_number idOfNewlyAddedOne2 = tbwgComboFunctionAddSoloFunction(&cf_i, (SoloFunctionSkeleton)example2, &overload);
+	printf("added function:%u %u\n",idOfNewlyAddedOne, idOfNewlyAddedOne2);
+
+	printf("Executing.\n");
+	resCFI = ((tbwgComboFunctionExecuter_iType)(cf_i.executer))(&cf_i, 5);
+	printf("result of cf_i is %i\n",resCFI);
+	if (resCFI != -1) return -91;
+	printf("OVERLOADING!\n");
+	overload = 1;
+	resCFI = ((tbwgComboFunctionExecuter_iType)(cf_i.executer))(&cf_i, 5);
+	printf("result of cf_i is %i\n",resCFI);
+	if (resCFI != 1000) return -92;
+
+	printf("removing the solo2 (%u)\n",idOfNewlyAddedOne2);
+	tbwgComboFunctionRemoveSoloFunction(&cf_i, idOfNewlyAddedOne2);
+	printf("removed! now trying it out.\n");
+	resCFI = ((tbwgComboFunctionExecuter_iType)(cf_i.executer))(&cf_i, 5);
+	printf("result of cf_i is %i\n",resCFI);
+	if (resCFI != -1) return -92;
+	printf("OK!\n");
+
 	printf("Testing look dir math 3.14f look angle.\n\n");
 	getTest(getiVector(10,0));
 	getTest(getiVector(28,2));
@@ -93,6 +139,12 @@ int main(int argc, char*argv[])
 
 		printf("\n");
 	}
+
+	printf("Regening health for character1!\n");
+	character1->hp.value = 5;
+	printf("Health now:%i\n",character1->hp.value);
+	chHealthRegener(character1, 20);
+	printf("Health now:%i\n",character1->hp.value);
 
 	for(unsigned int i = 0 ; i < 10 ; i += 1) {
 		printf("tbwgTurn test!\n");

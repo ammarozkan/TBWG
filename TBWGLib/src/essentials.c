@@ -30,6 +30,11 @@ void getName(Name memPlace, char* n)
 	tbwgmemcpy(memPlace, n, tbwgstrlen(n/*+1*/)+1);
 }
 
+iValue getiValue(int value, int max)
+{
+	iValue res = {.value = value, .max = max};
+}
+
 int addToiValue(iValue* v, int val)
 {
 	v->value += val;

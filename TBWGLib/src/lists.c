@@ -47,6 +47,22 @@ void addElement(struct List* list, void* elm, size_t size)
 	list->count += 1;
 }
 
+void prependElement(struct List* list, void* elm, size_t size)
+{
+	struct ListElementHeader* element = malloc(size);
+	tbwgmemcpy(element, elm, size);
+
+
+	if (list->lastelement == NULL) list->lastelement = element;
+	
+	if(list->firstelement != NULL) list->firstelement->prior = element;
+
+	element->prior = NULL;
+	element->next = list->firstelement;
+	list->firstelement = element;
+	list->count += 1;
+}
+
 
 void* popElement(struct List* list, void* elm)
 {
@@ -117,3 +133,4 @@ conloop: continue;
 
 	return result;
 }
+

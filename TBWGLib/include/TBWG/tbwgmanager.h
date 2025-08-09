@@ -19,6 +19,7 @@ void tbwgInterruptTurn(); // will be used when a stopper trap invoked
 void tbwgMakeObserveAllCharacters();
 void tbwgStreamWorldEvent(struct Dimension* dim, struct WorldEvent event);
 
+void tbwgRefreshEffects(unsigned int effectType, void* relativeInformation);
 void tbwgTriggerEffects(unsigned int effectType, void* relativeInformation);
 void tbwgAreaWhileInsides();
 

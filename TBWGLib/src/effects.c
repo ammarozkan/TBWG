@@ -59,6 +59,7 @@ struct Effect* getTestingHitEffect(void* effector)
 	f->effect.givenStats = s;
 
 	f->effect.executer = testingHitEffectExecuter;
+	f->effect.onremove = defaultEffectExecuter;
 	f->dodgeCount = 0;
 
 	for (unsigned int i = 0 ; i < 8 ; i += 1) {

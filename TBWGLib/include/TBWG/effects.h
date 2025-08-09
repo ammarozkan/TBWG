@@ -42,6 +42,7 @@ struct Effect {
 	struct Stats givenStats;
 
 	void (*executer)(void* effectptr, struct World*, struct Character* entity, void* relativeInformation);
+	void (*onremove)(void* effectptr, struct World*, struct Character* entity, void* relativeInformation);
 
 	int details[8];
 };

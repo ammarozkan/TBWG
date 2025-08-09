@@ -11,6 +11,7 @@
 #include <TBWG/eventer.h>
 #include <TBWG/effects.h>
 #include <TBWG/being.h>
+#include <TBWG/system/comboFunctions.h>
 
 
 struct Physiology {
@@ -40,7 +41,7 @@ struct Character {
 	iValue hp, e, se;
 	digits32 state;
 
-	struct List seeingResources; // in example gaara's eye, rinnegan bodies.
+	struct List seeingResources; // other outsider eyes.
 
 	size_t passivePowerCount;
 	struct PassivePower* passivePowers;
@@ -49,34 +50,49 @@ struct Character {
 	size_t eventerCount;
 	struct Eventer* *eventers;
 
-	HitterFunction headHit, bodyHit, armHit, legHit;
-
-	EnergyRegener energyRegener;
-	HealthRegener healthRegener;
+	struct ComboFunction headHit, bodyHit, armHit, legHit;
+	//struct ComboFunction headAttack, bodyAttack, armAttack, legAttack;
 
 	struct ControllerInterface* controllerInterface;
 
-	SeeCharacter seeCharacter;
-	SeeWorldEvent seeWorldEvent;
+	struct ComboFunction energyRegener;
+	struct ComboFunction healthRegener;
+	struct ComboFunction seeCharacter;
+	struct ComboFunction seeWorldEvent;
 };
 
-int characterDefaultHit(void* hitting, struct Character* hitter, struct AttackInfo atk);
-int characterDefaultEnergyRegener(struct Character* c, int amount);
-int characterDefaultHealthRegener(struct Character* c, int amount);
 
 struct Character* createDefaultCharacter(struct Dimension* dimension, iVector position);
-void destroyCharacter(struct Character*);
-
-
-int defaultSeeCharacter(struct Character* observer, struct Character* target);
-int defaultSeeWorldEvent(struct Character* observer, struct WorldEvent* target);
-
+void chDestroy(struct Character*);
 void chChangeControllerInterface(struct Character*, struct ControllerInterface* newInterface);
-
 void chAddEffect(struct Effect* effect, unsigned int effectTriggerType, struct Character*);
 void chTriggerEffect(struct Character* ch, struct World* world, unsigned int effectTriggerType, void* relativeInformation);
+void chRefreshEffect(struct Character* chr, struct World* world, unsigned int effectTriggerType, void* relativeInformation);
 void chUpdateStats(struct Character* ch);
 
 TBWGType* tbwgFindBeingByPosition(struct Dimension* dim, int x, int y);
+
+
+// default solo functions
+
+int characterDefaultEnergyRegener(void*ptr, struct ComboPositionlessInstructors*, struct Character* c, int amount);
+int characterDefaultHealthRegener(void*ptr, struct ComboPositionlessInstructors*, struct Character* c, int amount);
+struct Character* characterDefaultSeeCharacter(void*ptr, struct ComboPositionlessInstructors*, struct Character* observer, struct Character* target);
+struct WorldEvent* characterDefaultSeeWorldEvent(void*ptr, struct ComboPositionlessInstructors*, struct Character* observer, struct WorldEvent* target);
+struct AttackInfo characterDefaultHit(void*ptr, struct ComboPositionlessInstructors* instr, struct Character* harmed, void* hitter, struct AttackInfo atk);
+
+
+
+// outside executers
+
+int chEnergyRegener(struct Character*, int amount);
+int chHealthRegener(struct Character*, int amount);
+int chSeeCharacter(struct Character* observer, struct Character* target);
+int chSeeWorldEvent(struct Character* observer, struct WorldEvent* worldEvent);
+struct AttackInfo chHit(struct Character* harmed, void* hitter, struct AttackInfo attack);
+struct AttackInfo chHitBody(struct Character* harmed, void* hitter, struct AttackInfo attack);
+struct AttackInfo chHitHead(struct Character* harmed, void* hitter, struct AttackInfo attack);
+struct AttackInfo chHitArm(struct Character* harmed, void* hitter, struct AttackInfo attack);
+struct AttackInfo chHitLeg(struct Character* harmed, void* hitter, struct AttackInfo attack);
 
 #endif /*TBWG_CHARACTERS_H*/

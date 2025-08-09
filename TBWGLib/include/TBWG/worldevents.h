@@ -11,8 +11,8 @@
 struct WorldEvent {
 	id_number relative;
 	char* name;
-	float detailLevel;
-	float disappearingSpeed;
+	float detailLevel; // higher, detailer. observer's level should be okay to see this
+	float disappearingSpeed; // in seconds, how many seconds the event visible?
 	uint32_t eventStreamingType; // how can I see the event?
 	iVector position;
 };

@@ -8,32 +8,12 @@ struct Stats defaultStats = {0, 0, 0, 0, 0, 1, 0};
 
 //typedef int (*HitterFunction)(void* hitting, struct Character* hitter, struct AttackInfo);
 
-int characterDefaultHit(void* hitting, struct Character* hitter, struct AttackInfo atk)
-{
-	if (*(TBWGType*)hitting != TBWG_TYPE_CHARACTER) return 0;
-
-	struct Character* hittingCharacter = hitting;
-
-	chTriggerEffect(hittingCharacter, tbwgGetWorld(), EFFECT_TRIGGER_TYPE_HIT, &atk);
-
-	int hitterDEX = hitter->stats.DEX + atk.additiveStats.DEX;
-
-	int seecontrol = canSeeCharacter(hitting, hitter) || tbwgGetRandomed_2(60, 10);
-
-	if((tbwgRandomPercentageIncrease(hitterDEX, 0, 60) > hittingCharacter->stats.DEX) || (atk.specs & ATTACK_NONDODGEABLE) || !seecontrol) {
-		hittingCharacter->hp.value -= atk.damage;
-		return 1;
-	}
-
-	return 0;
-}
-
-int characterDefaultEnergyRegener(struct Character* c, int amount)
+int characterDefaultEnergyRegener(void*ptr, struct ComboPositionlessInstructors* instr, struct Character* c, int amount)
 {
 	return addToiValue(&(c->e), amount);
 }
 
-int characterDefaultHealthRegener(struct Character* c, int amount)
+int characterDefaultHealthRegener(void*ptr, struct ComboPositionlessInstructors* instr, struct Character* c, int amount)
 {
 	return addToiValue(&(c->hp), amount);
 }
@@ -64,13 +44,9 @@ struct Character* createDefaultCharacter(struct Dimension* dimension, iVector po
 	character->b.eye = eye;
 	character->seeingResources = createList();
 
-	iValue hp = {10,10};
-	iValue e = {5,5};
-	iValue se = {0,0};
-
-	character->hp = hp;
-	character->e = e;
-	character->se = se;
+	character->hp = getiValue(10,10);
+	character->e = getiValue(5,5);
+	character->se = getiValue(0,0);
 
 	character->state = 0;
 
@@ -94,15 +70,19 @@ struct Character* createDefaultCharacter(struct Dimension* dimension, iVector po
 	defaultCharTurn->character = character;
 	queueAddTurn(&(character->b.baseQueue), (struct QueueElementHeader*)defaultCharTurn);
 
-	character->headHit = character->bodyHit = character->armHit = character->legHit = characterDefaultHit;
-	character->energyRegener = characterDefaultEnergyRegener;
-	character->healthRegener = characterDefaultHealthRegener;
+	character->headHit = tbwgGetComboFunction2((ComboExec)tbwgComboFunctionExecuter_ppA, (ComboSolo)characterDefaultHit, NULL);
+	character->bodyHit = tbwgGetComboFunction2((ComboExec)tbwgComboFunctionExecuter_ppA, (ComboSolo)characterDefaultHit, NULL);
+	character->armHit = tbwgGetComboFunction2((ComboExec)tbwgComboFunctionExecuter_ppA, (ComboSolo)characterDefaultHit, NULL);
+	character->legHit = tbwgGetComboFunction2((ComboExec)tbwgComboFunctionExecuter_ppA, (ComboSolo)characterDefaultHit, NULL);
 
 	character->controllerInterface = getDefaultControllerInterface();
 
-	character->seeCharacter = defaultSeeCharacter;
+	character->energyRegener = tbwgGetComboFunction2((ComboExec)tbwgComboFunctionExecuter_pi, (ComboSolo)characterDefaultEnergyRegener, NULL);
+	character->healthRegener = tbwgGetComboFunction2((ComboExec)tbwgComboFunctionExecuter_pi, (ComboSolo)characterDefaultHealthRegener, NULL);
+	character->seeCharacter = tbwgGetComboFunction2((ComboExec)tbwgComboFunctionExecuter_pp, (ComboSolo)characterDefaultSeeCharacter, NULL);
+	character->seeWorldEvent = tbwgGetComboFunction2((ComboExec)tbwgComboFunctionExecuter_pp, (ComboSolo)characterDefaultSeeWorldEvent, NULL);
+
 	character->b.canSeen = defaultCanSeen;
-	character->seeWorldEvent = defaultSeeWorldEvent;
 
 	return character;
 }
@@ -110,27 +90,61 @@ struct Character* createDefaultCharacter(struct Dimension* dimension, iVector po
 float getVisionHardnessFinal(float visionHardness, float distance);
 
 
-int defaultSeeCharacter(struct Character* observer, struct Character* target)
+struct Character* characterDefaultSeeCharacter(void*ptr, struct ComboPositionlessInstructors* instr, struct Character* observer, struct Character* /*STREAM*/ target)
 {
-	return target->b.canSeen((struct Being*)observer, (struct Being*)target);
+	if(target != NULL && target->b.canSeen((struct Being*)observer, (struct Being*)target)) return target;
+	return NULL;
 }
 
-int defaultSeeWorldEvent(struct Character* observer, struct WorldEvent* target)
+struct WorldEvent* characterDefaultSeeWorldEvent(void*ptr, struct ComboPositionlessInstructors* instr, struct Character* observer, struct WorldEvent* target)
 {
+	int success = 0;
 	if (target->eventStreamingType == WORLDEVENT_VISION) {
 		int visionHardnessCheck = observer->b.eye.level >= getVisionHardnessFinal(target->detailLevel, getiVectorDistance(observer->b.position, target->position));
 		int speedCheck = observer->b.eye.speed <= target->disappearingSpeed;
-		return visionHardnessCheck && speedCheck;
+		success = visionHardnessCheck && speedCheck;
 	} else if(target->eventStreamingType == WORLDEVENT_SOUND) {
 		int hearingCheck = observer->b.eye.hearingLevel >= target->detailLevel;
 		int speedCheck = observer->b.eye.hearingSpeed <= target->disappearingSpeed;
-		return hearingCheck && speedCheck;
+		success = hearingCheck && speedCheck;
 	}
-	
-	return 0;
+
+	if (success) return target;
+	else return NULL;
 }
 
-void destroyCharacter(struct Character* chr)
+struct AttackInfo characterDefaultHit(void*ptr, struct ComboPositionlessInstructors* instr, struct Character* harmed, void* hitter, struct AttackInfo atk)
+{
+	struct Character* hitterCharacter = hitter;
+
+	chTriggerEffect(harmed, tbwgGetWorld(), EFFECT_TRIGGER_TYPE_HIT, &atk);
+	
+	if (hitterCharacter == NULL) {
+		if((atk.additiveStats.DEX > harmed->stats.DEX) || (atk.specs & ATTACK_NONDODGEABLE) || (atk.damageType == DAMAGE_BLEEDING)) {
+			goto gohit;
+		}
+	}
+
+	int hitterDEX = hitterCharacter->stats.DEX + atk.additiveStats.DEX;
+
+	if (atk.damageType == DAMAGE_TOUCH_SPECIFIC) hitterDEX -= 1;
+
+	int seecontrol = canSeeCharacter(harmed, hitterCharacter) || tbwgGetRandomed_2(60, 10);
+
+	if((tbwgRandomPercentageIncrease(hitterDEX, 0, 60) > harmed->stats.DEX) || (atk.specs & ATTACK_NONDODGEABLE) || !seecontrol || atk.damageType == DAMAGE_BLEEDING) {
+		goto gohit;
+	}
+
+gohit:
+	harmed->hp.value -= atk.damage;
+	atk.damage = 0;
+	atk.specs = atk.specs | ATTACK_HITTED;
+	return atk;
+gohitcancel:
+	return atk;
+}
+
+void chDestroy(struct Character* chr)
 {
 }
 
@@ -138,6 +152,22 @@ void chAddEffect(struct Effect* effect, unsigned int effectTriggerType, struct C
 {
 	struct EffectListElement elm; elm.effect = effect;
 	addElement(&(c->b.effects[effectTriggerType]), &elm, sizeof(elm));
+}
+
+void chRefreshEffect(struct Character* chr, struct World* world, unsigned int effectTriggerType, void* relativeInformation)
+{
+	ITERATE_FAKE(chr->b.effects[effectTriggerType], effectElm_pure) {
+		struct Effect* effect = ((struct EffectListElement*)effectElm_pure)->effect;
+
+		if (effect->willberemoved == 1) {
+			effect->onremove((void*)effect, world, chr, relativeInformation);
+			ITERATION_DESTROY(chr->b.effects[effectTriggerType], effectElm_pure);
+			DEBUG_PRINT("chRefreshEffect","ITERATION_DESTROY call.");
+			continue;
+		}
+
+		effectElm_pure = effectElm_pure->next;
+	}
 }
 
 void chTriggerEffect(struct Character* chr, struct World* world, unsigned int effectTriggerType, void* relativeInformation)
@@ -159,6 +189,7 @@ void chTriggerEffect(struct Character* chr, struct World* world, unsigned int ef
 		}
 
 		if (effect->willberemoved == 1) {
+			effect->onremove((void*)effect, world, chr, relativeInformation);
 			theGreaterBull = popElement(&(chr->b.effects[effectTriggerType]), effectElm_pure);
 		}
 	}
@@ -179,4 +210,61 @@ void chChangeControllerInterface(struct Character* chr, struct ControllerInterfa
 {
 	free(chr->controllerInterface);
 	chr->controllerInterface = newInterface;
+}
+
+
+// classic executors
+
+int chEnergyRegener(struct Character* c, int amount)
+{
+	struct ComboFunction cf_i = c->energyRegener;
+	return tbwgComboFunctionExecuter_pi(&cf_i, c, amount);
+}
+
+int chHealthRegener(struct Character* c, int amount)
+{
+	struct ComboFunction cf_i = c->healthRegener;
+	return tbwgComboFunctionExecuter_pi(&cf_i, c, amount);
+}
+
+int chSeeCharacter(struct Character* c, struct Character* target)
+{
+	struct ComboFunction cf_i = c->seeCharacter;
+	return tbwgComboFunctionExecuter_pp(&cf_i, (void*)c, (void*)target) != NULL;
+}
+
+int chSeeWorldEvent(struct Character* c, struct WorldEvent* worldEvent)
+{
+	struct ComboFunction cf_i = c->seeWorldEvent;
+	return tbwgComboFunctionExecuter_pp(&cf_i, (void*)c, (void*)worldEvent) != NULL;
+}
+
+struct AttackInfo chHit(struct Character* harmed, void* hitter, struct AttackInfo attack)
+{
+	struct ComboFunction cf_i = harmed->bodyHit;
+	return tbwgComboFunctionExecuter_ppA(&cf_i, harmed, hitter, attack);
+}
+
+struct AttackInfo chHitBody(struct Character* harmed, void* hitter, struct AttackInfo attack)
+{
+	struct ComboFunction cf_i = harmed->bodyHit;
+	return tbwgComboFunctionExecuter_ppA(&cf_i, harmed, hitter, attack);
+}
+
+struct AttackInfo chHitHead(struct Character* harmed, void* hitter, struct AttackInfo attack)
+{
+	struct ComboFunction cf_i = harmed->headHit;
+	return tbwgComboFunctionExecuter_ppA(&cf_i, harmed, hitter, attack);
+}
+
+struct AttackInfo chHitArm(struct Character* harmed, void* hitter, struct AttackInfo attack)
+{
+	struct ComboFunction cf_i = harmed->armHit;
+	return tbwgComboFunctionExecuter_ppA(&cf_i, harmed, hitter, attack);
+}
+
+struct AttackInfo chHitLeg(struct Character* harmed, void* hitter, struct AttackInfo attack)
+{
+	struct ComboFunction cf_i = harmed->legHit;
+	return tbwgComboFunctionExecuter_ppA(&cf_i, harmed, hitter, attack);
 }

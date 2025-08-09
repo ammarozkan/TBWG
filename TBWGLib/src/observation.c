@@ -26,7 +26,7 @@ int canSeeCharacter(struct Character* as, struct Character* chr)
 	seeingResult = seeingResult || isInVisionArea(as->b.direction, as->b.eye.angle, as->b.position, chr->b.position);
 
 	// okay lets look at the ability check
-	int seeingCheck = as->seeCharacter(as, chr) && chr->b.canSeen((struct Being*)as, (struct Being*)chr);
+	int seeingCheck = chSeeCharacter(as, chr) && chr->b.canSeen((struct Being*)as, (struct Being*)chr);
 
 	seeingResult = seeingResult && seeingCheck;
 
@@ -45,7 +45,7 @@ int canSeeCharacter(struct Character* as, struct Character* chr)
 
 			if(!isInVisionArea(sr->b.direction, sr->b.eye.angle, sr->b.position, chr->b.position)) continue;
 
-			seeingResult = seeingResult || (sr->seeCharacter(sr, chr) && chr->b.canSeen((struct Being*)sr, (struct Being*)chr));
+			seeingResult = seeingResult || (chSeeCharacter(sr, chr) && chr->b.canSeen((struct Being*)sr, (struct Being*)chr));
 		} else if (*resourceType == TBWG_TYPE_ENTITY) {
 			struct Entity* sr = (struct Entity*)resourceType;
 
@@ -119,7 +119,7 @@ struct WorldEventInformation ObserveWorldEventInformation(struct Character* as, 
 	int canbedetected = (vision && evnt->eventStreamingType & WORLDEVENT_VISION) || (evnt->eventStreamingType & WORLDEVENT_SOUND);
 	
 	if(!canbedetected) return info;
-	if(!as->seeWorldEvent(as, evnt)) return info;
+	if(!chSeeWorldEvent(as, evnt)) return info;
 	info.eventName = evnt->name;
 	return info;
 }

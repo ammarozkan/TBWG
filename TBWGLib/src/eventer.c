@@ -158,6 +158,8 @@ getDefaultEventer()
 	evn->baseEnergy = 0;
 	evn->baseSpellEnergy = 0;
 
+	evn->combo = 0;
+
 	evn->eventer_type = EVENTER_TYPE_CLASSIC;
 	evn->required_informations = EVENTER_REQUIRED_INFORMATION_POSITION;
 	struct EventerUses costs = {0,0,0,0,0};
