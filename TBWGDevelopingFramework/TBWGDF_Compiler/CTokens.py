@@ -110,6 +110,15 @@ class Retriever:
                 self.tokens.remove(self.tokens[i])
                 i -= 1
             i += 1
+    
+    def getNears(self):
+        start = max(0, self._from-6)
+        end = min(len(self.tokens)-1, self._from+6)
+
+        res = ""
+        for token in self.tokens[start:end]:
+            res += token.text
+        return res
         
 
     def correct(self, _index):
@@ -197,7 +206,7 @@ class Retriever:
             i += 1
         return result
 
-    def VomitAsText(self):
+    def VomitAsText(self,aftercommaseperator=True):
         text = ""
         lastCode = NOTHING
         for token in self.tokens:
@@ -205,6 +214,7 @@ class Retriever:
             elif token.type in textCodes and lastCode in textCodes: text += " "+token.text
             elif token.type == NUMBERS and lastCode in textCodes: text += " "+token.text
             elif token.type == TEXTTOKEN: text += f'"{token.text}"'
+            elif token.text == ';' and aftercommaseperator: text += f'{token.text}\n'
             else: text += token.text
             lastCode = token.type
         return text
@@ -246,31 +256,10 @@ def AsTokens(retriever : CharacterRetriever, optionalTextOpeners = []):
     textin = False
     textin_key = None
     textin_optionalopener = None
-    while (c := retriever.get()):
-        if textin:
-            if getCharType(c) == TEXTTOKEN and textin_optionalopener == None and c == textin_key:
-                textin = False
-                result.append(Token(memory, TEXTTOKEN))
-                memory = ""
-                lasttype = None
-            elif getCharType(c) == TEXTTOKEN and textin_optionalopener != None and getCharType(c) == textin_optionalopener + 1:
-                textin = False
-                result.append(Token(memory, TEXTTOKEN))
-                memory = ""
-                lasttype = None
-            else:
-                if c not in '\n':
-                    memory += c
-        elif getCharType(c, memory) in multiCharSymbols:
-            lasttype = getCharType(c, memory)
-            memory += c
-        elif isSymbol(lasttype):
-            result.append(Token(memory, lasttype))
-            lasttype = getCharType(c)
-            if lasttype != EMPTY:
-                memory = c
-            else: lasttype = None
-        elif c in emptyKeys:
+
+    def AfterBigIndex(c):
+        nonlocal textin, textin_key, textin_optionalopener, lasttype, memory
+        if c in emptyKeys:
             if lasttype != None:
                 if lasttype == GREATTEXT:
                     if isTypeName(memory):
@@ -278,7 +267,7 @@ def AsTokens(retriever : CharacterRetriever, optionalTextOpeners = []):
                 result.append(Token(memory, lasttype))
                 memory = ""
                 lasttype = None
-            continue
+            return True
 
         
         elif getCharType(c) == TEXTTOKEN or getCharType(c) in optionalTextOpeners:
@@ -308,6 +297,39 @@ def AsTokens(retriever : CharacterRetriever, optionalTextOpeners = []):
         else:
             lasttype = getCharType(c)
             memory += c
+        
+        return False
+    
+
+    while (c := retriever.get()):
+        
+        if textin:
+            if getCharType(c) == TEXTTOKEN and textin_optionalopener == None and c == textin_key:
+                textin = False
+                result.append(Token(memory, TEXTTOKEN))
+                memory = ""
+                lasttype = None
+            elif getCharType(c) == TEXTTOKEN and textin_optionalopener != None and getCharType(c) == textin_optionalopener + 1:
+                textin = False
+                result.append(Token(memory, TEXTTOKEN))
+                memory = ""
+                lasttype = None
+            else:
+                if c not in '\n':
+                    memory += c
+        elif getCharType(c, memory) in multiCharSymbols:
+            lasttype = getCharType(c, memory)
+            memory += c
+        elif isSymbol(lasttype):
+            result.append(Token(memory, lasttype))
+            lasttype = getCharType(c)
+            memory = ""
+            lasttype = None
+            if AfterBigIndex(c): continue
+        else:
+            if AfterBigIndex(c): continue
+        
+        
         
     if lasttype != None: result.append(Token(memory, lasttype))
     return result

@@ -8,6 +8,7 @@ characters = []
 eventers = []
 entities = []
 globalFunctions = []
+worldEvents = []
 PP = CPreProcessing.PreProcessor()
 
 assetspath = ""
@@ -16,6 +17,7 @@ defaultCharacterIconPath = "default.webp"
 defaultEntityIconPath = "default.webp"
 defaultEventerIconPath = "default.webp"
 defaultEffectIconPath = "default.webp"
+defaultWorldEventSoundPath = "sounds/error.wav"
 
 def getAssetsPath(path):
     if not os.path.isfile(f"{assetspath}/{path}"):
@@ -26,6 +28,9 @@ def getAssetsPath(path):
 def getPythonViewFunctionCall(targetType, code, explanation, iconpath):
     explambdafnc = f"lambda source: f\"{explanation}\""
     return f"viewManager.Push{targetType.capitalize()}View({code},{explambdafnc},\"{getAssetsPath(iconpath)}\")\n"
+def getPythonViewWorldEventCall(targetType, code, explanation, iconpath, soundpath):
+    explambdafnc = f"lambda source: f\"{explanation}\""
+    return f"viewManager.PushWorldEventView(\"{code}\", {explambdafnc}, \"{getAssetsPath(iconpath)}\", \"{getAssetsPath(soundpath)}\")\n"
 
 def findDefByName(name):
     for g in effects+characters+globalFunctions+eventers+entities:
@@ -70,6 +75,10 @@ def ProcessInsideConversion(tokens):
             InsideAtSigns(retriever)
     return retriever.tokens
 
+def ProcessText(text):
+    proccessed = CTokens.Retriever(ProcessInsideConversion(CTokens.QuickTokenize(text)))
+    return proccessed.VomitAsText()
+
 class Function:
     def __init__(self, type, name, parameters, inside, preparameters : dict):
         self.type = type
@@ -88,6 +97,22 @@ class Function:
 class StolenFunction:
     def __init__(self, name):
         self.name = name
+
+class WorldEvent:
+    def __init__(self, code):
+        self.code = code
+        self.changes = {}
+    def getChange(self, change, default):
+        if change in self.changes: return self.changes[change]
+        else: return default
+    def changeInvoke(self, name, value):
+        self.changes[name] = value
+    def getViewerPy(self,lang=""):
+        explanation = self.getChange(f"explanation{lang}", self.getChange("explanation", "No explanation entered."))
+        iconPath = self.getChange(f"icon{lang}", self.getChange(f"icon", defaultEventerIconPath))
+        soundPath = self.getChange(f"sound{lang}", self.getChange(f"sound", defaultWorldEventSoundPath))
+        
+        return getPythonViewWorldEventCall("WorldEvent", self.code, explanation, iconPath, soundPath) 
 
 class Eventer:
     def __init__(self, name : str, inside):
@@ -137,44 +162,46 @@ class Eventer:
     def getSource(self):
 
 
-        result = f"struct Eventer* {self.name}_GetEventer_base()"
-        result += "{"
-        result += f"struct Eventer* eventer = GET_SIZED_STRUCT({self.name});"
-        result += f"eventer->ID = getID();"
-        result += f"eventer->eventerCode = {self.codename};"
-        result += f"eventer->baseEnergy = {self.getChange("baseEnergy", "0")};"
-        result += f"eventer->baseSpellEnergy = {self.getChange("baseSpellEnergy","0")};"
+        result = f"struct Eventer* {self.name}_GetEventer_base()"+"\n"
+        result += "{"+"\n"
+        result += f"struct Eventer* eventer = GET_SIZED_STRUCT({self.name});"+"\n"
+        result += f"eventer->ID = getID();"+"\n"
+        result += f"eventer->eventerCode = {self.codename};"+"\n"
+        result += f"eventer->baseEnergy = {self.getChange("baseEnergy", "0")};"+"\n"
+        result += f"eventer->baseSpellEnergy = {self.getChange("baseSpellEnergy","0")};"+"\n"
 
-        result += f"eventer->eventer_type = {self.getChange("eventerType", "EVENTER_TYPE_CLASSIC")};"
+        result += f"eventer->eventer_type = {self.getChange("eventerType", "EVENTER_TYPE_CLASSIC")};"+"\n"
 
-        result += f"eventer->required_informations = {self.getRequiredInformations()};"
+        result += f"eventer->required_informations = {self.getRequiredInformations()};"+"\n"
 
         values = ""
         for costName in ["classic","armMove", "handMove", "movement", "thought"]:
-            values += self.getChange(costName, "0") + ","
+            values += self.getChange(costName, "0") + ","+"\n"
 
-        result += "struct EventerUses costs = { " + values[:len(values)-1] + " };"
-        result += "eventer->costs = costs;"
+        result += "struct EventerUses costs = { " + values[:len(values)-1] + " };"+"\n"
+        result += "eventer->costs = costs;"+"\n"
 
-        if "SetReady" in self.funcs: result += f"eventer->setReady = {self.funcs["SetReady"].name.text};"
-        else: result += "eventer->setReady = defaultSetEventerReady;"
+        result += "eventer->combo = 0;"+"\n"
 
-        if "Executer" in self.funcs: result += f"eventer->executer = {self.funcs["Executer"].name.text};"
-        else: result += "eventer->executer = defaultEventerExecuter;"
+        if "SetReady" in self.funcs: result += f"eventer->setReady = {self.funcs["SetReady"].name.text};"+"\n"
+        else: result += "eventer->setReady = defaultSetEventerReady;"+"\n"
 
-        if "NotChoosed" in self.funcs: result += f"eventer->notChoosed = {self.funcs["NotChoosed"].name.text};"
-        else: result += "eventer->notChoosed = defaultEventerNotChoosed;"
+        if "Executer" in self.funcs: result += f"eventer->executer = {self.funcs["Executer"].name.text};"+"\n"
+        else: result += "eventer->executer = defaultEventerExecuter;"+"\n"
 
-        if "CanExecutedNow" in self.funcs: result += f"eventer->canExecutedNow = {self.funcs["CanExecutedNow"].name.text};"
-        else: result += "eventer->canExecutedNow = defaultEventerCanExecutedNow;"
+        if "NotChoosed" in self.funcs: result += f"eventer->notChoosed = {self.funcs["NotChoosed"].name.text};"+"\n"
+        else: result += "eventer->notChoosed = defaultEventerNotChoosed;"+"\n"
+
+        if "CanExecutedNow" in self.funcs: result += f"eventer->canExecutedNow = {self.funcs["CanExecutedNow"].name.text};"+"\n"
+        else: result += "eventer->canExecutedNow = defaultEventerCanExecutedNow;"+"\n"
 
         if "Constructor" in self.funcs:
-            result += f"{self.getConstructorName()}((struct {self.name}*)eventer);"
+            result += f"{self.getConstructorName()}((struct {self.name}*)eventer);"+"\n"
         
-        result += "for (unsigned int i = 0 ; i < 8 ; i += 1) eventer->details[i] = 0;"
+        result += "for (unsigned int i = 0 ; i < 8 ; i += 1) eventer->details[i] = 0;"+"\n"
 
-        result += "return eventer;"
-        result += "}"
+        result += "return eventer;"+"\n"
+        result += "}"+"\n"
 
         for s in self.funcs:
             fn = self.funcs[s]
@@ -184,12 +211,12 @@ class Eventer:
     def getHeader(self):
         result = ""
         
-        result += f"struct {self.name}" + "{struct Eventer eventer;" +  f"{self.inside}" + "};"
-        result += f"struct Eventer* {self.name}_GetEventer_base();"
+        result += f"struct {self.name}" + "{struct Eventer eventer;" +  f"{self.inside}" + "};"+"\n"
+        result += f"struct Eventer* {self.name}_GetEventer_base();"+"\n"
         for s in self.funcs:
             fn = self.funcs[s]
             if type(fn) == StolenFunction: continue
-            result += fn.getHeader()
+            result += fn.getHeader()+"\n"
         
         return result
     
@@ -203,7 +230,6 @@ class Eventer:
         iconPath = self.getChange(f"icon{lang}", self.getChange(f"icon", defaultEventerIconPath))
         
         return getPythonViewFunctionCall("Eventer", self.code, explanation, iconPath)    
-
 
 class Character:
     def __init__(self, name : str, inside):
@@ -279,12 +305,12 @@ class Character:
         return params, ConstructorUse
     
     def getHeader(self):
-        result = ""
-        result += f"struct {self.name}" + "{struct Character character;" + f"{self.inside}" + "};"
+        result = ""+"\n"
+        result += f"struct {self.name}" + "{struct Character character;" + f"{self.inside}" + "};"+"\n"
 
         params, _ = self.getConstructorModifications()
 
-        result += f"struct Character* {self.name}_GetCharacter_base({CTokens.Retriever(params).VomitAsText()});"
+        result += f"struct Character* {self.name}_GetCharacter_base({CTokens.Retriever(params).VomitAsText()});"+"\n"
         for s in self.funcs:
             fn = self.funcs[s]
             if type(fn) == StolenFunction: continue
@@ -297,16 +323,16 @@ class Character:
         result = ""
         result += f"struct Character* {self.name}_GetCharacter_base({CTokens.Retriever(params).VomitAsText()})"
         result += "{"
-        result += "struct Character* character = GET_SIZED_STRUCT(Character);"
-        result += "character->b.tbwgType = TBWG_TYPE_CHARACTER;"
-        result += f"character->b.code = {self.codename};"
-        result += f"character->b.ID = getID();"
-        result += f"character->b.position=position;"
-        result += f"character->b.direction = getfVector(1.0f, 0.0f);"
-        result += f"character->b.dimension = dimension;"
-        result += f"character->b.mass=1.0f;"
-        result += f"character->b.collisionFunction = beingDefaultOneWayCollision;"
-        result += f"character->seeingResources = createList();"
+        result += "struct Character* character = GET_SIZED_STRUCT(Character);"+"\n"
+        result += "character->b.tbwgType = TBWG_TYPE_CHARACTER;"+"\n"
+        result += f"character->b.code = {self.codename};"+"\n"
+        result += f"character->b.ID = getID();"+"\n"
+        result += f"character->b.position=position;"+"\n"
+        result += f"character->b.direction = getfVector(1.0f, 0.0f);"+"\n"
+        result += f"character->b.dimension = dimension;"+"\n"
+        result += f"character->b.mass=1.0f;"+"\n"
+        result += f"character->b.collisionFunction = beingDefaultOneWayCollision;"+"\n"
+        result += f"character->seeingResources = createList();"+"\n"
         statNames = ["STR", "DEX", "CNS", "WIS", "SCS", "SPD","VISRES"]
         values = ""
         for k in ["STR", "DEX", "CNS", "WIS", "SCS", "SPD","VISRES"]:
@@ -314,65 +340,69 @@ class Character:
             else: values += f"10,"
         values = values[:len(values)-1]
 
-        result += "struct Stats s={" + values + "};"
-        result += f"character->baseStats = s;"
-        result += "character->stats = character->baseStats;"
+        result += "struct Stats s={" + values + "};"+"\n"
+        result += f"character->baseStats = s;"+"\n"
+        result += "character->stats = character->baseStats;"+"\n"
 
-        result += "character->b.visionHardness = 0;"
+        result += "character->b.visionHardness = 0;"+"\n"
         values = "";i = 0;defaultEyes = [1.8, 1.0, 0.1, 1.0, 0.1]
         for k in ["eyeAngle","eyeLevel","eyeSpeed","hearingLevel","hearingSpeed"]:
             if k in self.changes: values += f"{CWriter.getAsCFloat(self.changes[k])},"
             else: values += f"{CWriter.getAsCFloat(defaultEyes[i])},"
             i+=1
-        result += "struct Eye eye = { " + values + " };"
-        result += "character->b.baseEye = eye;"
-        result += "character->b.eye = eye;"
+        result += "struct Eye eye = { " + values + " };"+"\n"
+        result += "character->b.baseEye = eye;"+"\n"
+        result += "character->b.eye = eye;"+"\n"
 
-        result += "iValue hp = {" + self.getChange("health","20,20") + "};"
-        result += "iValue e = {" + self.getChange("energy","40,50") + "};"
-        result += "iValue se = {" + self.getChange("spellEnergy","0,0") + "};"
+        result += "iValue hp = {" + self.getChange("health","20,20") + "};"+"\n"
+        result += "iValue e = {" + self.getChange("energy","40,50") + "};"+"\n"
+        result += "iValue se = {" + self.getChange("spellEnergy","0,0") + "};"+"\n"
 
-        result += "character->hp = hp;character->e=e;character->se=se;"
+        result += "character->hp = hp;character->e=e;character->se=se;"+"\n"
 
-        result += "character->state = 0;"
+        result += "character->state = 0;"+"\n"
 
-        result += "character->passivePowerCount = 0;"
-        result += "character->passivePowers = malloc(0);"
+        result += "character->passivePowerCount = 0;"+"\n"
+        result += "character->passivePowers = malloc(0);"+"\n"
 
-        result += "struct EventerUses newUses = {0,0,0,0,0};"
-        result += "character->eventerSpendings = newUses;"
+        result += "struct EventerUses newUses = {0,0,0,0,0};"+"\n"
+        result += "character->eventerSpendings = newUses;"+"\n"
         
         eventerCount = len(self.eventers)
-        result += f"character->eventerCount = {eventerCount};"
-        result += f"character->eventers = malloc({eventerCount}*sizeof(struct Eventer*));"
+        result += f"character->eventerCount = {eventerCount};"+"\n"
+        result += f"character->eventers = malloc({eventerCount}*sizeof(struct Eventer*));"+"\n"
         for i in range(eventerCount):
-            result += f"character->eventers[{i}] = {self.eventers[i].getGetEventerBase()}();"
+            result += f"character->eventers[{i}] = {self.eventers[i].getGetEventerBase()}();"+"\n"
         
-        result += f"for(unsigned int i = 0 ; i < EFFECT_TRIGGER_TYPE_COUNT ; i += 1)"
-        result += "{character->b.effects[i]=createList();}"
+        result += f"for(unsigned int i = 0 ; i < EFFECT_TRIGGER_TYPE_COUNT ; i += 1)"+"\n"
+        result += "{character->b.effects[i]=createList();}"+"\n"
 
-        result += "character->b.baseQueue=createQueue();"
+        result += "character->b.baseQueue=createQueue();"+"\n"
 
         # Queue
 
-        result += "struct QueueCharacterTurn* defaultCharTurn = malloc(sizeof(struct QueueCharacterTurn));"
-        result += "(*defaultCharTurn)=getBasicCharacterTurn();"
-        result += "defaultCharTurn->character = character;"
-        result += "queueAddTurn(&(character->b.baseQueue), (struct QueueElementHeader*)defaultCharTurn);"
+        result += "struct QueueCharacterTurn* defaultCharTurn = malloc(sizeof(struct QueueCharacterTurn));"+"\n"
+        result += "(*defaultCharTurn)=getBasicCharacterTurn();"+"\n"
+        result += "defaultCharTurn->character = character;"+"\n"
+        result += "queueAddTurn(&(character->b.baseQueue), (struct QueueElementHeader*)defaultCharTurn);"+"\n"
 
-        result += "character->headHit = character->bodyHit = character->armHit = character->legHit = characterDefaultHit;"
-        result += "character->energyRegener = characterDefaultEnergyRegener;"
-        result += "character->healthRegener = characterDefaultHealthRegener;"
+        result += "character->headHit = tbwgGetComboFunction2((ComboExec)tbwgComboFunctionExecuter_ppA, (ComboSolo)characterDefaultHit, NULL);"
+        result += "character->bodyHit = tbwgGetComboFunction2((ComboExec)tbwgComboFunctionExecuter_ppA, (ComboSolo)characterDefaultHit, NULL);"
+        result += "character->armHit = tbwgGetComboFunction2((ComboExec)tbwgComboFunctionExecuter_ppA, (ComboSolo)characterDefaultHit, NULL);"
+        result += "character->legHit = tbwgGetComboFunction2((ComboExec)tbwgComboFunctionExecuter_ppA, (ComboSolo)characterDefaultHit, NULL);"
 
-        result += "character->controllerInterface = getDefaultControllerInterface();"
+        result += "character->energyRegener = tbwgGetComboFunction2((ComboExec)tbwgComboFunctionExecuter_pi, (ComboSolo)characterDefaultEnergyRegener, NULL);"+"\n"
+        result += "character->healthRegener = tbwgGetComboFunction2((ComboExec)tbwgComboFunctionExecuter_pi, (ComboSolo)characterDefaultHealthRegener, NULL);"+"\n"
+        result += "character->seeCharacter = tbwgGetComboFunction2((ComboExec)tbwgComboFunctionExecuter_pp, (ComboSolo)characterDefaultSeeCharacter, NULL);"
+        result += "character->seeWorldEvent = tbwgGetComboFunction2((ComboExec)tbwgComboFunctionExecuter_pp, (ComboSolo)characterDefaultSeeWorldEvent, NULL);"+"\n"
 
-        result += "character->seeCharacter = defaultSeeCharacter;"
-        result += "character->b.canSeen = defaultCanSeen;"
-        result += "character->seeWorldEvent = defaultSeeWorldEvent;"
+        result += "character->controllerInterface = getDefaultControllerInterface();"+"\n"
+
+        result += "character->b.canSeen = defaultCanSeen;"+"\n"
 
         if "Constructor" in self.funcs: result += constrUse
 
-        result += "return character;"
+        result += "return character;"+"\n"
 
 
         result += "}"
@@ -433,63 +463,63 @@ class Entity:
     
     def getHeader(self):
         result = ""
-        result += f"struct {self.name}" + "{struct Entity entity;" + f"{self.inside}" + "};"
+        result += f"struct {self.name}" + "{struct Entity entity;" + f"{self.inside}" + "};"+"\n"
 
         params, _ = self.getConstructorModifications()
 
-        result += f"struct Entity* {self.name}_GetEntity_base({CTokens.Retriever(params).VomitAsText()});"
+        result += f"struct Entity* {self.name}_GetEntity_base({CTokens.Retriever(params).VomitAsText()});"+"\n"
         for s in self.funcs:
             fn = self.funcs[s]
             if type(fn) == StolenFunction: continue
-            result += fn.getHeader()
+            result += fn.getHeader()+"\n"
         return result
     
     def getSource(self):
 
         params, constrUse = self.getConstructorModifications()
-        result = ""
-        result += f"struct Entity* {self.name}_GetEntity_base({CTokens.Retriever(params).VomitAsText()})"
-        result += "{"
-        result += f"struct Entity* entity = GET_SIZED_STRUCT({self.name});"
-        result += "entity->b.tbwgType = TBWG_TYPE_ENTITY;"
-        result += f"entity->b.code = {self.codename};"
-        result += f"entity->b.ID = getID();"
-        result += f"entity->b.position = position;"
-        result += f"entity->b.direction = getfVector(1.0f, 0.0f);"
-        result += f"entity->b.dimension = dimension;"
-        result += f"entity->b.collisionFunction = beingDefaultOneWayCollision;"
-        result += f"entity->b.mass=1.0f;"
+        result = ""+"\n"
+        result += f"struct Entity* {self.name}_GetEntity_base({CTokens.Retriever(params).VomitAsText()})"+"\n"
+        result += "{"+"\n"
+        result += f"struct Entity* entity = GET_SIZED_STRUCT({self.name});"+"\n"
+        result += "entity->b.tbwgType = TBWG_TYPE_ENTITY;"+"\n"
+        result += f"entity->b.code = {self.codename};"+"\n"
+        result += f"entity->b.ID = getID();"+"\n"
+        result += f"entity->b.position = position;"+"\n"
+        result += f"entity->b.direction = getfVector(1.0f, 0.0f);"+"\n"
+        result += f"entity->b.dimension = dimension;"+"\n"
+        result += f"entity->b.collisionFunction = beingDefaultOneWayCollision;"+"\n"
+        result += f"entity->b.mass=1.0f;"+"\n"
 
-        result += "entity->b.visionHardness = 0;"
+        result += "entity->b.visionHardness = 0;"+"\n"
         values = "";i = 0;defaultEyes = [1.8, 1.0, 0.1, 1.0, 0.1]
         for k in ["eyeAngle","eyeLevel","eyeSpeed","hearingLevel","hearingSpeed"]:
             if k in self.changes: values += f"{CWriter.getAsCFloat(self.changes[k])},"
             else: values += f"{CWriter.getAsCFloat(defaultEyes[i])},"
             i+=1
-        result += "struct Eye eye = { " + values + " };"
-        result += "entity->b.baseEye = eye;"
-        result += "entity->b.eye = eye;"
+        result += "struct Eye eye = { " + values + " };"+"\n"
+        result += "entity->b.baseEye = eye;"+"\n"
+        result += "entity->b.eye = eye;"+"\n"
 
-        result += f"for(unsigned int i = 0 ; i < EFFECT_TRIGGER_TYPE_COUNT ; i += 1)"
-        result += "{entity->b.effects[i]=createList();}"
+        result += f"for(unsigned int i = 0 ; i < EFFECT_TRIGGER_TYPE_COUNT ; i += 1)"+"\n"
+        result += "{entity->b.effects[i]=createList();}"+"\n"
 
-        result += "entity->b.baseQueue=createQueue();"
+        result += "entity->b.baseQueue=createQueue();"+"\n"
 
         # Queue
 
-        result += "struct QueueEntityTurn* defaultEntityTurn = NEW(QueueEntityTurn);"
-        result += "(*defaultEntityTurn)=getBasicEntityTurn(entity);"
-        result += "queueAddTurn(&(entity->b.baseQueue), (struct QueueElementHeader*)defaultEntityTurn);"
+        result += "struct QueueEntityTurn* defaultEntityTurn = NEW(QueueEntityTurn);"+"\n"
+        result += "(*defaultEntityTurn)=getBasicEntityTurn(entity);"+"\n"
+        result += "queueAddTurn(&(entity->b.baseQueue), (struct QueueElementHeader*)defaultEntityTurn);"+"\n"
         
         if "Eventer" in self.funcs: result += f"entity->eventer={self.funcs["Eventer"]};"
-        else: result += "entity->eventer=defaultEntityEventer;"
+        else: result += "entity->eventer=defaultEntityEventer;"+"\n"
 
         if "Constructor" in self.funcs: result += constrUse
 
-        result += "return entity;"
+        result += "return entity;"+"\n"
 
 
-        result += "}"
+        result += "}"+"\n"
         for s in self.funcs:
             fn = self.funcs[s]
             if type(fn) == StolenFunction: continue
@@ -549,9 +579,9 @@ class Effect:
 
     def getHeader(self):
         params, _ = self.getConstructorModifications()
-        result = ""
-        result += f"struct {self.name}" + "{struct Effect effect;" +  f"{self.inside}" + "};"
-        result += f"struct Effect* {self.name}_GetEffect_base({CTokens.Retriever(params).VomitAsText()});"
+        result = ""+"\n"
+        result += f"struct {self.name}" + "{struct Effect effect;" +  f"{self.inside}" + "};"+"\n"
+        result += f"struct Effect* {self.name}_GetEffect_base({CTokens.Retriever(params).VomitAsText()});"+"\n"
         for s in self.funcs:
             fn = self.funcs[s]
             if type(fn) == StolenFunction: continue
@@ -563,23 +593,23 @@ class Effect:
 
         result = ""
         baseLinic = CTokens.QuickTokenize(f"struct Effect* {self.name}_GetEffect_base(")+params+[CTokens.Token(")")]
-        result += CTokens.Retriever(baseLinic).VomitAsText()
-        result += "{"
-        result += f"struct Effect* effect = GET_SIZED_STRUCT({self.name});"
-        result += f"effect->ID = getID();"
-        result += f"TBWGType effectorType = TBWG_TYPE_UNKNOWN;"
-        result += f"if(effector!=NULL)effectorType = *((TBWGType*)effector);"
-        result += f"effect->effectorType=effectorType;"
-        result += f"effect->effector=effector;"
-        result += f"effect->willberemoved=0;"
-        result += f"effect->code={self.codename};"
+        result += CTokens.Retriever(baseLinic).VomitAsText()+"\n"
+        result += "{"+"\n"
+        result += f"struct Effect* effect = GET_SIZED_STRUCT({self.name});"+"\n"
+        result += f"effect->ID = getID();"+"\n"
+        result += f"TBWGType effectorType = TBWG_TYPE_UNKNOWN;"+"\n"
+        result += f"if(effector!=NULL)effectorType = *((TBWGType*)effector);"+"\n"
+        result += f"effect->effectorType=effectorType;"+"\n"
+        result += f"effect->effector=effector;"+"\n"
+        result += f"effect->willberemoved=0;"+"\n"
+        result += f"effect->code={self.codename};"+"\n"
 
 
         if "time" in self.changes:
-            result += f"effect->time={self.changes["time"]};"
+            result += f"effect->time={self.changes["time"]};"+"\n"
         else:
-            result += f"effect->time=-1;"
-        result += f"effect->effectSpecs=0;"
+            result += f"effect->time=-1;"+"\n"
+        result += f"effect->effectSpecs=0;"+"\n"
 
         statNames = ["STR", "DEX", "CNS", "WIS", "SCS", "SPD","VISRES"]
         values = ""
@@ -588,23 +618,24 @@ class Effect:
             else: values += f"0,"
         values = values[:len(values)-1]
 
-        result += "struct Stats s={" + values + "};"
+        result += "struct Stats s={" + values + "};"+"\n"
 
-        result += "effect->givenStats = s;"
+        result += "effect->givenStats = s;"+"\n"
         
         if "Executer" not in self.funcs:
-            result += "effect->executer=defaultEffectExecuter;"
+            result += "effect->executer=defaultEffectExecuter;"+"\n"
         else: 
-            result += f"effect->executer={self.funcs["Executer"].name.text};"
+            result += f"effect->executer={self.funcs["Executer"].name.text};"+"\n"
+        result += f"effect->onremove = defaultEffectExecuter;"+"\n"
         
         if "Constructor" in self.funcs:
             result += ConstructorUse
 
-        result += "for (unsigned int i = 0 ; i < 8 ; i += 1) effect->details[i] = 0;"
+        result += "for (unsigned int i = 0 ; i < 8 ; i += 1) effect->details[i] = 0;"+"\n"
         
-        result += f"return effect;"
+        result += f"return effect;"+"\n"
 
-        result += "}"
+        result += "}"+"\n"
 
         for func_name in self.funcs:
             fn = self.funcs[func_name]
@@ -674,6 +705,14 @@ def EntityDefinition(retriever : CTokens.Retriever):
     retriever.jump(end+1)
     lastDefinition = entities[len(entities)-1]
 
+def WorldEventDefinition(retriever : CTokens.Retriever):
+    global worldEvents, lastDefinition
+
+    name = retriever.get(2).text
+
+    worldEvents.append(WorldEvent(name))
+    lastDefinition = worldEvents[len(worldEvents)-1]
+
 #IMPLEMENTATION
 
 def Implementation(retriever : CTokens.Retriever):
@@ -694,6 +733,7 @@ def Implementation(retriever : CTokens.Retriever):
     parameterStart, parameterEnd = retriever.getNextBracketIndices(CTokens.BRACKET_OPEN)
     parameters = retriever.retrieveBetweenIndices(parameterStart,parameterEnd)
     retriever.jump(parameterEnd)
+    print("While Near:'",retriever.getNears(),"'")
     definitionStart, definitionEnd = retriever.getNextBracketIndices(CTokens.CURLYBRACKET_OPEN)
     definition = retriever.retrieveBetweenIndices(definitionStart,definitionEnd)
 
@@ -739,12 +779,55 @@ def AddEventer(retriever : CTokens.Retriever):
     character = findDefByName(targetName)
     if type(character) != Character: print(f"Warning! trying to add eventer to a non character {type(character)} object in name of '{targetName}'")
     
-    
+    print("adding eventer source ",sourceName)
     character.addEventerSource(sourceName)
 
+
+# DIRECT INPUTS
+
+inputted_sources = ""
+
+directSourceFilesInQueue = []
+
+inputted_headers = ""
+
+def SourceFileInput(filepath):
+    global directSourceFilesInQueue
+    directSourceFilesInQueue.append(filepath)
+
+def ProcessSourceFileInput():
+    global inputted_sources
+    global directSourceFilesInQueue
+    for filepath in directSourceFilesInQueue:
+        with open(filepath,"r") as source:
+            readenSource = source.read()
+            inputted_sources += ProcessText(readenSource)+"\n"
+
+def HeaderFileInput(filepath):
+    global inputted_headers
+    with open(filepath, "r") as header:
+        inputted_headers += source.read()+"\n"
+
+
+
+
+
+# FILE READING
+
 def File(filepath):
-    if filepath.split(".")[1] == "discard":
+    filepath_joe = filepath.split(".")
+    extension = filepath_joe[len(filepath_joe)-1]
+    print("EXTENSION!!",extension)
+    if extension == "discard":
         print(filepath, " is discarded")
+        return
+    elif extension == "c":
+        print(filepath, "IS A SOURCE FILE!")
+        SourceFileInput(filepath)
+        return
+    elif extension == "h":
+        print(filepath, "IS A HEADER FILE!")
+        HeaderFileInput(filepath)
         return
     text = PP.do(filepath)
     c = CTokens.CharacterRetrieverFromText(text)
@@ -770,6 +853,8 @@ def File(filepath):
                 EventerDefinition(retriever)
             elif retriever.get(1).checkme(CTokens.Token("entity", CTokens.DISTINCT)):
                 EntityDefinition(retriever)
+            elif retriever.get(1).checkme(CTokens.Token("worldEvent", CTokens.DISTINCT)):
+                WorldEventDefinition(retriever)
             elif retriever.get(1).checkme(CTokens.Token("implement",CTokens.DISTINCT)):
                 Implementation(retriever)
             elif retriever.get(1).checkme(CTokens.Token("steal",CTokens.DISTINCT)):
@@ -806,6 +891,8 @@ outclpath = f"outcl"
 
 Folder(codepath)
 ExecuteStealCommands()
+ProcessSourceFileInput()
+print("SOurceS!!", inputted_sources)
 
 i = 0;codeDefinitor = ""
 for e in effects:
@@ -837,27 +924,29 @@ for lang in ["","tr"]:
     viewerspy_bylanguages[lang] = ""
 
 for ef in effects:
-    source += ef.getSource()
-    header += ef.getHeader()
+    source += ef.getSource()+"\n"
+    header += ef.getHeader()+"\n"
     print("effect:", ef.name)
 
     for lang in viewerspy_bylanguages: viewerspy_bylanguages[lang] += "\t\t"+ef.getViewerPy(lang)
 for c in eventers:
-    source += c.getSource()
-    header += c.getHeader()
+    source += c.getSource()+"\n"
+    header += c.getHeader()+"\n"
     print("eventer:", c.name)
     for lang in viewerspy_bylanguages: viewerspy_bylanguages[lang] += "\t\t"+c.getViewerPy(lang)
 for c in entities:
-    source += c.getSource()
-    header += c.getHeader()
+    source += c.getSource()+"\n"
+    header += c.getHeader()+"\n"
     print("entity:", c.name)
     for lang in viewerspy_bylanguages: viewerspy_bylanguages[lang] += "\t\t"+c.getViewerPy(lang)
 for c in characters:
     c.mergeEventersInOnePlace()
-    source += c.getSource()
-    header += c.getHeader()
+    source += c.getSource()+"\n"
+    header += c.getHeader()+"\n"
     print("character:", c.name, f"({c.eventers})")
     for lang in viewerspy_bylanguages: viewerspy_bylanguages[lang] += "\t\t"+c.getViewerPy(lang)
+for w in worldEvents:
+    for lang in viewerspy_bylanguages: viewerspy_bylanguages[lang] += "\t\t"+w.getViewerPy(lang)
 
 # Blushes to Out
 
@@ -870,9 +959,11 @@ pushviewersdotpy = f"{outclpath}/pushviewers.py"
 for p in [morselsHeader]:
     if not os.path.exists(p): os.makedirs(p)
 
+#print(inputted_sources)
+
 with open(f"{morselsHeader}/morsels.h", "w") as file:
     file.write('#include "codes.h"\n')
-    file.write(header+"\n\n"+source+"\n")
+    file.write(header+inputted_headers+"\n\n"+inputted_sources+source+"\n")
     file.write('#include "morsels_core.h"\n')
 
 morsels_core_template = ""

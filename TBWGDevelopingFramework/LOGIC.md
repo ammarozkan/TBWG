@@ -94,7 +94,7 @@ void functionNameHere()
 }
 ```
 
-Constructor, Executors can be implementing with that.
+Constructor, Executors can be implemented with that.
 
 And also a quick implementation to a previously defined 
 thing could be done with "_" sign.
@@ -106,6 +106,17 @@ thing could be done with "_" sign.
 void Constructor() {} // constructor of TheGreatCharacter
 ```
 
+#### Quick Filters
+
+If theres an object, and object has a interesting value that could be usen in the code;
+
+```C
+InterestingValueName@ObjectName
+```
+
+could be written anywhere of the code!
+
+For example; effects, characters and eventers all have a unique code.
 
 
 ### Defining a Character
@@ -166,3 +177,23 @@ int CanExecutedNow(struct World* world, struct Character* user, struct EventerRe
 ```
 
 mmm.
+
+### Using Raw Source and Header Files
+
+
+So when a file is createn with tbwgc extension, it will be passed from these filter-like compilation
+proccesses. But when person wants to write non-filtered (almost, I'm gonna talk about that.) code,
+a c or h extensioned files could be created. In those files, what is written is what is outputted.
+But for the sake of easy code assignment, support of Code@ is still goes.
+
+Compilation is done like that (in the order that is written):
+
+
+
+(Header convertion of the stuff that is written in .tbwgc files) +
+(Raw Header Files) +
+(Raw Source Files) +
+(Source convertion of the stuff that is written in .tbwgc files) => morsels.h
+
+So with that order, programmer could define a function in a source file without a header
+and use it on the .tbwgc files.
