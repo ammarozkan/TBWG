@@ -31,7 +31,7 @@ Player.initsoundlib()
 assets = getTGFAssets("assets/")
 vm = Player.ViewerManager(assets)
 import pushviewers
-pushviewers.pushGeneratedViews(vm, lang="tr")
+pushviewers.pushGeneratedViews(vm)
 assets.loadAll()
 
 program(viewerManager=vm, tbwgconenable=True, widenet=widenet, address=address, ip=ip, port=port, name="John")
