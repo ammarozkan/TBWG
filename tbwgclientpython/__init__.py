@@ -25,7 +25,7 @@ def program(viewerManager = None, tbwgconenable = True, ip="127.0.0.1", port=500
         player.addWorldEvent((wevnt.eventname,(wevnt.position.x,wevnt.position.y)))
 
     def eventer(evntrhdr : tbwgcon1.TBWGEventerOptionsInformationHeader, eventeroptinfos : tbwgcon1.TBWGEventerOptionsInformation):
-        player.setRestUses([evntrhdr.eventeruses.classic,evntrhdr.eventeruses.fastcombat,evntrhdr.eventeruses.movement,evntrhdr.eventeruses.fastmagic,evntrhdr.eventeruses.thoughtmagic])
+        player.setRestUses([evntrhdr.eventeruses.classic,evntrhdr.eventeruses.arm,evntrhdr.eventeruses.hand,evntrhdr.eventeruses.movement,evntrhdr.eventeruses.thought])
 
         for evn in eventeroptinfos.eventers:
             print(evn)

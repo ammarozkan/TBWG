@@ -59,6 +59,12 @@ def getThingFromBytes(data, name):
     elif name == "Details":
         details = struct.unpack("iiiiiiii",data)
         return details
+    elif name == "tool":
+        print("BYTES ARE:",data[:4], len(data[:4]))
+        toolCode = int.from_bytes(data[:4],"little")
+        details = getThingFromBytes(data[4:36],"Details")
+        observationPower = int.from_bytes(data[36:36],"little")
+        return (toolCode, details, observationPower)
     elif name == "iValue":
         b = struct.unpack("ii",data)
         return TBWGiValue(b[0],b[1])
@@ -159,9 +165,10 @@ def getRestPkgFromSocket(socket, pkgcode, size, extraheader = None):
         position = getThingFromBytes(data[56:64],"iVector")
         direction = getThingFromBytes(data[64:72],"fVector")
         state = getThingFromBytes(data[72:76],"uint32_t")
+        tool = getThingFromBytes(data[76:113],"tool")
 
         print("extraheader:",extraheader)
-        lastp = 76
+        lastp = 113
         effects = []
         
         effectcount = sum(extraheader.effectCounts)
@@ -213,7 +220,7 @@ def getRestPkgFromSocket(socket, pkgcode, size, extraheader = None):
 
         if lastp != len(data): raise Exception(f"DATA IS NOT FULLY READEN BY MISTAKE {len(data)-lastp} to go")
 
-        return TBWGObservingInformation(selfid, stats, hp, e, se, position, direction, state, effects, eventers, characters, entities)
+        return TBWGObservingInformation(selfid, stats, hp, e, se, position, direction, state, tool, effects, eventers, characters, entities)
     elif pkgcode == TBWGWorldEventInformation_code:
         ID = getThingFromBytes(data[0:4], "uint32_t")
         name = getThingFromBytes(data[4:36],"string")

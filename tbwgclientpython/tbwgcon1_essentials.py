@@ -127,12 +127,22 @@ class TBWGUsersEventerInformation:
 
 TBWGEventerUses_size = 20
 class TBWGEventerUses:
-    def __init__(self, classic, fastcombat, movement, fastmagic, thoughtmagic):
+    def __init__(self, classic, arm, hand, movement, thought):
         self.classic = classic
-        self.fastcombat = fastcombat
+        self.arm = arm
+        self.hand = hand
         self.movement = movement
-        self.fastmagic = fastmagic
-        self.thoughtmagic = thoughtmagic
+        self.thought = thought
+    def __str__(self):
+        result = ""
+        if self.classic > 0: result += f"{self.classic} classic "
+        if self.arm > 0: result += f"{self.arm} arm "
+        if self.hand > 0: result += f"{self.hand} hand "
+        if self.movement > 0: result += f"{self.movement} movement "
+        if self.thought > 0: result += f"{self.thought} thought "
+        
+        if result == "": return ""
+        else: return result[:len(result)-1] + "."
 
 
 
@@ -197,11 +207,13 @@ class TBWGObservingInformationHeader:
         self.entityInformationCount = entityInformationCount
     def __str__(self):
         return f"[| ObservingInformationHeader | {self.effectCounts} effects | {self.eventerCount} eventers | {self.characterInformationCount} characters | {self.entityInformationCount} entities |]"
+    
+
 
 TBWGObservingInformation_code = 34
 TBWGObservingInformation_shape = "IiiiiiiiiiiiiiiiffI"
 class TBWGObservingInformation:
-    def __init__(self,selfid,stats,hp,e,se,position,direction,state,effects,eventers,characters,entities):
+    def __init__(self,selfid,stats,hp,e,se,position,direction,state,tool,effects,eventers,characters,entities):
         self.selfid = selfid
         self.stats = stats
         self.hp = hp
@@ -210,6 +222,7 @@ class TBWGObservingInformation:
         self.position = position
         self.direction = direction
         self.state = state
+        self.tool = tool
         self.effects = effects
         self.eventers = eventers
         self.characters = characters

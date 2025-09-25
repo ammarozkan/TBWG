@@ -38,7 +38,7 @@ def getEventerPanelDefault(uitool, eventers, onclickfunc, viewerManager):
     for nbutton in nbuttons:
         img, getHovering = viewerManager.GetEventerView(eventers[i].eventerCode)
         nbutton.updateimage( img )
-        nbutton.hoveringCode = getHovering(eventers[i])
+        nbutton.hoveringCode = f"[{eventers[i].energy} E | {eventers[i].spellenergy} SE] {eventers[i].costs} "+getHovering(eventers[i])
         i+=1
     img, getHovering = viewerManager.GetButtonView("CancelButton")
     nbuttons.append( uitool.getButton(img, -1, "Cancel", "upright", onclickfunc, transform = (-30,+30)) )
