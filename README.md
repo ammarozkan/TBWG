@@ -3,10 +3,6 @@
 TBWG is a Turn Based War Game. I want to give players almostly full freedom to do what they want.
 Game can be modified easily.
 
-#### Quick Notes
-
-- Entities are not fully implemented, yet.
-
 ## Logic
 
 So theres characters. Characters have a base turn. When a special type of turn hits from the queue,
