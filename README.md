@@ -1,7 +1,5 @@
 # TBWG
 
-wanna break from the ads? skip to the [I JUST WANT TO PLAY](README.md#i-just-want-to-play) segment.
-
 TBWG is a Turn Based War Game. I want to give players almostly full freedom to do what they want.
 Game can be modified easily.
 
@@ -29,18 +27,15 @@ that teleports someones to somewhere. (idk)
 
 
 
-# Compiling a Server
+# Compiling
 
 A basic server of TBWG uses the TBWGLib. I'd use compiling TBWGLib seperately and using that
 compilement for server compilation via linking to use the symbols.
 
 ## Compiling the TBWGLib
 
-On linux, GCC and MAKE required. and also linux socket.h ... and also GNU C lib..
-
-On windows, just MinGW.
-
 ### Linux
+Requirements: GCC, MAKE
 
 In the TBWGLib directory, running
 
@@ -48,7 +43,7 @@ In the TBWGLib directory, running
 make tbwgessentialslib lib
 ```
 
-will compile the lib onto a directory named "libs". If debug or some interesting stuff
+will compile the lib onto a directory named "libs". If debug or some other interesting stuff
 is wanted to compile too, see the Makefile.
 
 then, unnecessary things could be cleaned up
@@ -58,9 +53,10 @@ make clean
 ```
 
 ### Windows
+Requirements: MinGW
 
-In the TBWGLib directory, theres a .bat file to run. Double clicking or executing
-it from terminal will compile the lib into a directory named "libs".
+In the TBWGLib directory, theres a .bat file to run. Running
+it will compile the lib into a directory named "libs".
 
 Compiled libs:
 
@@ -72,40 +68,69 @@ Compiled libs:
 
 it will cost approximately 285 KB of storage.
 
-## Compiling the Server Scheme
+## Compiling the Server Template
+Requirements: same as TBWGLib requirements + the compiled TBWGLib on ../TBWGLib
 
+Compiled binary will be putten to ../bin. In any errors, try creating bin directory
+manually.
 
-
-# I JUST WANT TO PLAY
-
-just add the files that are outputten from a TBWGDF_Compiler for the client
-to the pythontbwgclient then run
-
-```bash
-python . {serveraddresshere}
-```
-
-and client will be opened and will try to join the server
-
-# How to serve a server
-
-tbwgnet for server is supported by windows and linux. on a compatible device, you can natively run a server.
-
-## SERVER DEMO
-
-firstly compile the tbwglib.
-
-after, on the main directory
+### Linux
 
 ```bash
-make serverdemo
+make classic
 ```
 
-then you should have a server on the /outs directory.
+### Windows
+Run the MakeWindows.bat
 
-I haven't written a method for quickly compiling it on windows.
 
-## TheGreatFighters
+# Using TBWGDF_Compiler
 
-TheGreatFighters is a complete server program/game to test the strength of TBWG. It is on a different GitHub
-page.
+For compiling a proper Project folder with TBWGDF_Compiler, files
+should look like this:
+
+```
+- The Great Folder
+|--- TBWGDF_Compiler/
+   |--- __main__.py
+   |--- CPreProcessing.py
+   |--- CTokens.py
+   |--- ...
+|--- Project/ (the game project folder)
+   |--- Assets/
+   |--- Codes/
+   |--- Templates/
+|--- TBWGLib/ (the compiled TBWGLib folder)
+   |--- include/
+   |--- src/
+   |--- tbwgnetsrc/
+   |--- Makefile
+   |--- ...
+|--- outcl/ (copy of tbwgclientpython)
+   |--- tbwgplayer/
+   |--- assets/ (copy of Project/Assets here)
+   |--- __init__.py
+   |--- __main__.py
+   |--- ...
+|--- outsv/ (copy of TBWGServerTemplate)
+   |--- details/
+   |--- morsels/
+   |--- main.c
+   |--- ...
+```
+
+then run the TBWGDF_Compiler with python. It will detect the folders by
+their names. So NAMES SHOULD EXACTLY MATCH.
+
+```bash
+python TBWGDF_Compiler
+```
+
+Then for running the server, compile outsv by "Compiling the Server Template"
+and run it from bin folder. 
+
+For running the client, directly run outcl by
+
+```bash
+python outcl
+```
