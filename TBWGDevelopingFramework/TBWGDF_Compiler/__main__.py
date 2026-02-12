@@ -53,7 +53,7 @@ def InsideAtSigns(retriever : CTokens.Retriever):
     elm = retriever.get(0).text
     target = retriever.get(2).text
     _target = findDefByName(target)
-    if _target == None: 
+    if _target == None:
         print(f"NULL TARGET AS SEARCHING '{target}'")
         raise("bop")
     if type(_target) == Effect and elm == "Get": result = f"{target}_GetEffect_base"
@@ -66,7 +66,7 @@ def InsideAtSigns(retriever : CTokens.Retriever):
     retriever.modify(1, CTokens.Token(CTokens.NOTHING))
     retriever.modify(2, CTokens.Token(result))
     retriever.makeNothingsDisappear()
-        
+
 
 def ProcessInsideConversion(tokens):
     retriever = CTokens.Retriever(tokens)
@@ -111,8 +111,8 @@ class WorldEvent:
         explanation = self.getChange(f"explanation{lang}", self.getChange("explanation", "No explanation entered."))
         iconPath = self.getChange(f"icon{lang}", self.getChange(f"icon", defaultEventerIconPath))
         soundPath = self.getChange(f"sound{lang}", self.getChange(f"sound", defaultWorldEventSoundPath))
-        
-        return getPythonViewWorldEventCall("WorldEvent", self.code, explanation, iconPath, soundPath) 
+
+        return getPythonViewWorldEventCall("WorldEvent", self.code, explanation, iconPath, soundPath)
 
 class Eventer:
     def __init__(self, name : str, inside):
@@ -123,7 +123,7 @@ class Eventer:
         self.code = 0
 
         self.changes = {}
-    
+
     def getChange(self, change, default):
         if change in self.changes: return self.changes[change]
         else: return default
@@ -132,7 +132,7 @@ class Eventer:
         else: return None
     def getGetEventerBase(self):
         return f"{self.name}_GetEventer_base"
-    
+
     def addFunction(self, name, func : Function):
         self.funcs[name] = func
         self.funcs[name].name.text = f"{self.name}_{name}"
@@ -154,7 +154,7 @@ class Eventer:
         result = "0|"
         parsedRequire = []
         if "require" in self.changes: parsedRequire = self.changes["require"].split(",")
-        
+
         if "position" in parsedRequire: result += "EVENTER_REQUIRED_INFORMATION_POSITION|"
         if "direction" in parsedRequire: result += "EVENTER_REQUIRED_INFORMATION_DIRECTION|"
 
@@ -197,7 +197,7 @@ class Eventer:
 
         if "Constructor" in self.funcs:
             result += f"{self.getConstructorName()}((struct {self.name}*)eventer);"+"\n"
-        
+
         result += "for (unsigned int i = 0 ; i < 8 ; i += 1) eventer->details[i] = 0;"+"\n"
 
         result += "return eventer;"+"\n"
@@ -210,26 +210,26 @@ class Eventer:
         return result
     def getHeader(self):
         result = ""
-        
+
         result += f"struct {self.name}" + "{struct Eventer eventer;" +  f"{self.inside}" + "};"+"\n"
         result += f"struct Eventer* {self.name}_GetEventer_base();"+"\n"
         for s in self.funcs:
             fn = self.funcs[s]
             if type(fn) == StolenFunction: continue
             result += fn.getHeader()+"\n"
-        
+
         return result
-    
+
     def changeInvoke(self, name, value):
         self.changes[name] = value
-    
-    
+
+
 
     def getViewerPy(self,lang=""):
         explanation = self.getChange(f"explanation{lang}", self.getChange("explanation", "No explanation entered."))
         iconPath = self.getChange(f"icon{lang}", self.getChange(f"icon", defaultEventerIconPath))
-        
-        return getPythonViewFunctionCall("Eventer", self.code, explanation, iconPath)    
+
+        return getPythonViewFunctionCall("Eventer", self.code, explanation, iconPath)
 
 class Character:
     def __init__(self, name : str, inside):
@@ -245,16 +245,16 @@ class Character:
         self.usingEventersOf = [] # character's name of eventers
         self.eventerSources = [] # for pre compilation
         self.eventersMerged = False
-    
+
     def addEventer(self, eventer):
         self.eventers.append(eventer)
-    
+
     def addUsingEventersOf(self, characterName):
         self.usingEventersOf.append(characterName)
-    
+
     def addEventerSource(self, sourceName):
         self.eventerSources.append(sourceName)
-    
+
     def resolveEventerSources(self):
         for s in self.eventerSources:
             df = findDefByName(s)
@@ -266,7 +266,7 @@ class Character:
                 print(f"eventer source {s} on {self.name} is {df}, so finding function didnt returned a proper stuff.")
                 raise("balloons")
         self.eventerSources = []
-    
+
     def mergeEventersInOnePlace(self): # only after we're sure that every character is defined
         self.resolveEventerSources()
         if self.eventersMerged: return True
@@ -274,14 +274,14 @@ class Character:
             if type(c) != Character: continue
             if c.mergeEventersInOnePlace(): self.eventers = c.eventers + self.eventers
             else: return False
-        
+
         self.eventersMerged = True
         return True
-    
+
     def getChange(self, change, default):
         if change in self.changes: return self.changes[change]
         else: return default
-    
+
     def addFunction(self, name, func : Function):
         self.funcs[name] = func
         self.funcs[name].name.text = f"{self.name}_{name}"
@@ -290,7 +290,7 @@ class Character:
             fetcherParam = CTokens.QuickTokenize(f"struct {self.name}*{fn.preparameters["naming"]}")
             if len(self.funcs[name].parameters) > 0: fetcherParam+=[CTokens.Token(",")]
             self.funcs[name].parameters = fetcherParam+fn.parameters
-    
+
     def getConstructorModifications(self):
         ConstructorUse = ""
         params = []
@@ -303,7 +303,7 @@ class Character:
             ConstructorUse += f"{self.name}_Constructor({CTokens.Retriever(use).VomitAsText()});"
         params = CTokens.QuickTokenize("struct Dimension*dimension,iVector position")+params
         return params, ConstructorUse
-    
+
     def getHeader(self):
         result = ""+"\n"
         result += f"struct {self.name}" + "{struct Character character;" + f"{self.inside}" + "};"+"\n"
@@ -316,7 +316,7 @@ class Character:
             if type(fn) == StolenFunction: continue
             result += fn.getHeader()
         return result
-    
+
     def getSource(self):
 
         params, constrUse = self.getConstructorModifications()
@@ -367,13 +367,13 @@ class Character:
 
         result += "struct EventerUses newUses = {0,0,0,0,0};"+"\n"
         result += "character->eventerSpendings = newUses;"+"\n"
-        
+
         eventerCount = len(self.eventers)
         result += f"character->eventerCount = {eventerCount};"+"\n"
         result += f"character->eventers = malloc({eventerCount}*sizeof(struct Eventer*));"+"\n"
         for i in range(eventerCount):
             result += f"character->eventers[{i}] = {self.eventers[i].getGetEventerBase()}();"+"\n"
-        
+
         result += f"for(unsigned int i = 0 ; i < EFFECT_TRIGGER_TYPE_COUNT ; i += 1)"+"\n"
         result += "{character->b.effects[i]=createList();}"+"\n"
 
@@ -416,8 +416,8 @@ class Character:
         explanation = self.getChange(f"explanation{lang}", self.getChange("explanation", "No explanation entered."))
         iconPath = self.getChange(f"icon{lang}", self.getChange(f"icon", defaultCharacterIconPath))
 
-        return getPythonViewFunctionCall("Character", self.code, explanation, iconPath)    
-    
+        return getPythonViewFunctionCall("Character", self.code, explanation, iconPath)
+
     def changeInvoke(self, name, value):
         self.changes[name] = value
 
@@ -430,11 +430,11 @@ class Entity:
         self.code = 0
 
         self.changes = {}
-    
+
     def getChange(self, change, default):
         if change in self.changes: return self.changes[change]
         else: return default
-    
+
     def addFunction(self, name, func : Function):
         self.funcs[name] = func
         self.funcs[name].name.text = f"{self.name}_{name}"
@@ -447,7 +447,7 @@ class Entity:
             converter = CTokens.QuickTokenize(f"struct {self.name}*{fn.preparameters["naming"]}=(struct {self.name}*)entity;")
             self.funcs[name].inside = converter+fn.inside
             self.funcs[name].parameters = CTokens.QuickTokenize(f"void* entity,")+self.funcs[name].parameters
-    
+
     def getConstructorModifications(self):
         ConstructorUse = ""
         params = []
@@ -460,7 +460,7 @@ class Entity:
             ConstructorUse += f"{self.name}_Constructor({CTokens.Retriever(use).VomitAsText()});"
         params = CTokens.QuickTokenize("struct Dimension*dimension,iVector position")+params
         return params, ConstructorUse
-    
+
     def getHeader(self):
         result = ""
         result += f"struct {self.name}" + "{struct Entity entity;" + f"{self.inside}" + "};"+"\n"
@@ -473,7 +473,7 @@ class Entity:
             if type(fn) == StolenFunction: continue
             result += fn.getHeader()+"\n"
         return result
-    
+
     def getSource(self):
 
         params, constrUse = self.getConstructorModifications()
@@ -510,7 +510,7 @@ class Entity:
         result += "struct QueueEntityTurn* defaultEntityTurn = NEW(QueueEntityTurn);"+"\n"
         result += "(*defaultEntityTurn)=getBasicEntityTurn(entity);"+"\n"
         result += "queueAddTurn(&(entity->b.baseQueue), (struct QueueElementHeader*)defaultEntityTurn);"+"\n"
-        
+
         if "Eventer" in self.funcs: result += f"entity->eventer={self.funcs["Eventer"]};"
         else: result += "entity->eventer=defaultEntityEventer;"+"\n"
 
@@ -525,13 +525,13 @@ class Entity:
             if type(fn) == StolenFunction: continue
             result += fn.getSource()
         return result
-    
+
     def getViewerPy(self,lang=""):
         explanation = self.getChange(f"explanation{lang}", self.getChange("explanation", "No explanation entered."))
         iconPath = self.getChange(f"icon{lang}", self.getChange(f"icon", defaultEntityIconPath))
 
         return getPythonViewFunctionCall("Entity", self.code, explanation, iconPath)
-    
+
     def changeInvoke(self, name, value):
         self.changes[name] = value
 
@@ -563,7 +563,7 @@ class Effect:
             converter = CTokens.QuickTokenize(f"struct {self.name}*{fn.preparameters["naming"]}=(struct {self.name}*)effectptr;")
             addition = CTokens.QuickTokenize(f"struct {self.name}*{fn.preparameters["naming"]}" + ("," if len(fn.parameters) != 0 else ""))
             self.funcs[name].parameters = addition+self.funcs[name].parameters
-    
+
     def getConstructorModifications(self):
         ConstructorUse = ""
         params = []
@@ -621,18 +621,28 @@ class Effect:
         result += "struct Stats s={" + values + "};"+"\n"
 
         result += "effect->givenStats = s;"+"\n"
-        
+
         if "Executer" not in self.funcs:
             result += "effect->executer=defaultEffectExecuter;"+"\n"
-        else: 
+        else:
             result += f"effect->executer={self.funcs["Executer"].name.text};"+"\n"
+
+        if "SetReady" not in self.funcs:
+        	result += "effect->setReady=defaultEffectSetReady;"+"\n"
+        else:
+        	result += f"effect->setReady={self.funcs["Executer"].name.text};"+"\n"
+
+        if "OnRemove" not in self.funcs:
+        	result += "effect->onremove=defaultEffectSetReady;"+"\n"
+        else:
+        	result += f"effect->onremove={self.funcs["OnRemove"].name.text};"+"\n"
         result += f"effect->onremove = defaultEffectExecuter;"+"\n"
-        
+
         if "Constructor" in self.funcs:
             result += ConstructorUse
 
         result += "for (unsigned int i = 0 ; i < 8 ; i += 1) effect->details[i] = 0;"+"\n"
-        
+
         result += f"return effect;"+"\n"
 
         result += "}"+"\n"
@@ -646,7 +656,7 @@ class Effect:
     def getViewerPy(self,lang=""):
         explanation = self.getChange(f"explanation{lang}", self.getChange("explanation", "No explanation entered."))
         iconPath = self.getChange(f"icon{lang}", self.getChange(f"icon", defaultEffectIconPath))
-        
+
         return getPythonViewFunctionCall("Effect", self.code, explanation, iconPath)
 
     def changeInvoke(self, name, value):
@@ -717,7 +727,7 @@ def WorldEventDefinition(retriever : CTokens.Retriever):
 
 def Implementation(retriever : CTokens.Retriever):
     global lastDefinition
-    
+
     targetName = retriever.get(2).text
     if targetName == "_": targetName = lastDefinition.name
     naming = retriever.get(3).text
@@ -765,20 +775,20 @@ def ExecuteStealCommands():
         if _stealedfrom == None: print(f"{stealedfrom} is empty.")
         prg.funcs[stealed] = StolenFunction(_stealedfrom.funcs[stealed].name)
         print(f"{stealed} steal from {stealedfrom} to {targetName}!")
-    
+
 
 
 def AddEventer(retriever : CTokens.Retriever):
     global lastDefinition
 
-    
+
     targetName = retriever.get(2).text
     if targetName == "_": targetName = lastDefinition.name
     sourceName = retriever.get(3).text
 
     character = findDefByName(targetName)
     if type(character) != Character: print(f"Warning! trying to add eventer to a non character {type(character)} object in name of '{targetName}'")
-    
+
     print("adding eventer source ",sourceName)
     character.addEventerSource(sourceName)
 
@@ -843,9 +853,9 @@ def File(filepath):
     while retriever.next(usepasser = True):
         retrieved = retriever.retrieve(2)
         if not retrieved: break
-        
+
         if retriever.get(0).checkme(CTokens.Token("@")):
-            if retriever.get(1).checkme(CTokens.Token("effect",CTokens.DISTINCT)): 
+            if retriever.get(1).checkme(CTokens.Token("effect",CTokens.DISTINCT)):
                 EffectDefinition(retriever)
             elif retriever.get(1).checkme(CTokens.Token("character",CTokens.DISTINCT)):
                 CharacterDefinition(retriever)
@@ -976,10 +986,10 @@ with open(f"{morselsHeader}/morsels_core.h", "w") as file:
 
     grt = 'struct Character* morselsGetCharacterByOrder(unsigned int i, struct Dimension* dim, iVector position)\n'
     grt += '{\n'
-    for i in range(len(characters)): 
+    for i in range(len(characters)):
         grt += f'if (i == {i}) return Get@{characters[i].name}(dim, position);\n'
     grt += '}\n'
-    
+
     grtRetr = ProcessInsideConversion(CTokens.QuickTokenize(grt))
     file.write(CTokens.Retriever(grtRetr).VomitAsText())
     file.write(morsels_core_template)
