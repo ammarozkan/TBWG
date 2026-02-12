@@ -50,7 +50,12 @@ class Assets:
     def loadAll(self):
         newimages = {}
         for n in self.images:
-            newimages[n] = pygame.image.load(self.images[n])
+            try:
+                newimages[n] = pygame.image.load(self.images[n])
+            except FileNotFoundError:
+                print(f"File: {self.images[n]} not found.")
+            else:
+                print(f"File: {self.images[n]} loaded.")
         self.images = newimages
 
         newsounds = {}
