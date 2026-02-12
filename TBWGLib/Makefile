@@ -12,7 +12,7 @@ tbwgnetlib:
 
 tbwglib:
 	make cleanobjs; make necessarydirs
-	gcc src/* -I include -c
+	gcc src/* src/system/* -I include -c
 	mv *.o objs/
 	ar rcs libtbwg.a objs/*.o
 	mv *.a libs/
@@ -20,14 +20,14 @@ tbwglib:
 tbwgnetdebuglib:
 	echo "Net Debug Lib Compile!"
 	make cleanobjs; make necessarydirs
-	gcc -DTBWG_DEBUG tbwgnetsrc/* -I include -c
+	gcc -g -DTBWG_DEBUG tbwgnetsrc/* -I include -c
 	mv *.o objs/
 	ar rcs libtbwgnetdebug.a objs/*.o
 	mv *.a libs/
 
 tbwgdebuglib:
 	make cleanobjs; make necessarydirs
-	gcc -DTBWG_DEBUG src/* -I include -c
+	gcc -g -DTBWG_DEBUG src/* src/system/* -I include -c
 	mv *.o objs/
 	ar rcs libtbwgdebug.a objs/*.o
 	mv *.a libs/
@@ -40,8 +40,14 @@ tbwgessentialslib:
 	gcc src/maths.c -I include -c -o essmathslibo.o
 	ar rcs libs/libtbwgessentials.a essentialslibo.o esslistslibo.o essmathslibo.o
 	rm essentialslibo.o esslistslibo.o essmathslibo.o
-
-
+tbwgessentialsdebuglib:
+	echo "Essential Lib"
+	make necessarydirs
+	gcc -g src/essentials.c  -I include -c -o essentialslibo.o
+	gcc -g src/lists.c  -I include -c -o esslistslibo.o
+	gcc -g src/maths.c -I include -c -o essmathslibo.o
+	ar rcs libs/libtbwgessentials.a essentialslibo.o esslistslibo.o essmathslibo.o
+	rm essentialslibo.o esslistslibo.o essmathslibo.o
 debug:
 	make tbwgnetdebuglib
 	make tbwgdebuglib
