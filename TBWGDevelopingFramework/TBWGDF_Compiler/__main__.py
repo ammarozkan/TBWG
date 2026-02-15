@@ -332,6 +332,7 @@ class Character:
         result += f"character->b.dimension = dimension;"+"\n"
         result += f"character->b.mass=1.0f;"+"\n"
         result += f"character->b.collisionFunction = beingDefaultOneWayCollision;"+"\n"
+        result += f"character->b.tool = NULL;"+"\n"
         result += f"character->seeingResources = createList();"+"\n"
         statNames = ["STR", "DEX", "CNS", "WIS", "SCS", "SPD","VISRES"]
         values = ""
