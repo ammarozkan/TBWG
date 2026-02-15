@@ -1,5 +1,5 @@
 import CTokens, CPreProcessing, CWriter
-import os
+import os, shutil
 
 result = ""
 
@@ -1005,3 +1005,10 @@ with open(pushviewersdotpy, "w", encoding="utf-8") as file:
     for lang in viewerspy_bylanguages:
         file.write(f"\tif lang == '{lang}':\n")
         file.write(viewerspy_bylanguages[lang])
+
+
+# Copying assets
+
+cl_assets_dir = f"{outclpath}/assets"
+os.makedirs(os.path.dirname(cl_assets_dir), exist_ok=True)
+shutil.copytree(assetspath, cl_assets_dir)
