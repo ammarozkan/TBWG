@@ -82,16 +82,6 @@ Run the MakeWindows.bat
 
 # Using TBWGDF_Compiler
 
-## Informative Warning About a Failure
-
-If you really care about running, read.
-
-Due to some version mixing (I mistakenly merged two different versions of the code)
-TBWGDF_Compiler does not compile correctly. It will bombard a lot of errors when tried
-to compile the compiled C code. It should be able to fixed by analyzing.
-
-## Using TBWGDF_Compiler
-
 For compiling a proper Project folder with TBWGDF_Compiler, files
 should look like this:
 
